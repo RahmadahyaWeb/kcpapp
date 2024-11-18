@@ -39,13 +39,17 @@ class DksController extends Controller
             $katalog = $request->get('katalog');
 
             if ($toko) {
-                // CHECK TYPE APAKAH CEK IN ATAU CEK OUT
-                $check = DB::table('trns_dks')
-                    ->where('kd_toko', $kd_toko)
-                    ->where('user_sales', Auth::user()->username)
-                    ->where('type', 'in')
-                    ->whereDate('tgl_kunjungan', '=', now()->toDateString())
-                    ->count();
+                if ($katalog[6] == 'Y') {
+                    $check = 'katalog';
+                } else {
+                    // CHECK TYPE APAKAH CEK IN ATAU CEK OUT
+                    $check = DB::table('trns_dks')
+                        ->where('kd_toko', $kd_toko)
+                        ->where('user_sales', Auth::user()->username)
+                        ->where('type', 'in')
+                        ->whereDate('tgl_kunjungan', '=', now()->toDateString())
+                        ->count();
+                }
 
                 return view('dks.submit', compact('toko', 'katalog', 'check'));
             } else {

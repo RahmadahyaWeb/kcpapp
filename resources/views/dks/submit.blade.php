@@ -7,7 +7,18 @@
         <div class="card-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <b>DKS ({{ $check ? 'Check Out' : 'Check In' }})</b>
+                    @php
+                        $inOrOut = '';
+
+                        if ($check == 1) {
+                            $inOrOut = 'Check Out';
+                        } elseif ($check == 'katalog') {
+                            $inOrOut = 'Katalog';
+                        } else {
+                            $inOrOut = 'Check In';
+                        }
+                    @endphp
+                    <b>DKS {{ $inOrOut }}</b>
                 </div>
             </div>
             <hr>
@@ -140,15 +151,9 @@
 
             function validateForm(event) {
                 const check = {{ $check }};
-                let inOrOut = '';
+                let inOrOut = "{{ $inOrOut }}"
 
-                if (check) {
-                    inOrOut = 'Check Out';
-                } else {
-                    inOrOut = 'Check In';
-                }
-
-                let confirmAction = confirm(`Apakah Anda yakin ingin melakukan ${inOrOut}?`)
+                let confirmAction = confirm(`Apakah Anda yakin ingin melakukan scan ${inOrOut}?`)
 
                 if (!confirmAction) {
                     return false;
