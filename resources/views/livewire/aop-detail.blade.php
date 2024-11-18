@@ -362,7 +362,7 @@
                             <label for="fakturPajak" class="form-label">Faktur Pajak</label>
                             <input type="text" class="form-control" wire:model="fakturPajak">
                             <div class="d-flex justify-content-end mt-2 gap-2">
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" wire:click="closeModalFakturPajak">Batal</button>
                                 <button type="submit" class="btn btn-primary">Simpan</button>
                             </div>
                         </form>

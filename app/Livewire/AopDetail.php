@@ -31,6 +31,12 @@ class AopDetail extends Component
         $this->fakturPajak = $invoice->fakturPajak;
     }
 
+    public function closeModalFakturPajak()
+    {
+        $this->classFakturPajak = "";
+        $this->styleFakturPajak = "";
+    }
+
     public function openModalProgram()
     {
         $this->classProgram = "show";
