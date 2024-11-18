@@ -57,17 +57,18 @@
                                 <td>
                                     @foreach ($item['invoices'] as $invoice => $qty)
                                         <div>
-                                            <span>{{ $invoice }}: {{ $qty }}</span>
+                                            <span>
+                                                <a href="{{ route('aop.detail', $invoice) }}">{{ $invoice }}</a> :
+                                                {{ $qty }}
+                                            </span>
                                         </div>
                                     @endforeach
                                 </td>
                                 <td>
                                     @if ($item['statusItem'] == 'BOSNET')
-                                        <span class="badge text-bg-success">Berhasil dikirim</span>
-                                    @elseif ($item['total_qty'] == $item['qty_terima'])
-                                        <span class="badge text-bg-success">Lengkap</span>
+                                        <span class="badge text-bg-warning">BOSNET</span>
                                     @else
-                                        <span class="badge text-bg-danger">Belum Lengkap</span>
+                                        <span class="badge text-bg-success">KCP</span>
                                     @endif
                                 </td>
                             </tr>

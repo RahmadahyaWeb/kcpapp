@@ -9,25 +9,28 @@ use Livewire\Component;
 
 class AopGrDetail extends Component
 {
+    public $kcpInformation;
+    public $token;
+
     public $spb;
-    public $statusItem;  
+    public $statusItem;
 
     public function mount($spb)
     {
         $this->spb = $spb;
+
+        $this->kcpInformation = new KcpInformation;
+
+        $conn = $this->kcpInformation->login();
+
+        if ($conn) {
+            $this->token = $conn['token'];
+        }
     }
 
     public function getIntransitBySpb($spb)
     {
-        $kcpInformation = new KcpInformation;
-
-        $login = $kcpInformation->login();
-
-        if ($login) {
-            $token = $login['token'];
-        }
-
-        $intransitStock = $kcpInformation->getIntransitBySpb($token, $spb);
+        $intransitStock = $this->kcpInformation->getIntransitBySpb($this->token, $spb);
 
         if ($intransitStock) {
             return $intransitStock;
@@ -62,9 +65,23 @@ class AopGrDetail extends Component
             ->get()
             ->groupBy('invoiceAop');
 
-
         $dataToSent = [];
         $itemsToUpdate = [];
+
+        $materialNumberToSave = '';
+
+        foreach ($this->selectedItems as $value) {
+
+            if ($materialNumberToSave == '') {
+                $materialNumberToSave = $value;
+            } else {
+                $materialNumberToSave .= ',' . $value;
+            }
+        }
+
+        // AUTO GENERATE GR NUMBER
+        $no_gr = $this->generateGRNumber($this->spb, $materialNumberToSave);
+
         foreach ($invoiceDetails as $invoiceAop => $details) {
             $invoiceHeader = DB::table('invoice_aop_header')
                 ->select(['*'])
@@ -91,7 +108,7 @@ class AopGrDetail extends Component
 
             $dataToSent[] = [
                 'szFpoId'                   => $invoiceHeader->invoiceAop,
-                'szFAPInvoiceId'            => $invoiceHeader->invoiceAop,
+                'szFAPInvoiceId'            => $no_gr,
                 'dtmPO'                     => date('Y-m-d H:i:s', strtotime($invoiceHeader->billingDocumentDate)),
                 'dtmReceipt'                => "2024-10-15 00:00:00",
                 'bReturn'                   => 0,
@@ -140,20 +157,37 @@ class AopGrDetail extends Component
         dd(json_encode($dataToSent));
     }
 
-    public function checkApiConn()
+    public function generateGRNumber($spb, $items)
     {
-        $kcpInformation = new KcpInformation;
+        /**
+         * GR-AOP-TAHUNBULAN-NOMOR
+         */
 
-        $login = $kcpInformation->login();
+        $tahun = Carbon::now()->year;
+        $bulan = Carbon::now()->month;
 
-        return $login;
+        $lastGR = DB::table('gr_aop')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $nomor_urut = $lastGR ? (int)substr($lastGR->no_gr, -4) + 1 : 1;
+
+        $no_gr = 'GR-AOP-' . $tahun . $bulan . '-' . str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
+
+        DB::table('gr_aop')
+            ->insert([
+                'no_gr'         => $no_gr,
+                'spb'           => $spb,
+                'items'         => $items,
+                'created_at'    => now()
+            ]);
+
+        return $no_gr;
     }
 
     public function render()
     {
-        $conn = $this->checkApiConn();
-
-        if (!$conn) {
+        if (!$this->token) {
             abort(500);
         }
 
@@ -234,9 +268,7 @@ class AopGrDetail extends Component
                 }
             }
         } else {
-            foreach ($finalResult as &$item) {
-                $item['qty_terima'] = 0;
-            }
+            abort(500);
         }
 
         return view('livewire.aop-gr-detail', compact('finalResult'));

@@ -13,6 +13,23 @@ class AopGr extends Component
     use WithPagination, WithoutUrlPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public $kcpInformation;
+    public $token;
+
+    public $invoiceAop;
+    public $spb;
+
+    public function mount()
+    {
+        $this->kcpInformation = new KcpInformation;
+
+        $conn = $this->kcpInformation->login();
+
+        if ($conn) {
+            $this->token = $conn['token'];
+        }
+    }
+
     public function getTotalQty($spb)
     {
         return DB::table('invoice_aop_header')
@@ -38,19 +55,7 @@ class AopGr extends Component
 
     public function getIntransitBySpb($spb)
     {
-        $kcpInformation = new KcpInformation;
-
-        $login = $kcpInformation->login();
-
-        if ($login) {
-            $token = $login['token'];
-        }
-
-        if (!$login) {
-            return 0;
-        }
-
-        $intransitStock = $kcpInformation->getIntransitBySpb($token, $spb);
+        $intransitStock = $this->kcpInformation->getIntransitBySpb($this->token, $spb);
 
         $totalQtyTerima = 0;
 
@@ -65,21 +70,11 @@ class AopGr extends Component
         return $totalQtyTerima;
     }
 
-    public function checkApiConn()
-    {
-        $kcpInformation = new KcpInformation;
-
-        $login = $kcpInformation->login();
-
-        return $login;
-    }
-
-    public $invoiceAop;
-    public $spb;
-
     public function render()
     {
-        $conn = $this->checkApiConn();
+        if (!$this->token) {
+            abort(500);
+        }
 
         $invoiceAopHeader = DB::table('invoice_aop_header')
             ->select('SPB')
@@ -89,11 +84,7 @@ class AopGr extends Component
         $items = [];
         foreach ($invoiceAopHeader as $spb) {
 
-            if ($conn) {
-                $totalQtyTerima = $this->getIntransitBySpb($spb->SPB);
-            } else {
-                $totalQtyTerima = 'API Error.';
-            }
+            $totalQtyTerima = $this->getIntransitBySpb($spb->SPB);
 
             $totalQty = $this->getTotalQty($spb->SPB);
             $invoices = $this->getInvoices($spb->SPB);
