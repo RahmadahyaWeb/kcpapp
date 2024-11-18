@@ -212,62 +212,6 @@ class SalesOrderDetail extends Component
             ->delete();
     }
 
-    public function syncProgram()
-    {
-        $items = $this->kcpInformation->getBonusHeader($this->token);
-
-        // Mulai transaksi
-        DB::beginTransaction();
-
-        try {
-            foreach ($items['data'] as $item) {
-                $existing = DB::table('bonus_detail')
-                    ->where('id', $item['id'])
-                    ->exists();
-
-                if (!$existing) {
-                    DB::table('bonus_detail')
-                        ->insert([
-                            'id'                        => $item['id'],
-                            'no_program'                => $item['no_program'],
-                            'flag_pengajuan_manual'     => $item['flag_pengajuan_manual'],
-                            'flag_transfer'             => $item['flag_transfer'],
-                            'nm_program'                => $item['nm_program'],
-                            'kd_outlet'                 => $item['kd_outlet'],
-                            'nm_outlet'                 => $item['nm_outlet'],
-                            'nominal'                   => $item['nominal'],
-                            'nominal_pph'               => $item['nominal_pph'],
-                            'nominal_materai'           => $item['nominal_materai'],
-                            'nominal_total'             => $item['nominal_total'],
-                            'flag_kwitansi'             => $item['flag_kwitansi'],
-                            'flag_kwitansi_date'        => $item['flag_kwitansi_date'],
-                            'flag_kwitansi_by'          => $item['flag_kwitansi_by'],
-                            'flag_tampilkan'            => $item['flag_tampilkan'],
-                            'flag_trm_kwitansi'         => $item['flag_trm_kwitansi'],
-                            'flag_trm_kwitansi_date'    => $item['flag_trm_kwitansi_date'],
-                            'flag_trm_kwitansi_by'      => $item['flag_trm_kwitansi_by'],
-                            'reff_jurnal'               => $item['reff_jurnal'],
-                            'reff_jurnal2'              => $item['reff_jurnal2'],
-                            'status'                    => $item['status'],
-                            'crea_date'                 => $item['crea_date'],
-                            'crea_by'                   => $item['crea_by'],
-                            'modi_date'                 => $item['modi_date'],
-                            'modi_by'                   => $item['modi_by'],
-                        ]);
-                }
-            }
-
-            // Commit transaksi jika semua berhasil
-            DB::commit();
-        } catch (\Exception $e) {
-            // Rollback transaksi jika terjadi error
-            DB::rollBack();
-
-            // Opsional: bisa melempar exception atau mengembalikan respon error
-            abort(500, 'Terjadi kesalahan saat melakukan sinkronisasi data.');
-        }
-    }
-
     public function updatedNamaProgram()
     {
         if ($this->nama_program) {
@@ -289,8 +233,6 @@ class SalesOrderDetail extends Component
         if (!$this->token) {
             abort(500);
         }
-
-        $this->syncProgram();
 
         $invoices = $this->getInvoice($this->invoice);
 
