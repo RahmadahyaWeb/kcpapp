@@ -1,0 +1,91 @@
+@charset "UTF-8";
+.authentication-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-preferred-size: 100%;
+      flex-basis: 100%;
+  min-height: 100vh;
+  width: 100%;
+}
+.authentication-wrapper .authentication-inner {
+  width: 100%;
+}
+.authentication-wrapper .app-brand-logo.demo svg {
+  width: 20px;
+  height: 30px;
+}
+.authentication-wrapper.authentication-basic {
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  overflow: hidden;
+}
+.authentication-wrapper.authentication-cover {
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+}
+.authentication-wrapper.authentication-cover .authentication-inner {
+  height: 100vh;
+}
+.authentication-wrapper.authentication-basic .authentication-inner {
+  max-width: 460px;
+  position: relative;
+}
+.authentication-wrapper.authentication-basic .authentication-inner .card {
+  padding: 1.5rem;
+}
+.authentication-wrapper.authentication-basic .authentication-inner:after {
+  width: 243px;
+  height: 240px;
+  content: " ";
+  position: absolute;
+  bottom: -88px;
+  left: -50px;
+}
+.authentication-wrapper.authentication-basic .authentication-inner .card {
+  z-index: 1;
+}
+.authentication-wrapper.authentication-basic .authentication-inner .card .app-brand {
+  margin-bottom: 1.5rem;
+}
+.authentication-wrapper .auth-input-wrapper .auth-input {
+  max-width: 50px;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  font-size: 150%;
+}
+
+.auth-cover-brand {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 2rem;
+  inset-inline-start: 2.5rem;
+}
+
+@media (max-width: 575.98px) {
+  .auth-cover-brand {
+    inset-inline-start: 1.5rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .authentication-wrapper .auth-input-wrapper .auth-input {
+    font-size: 1.125rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .numeral-mask-wrapper .numeral-mask {
+    padding: 0 !important;
+  }
+  .numeral-mask {
+    margin-inline: 1px !important;
+  }
+}
+.light-style .authentication-wrapper .authentication-bg {
+  background-color: #fff;
+}
+
