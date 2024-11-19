@@ -20,14 +20,14 @@
                         </div>
                     </div>
 
-                    <div wire:loading.flex wire:target="invoiceAop"
+                    <div wire:loading.flex wire:target="invoiceAop, spb"
                         class="text-center justify-content-center align-items-center" style="height: 200px;">
                         <div class="spinner-border" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
 
-                    <div class="table-responsive" wire:loading.class="d-none" wire:target="invoiceAop">
+                    <div class="table-responsive" wire:loading.class="d-none" wire:target="invoiceAop, spb">
                         @if (empty($items))
                             <table class="table table-hover">
                                 <thead>
@@ -80,9 +80,6 @@
                         @endif
                     </div>
                 </div>
-                {{-- <div class="card-footer">
-                    {{ $invoiceAopHeader->links() }}
-                </div> --}}
             </div>
         </div>
     </div>

@@ -154,7 +154,7 @@ class AopGrDetail extends Component
 
     public function sendToBosnetAPI($dataToSent)
     {
-        dd(json_encode($dataToSent));
+            dd(json_encode($dataToSent));
     }
 
     public function generateGRNumber($spb, $items)
