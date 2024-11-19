@@ -22,7 +22,6 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-
         $user = DB::table('users')->where('username', $request->username)->first();
 
         if ($user && $this->verifyPassword($request->password, $user->password_md5)) {
