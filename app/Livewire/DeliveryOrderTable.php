@@ -93,10 +93,17 @@ class DeliveryOrderTable extends Component
     public function render()
     {
         $items = DB::table('trns_do_invoice')
-            ->select(['no_lkh', 'status', 'crea_date'])
-            ->groupBy('no_lkh', 'status', 'crea_date')
-            ->orderBy('no_lkh', 'desc')
+            ->select(['trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date'])
+            ->leftJoin('trns_do_invoice AS invoice', 'invoice.no_lkh', '=', 'trns_do_invoice.no_lkh')
+            ->groupBy('trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date')
+            ->orderBy('trns_do_invoice.no_lkh', 'desc')
             ->paginate(20);
+
+        foreach ($items as $item) {
+            $item->invoices = DB::table('trns_do_invoice')
+                ->where('no_lkh', $item->no_lkh)
+                ->pluck('noso');
+        }
 
         return view('livewire.delivery-order-table', compact('items'));
     }

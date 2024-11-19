@@ -46,6 +46,7 @@
                     <thead>
                         <tr>
                             <th>No LKH</th>
+                            <th>SO / Invoice</th>
                             <th>Status</th>
                             <th>Tanggal Dibuat</th>
                         </tr>
@@ -60,6 +61,12 @@
                                 <tr>
                                     <td>
                                         <a href="{{ route('do.detail', $item->no_lkh) }}">{{ $item->no_lkh }}</a>
+                                    </td>
+                                    <td>
+                                        @foreach ($item->invoices as $invoice)
+                                            {{ $invoice }}
+                                            <br>
+                                        @endforeach
                                     </td>
                                     <td>
                                         @if ($item->status == 'KCP')
