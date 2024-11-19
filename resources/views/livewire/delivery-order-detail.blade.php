@@ -147,11 +147,11 @@
                                             <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
                                             <td>
                                                 <a
-                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
+                                                   target="_blank" href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
                                             </td>
                                             <td>
                                                 <a
-                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
+                                                   target="_blank" href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
                                             </td>
                                             <td>
                                                 @if ($item->status == 'KCP')

@@ -13,6 +13,7 @@ class SalesOrderDetail extends Component
 {
     public $token;
     public $kcpInformation;
+    
     public $invoice;
     public $nominalSuppProgram;
     public $header = [];
@@ -60,7 +61,8 @@ class SalesOrderDetail extends Component
             DB::table('invoice_header')
                 ->where('noinv', $this->invoice)
                 ->update([
-                    'status' => 'BOSNET'
+                    'status'        => 'BOSNET',
+                    'sendToBosnet'  => now()
                 ]);
 
             session()->flash('status', "Data SO berhasil dikirim!");

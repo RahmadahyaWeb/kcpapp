@@ -15,27 +15,30 @@ class DeliveryOrderTable extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public $token;
+    public $kcpInformation;
+
     public $noLkh;
 
-    public function checkApiConn()
+    public function mount()
     {
-        $kcpInformation = new KcpInformation;
+        $this->kcpInformation = new KcpInformation;
 
-        $login = $kcpInformation->login();
+        $conn = $this->kcpInformation->login();
 
-        return $login;
+        if ($conn) {
+            $this->token = $conn['token'];
+        }
     }
 
     public function synchronization()
     {
-        $conn = $this->checkApiConn();
-
-        if (!$conn) {
-            abort(500, 'Connection failed');
+        if (!$this->token) {
+            session()->flash('error', 'Error during synchronization');
+            return;
         }
 
-        $kcpInformation = new KcpInformation;
-        $items = $kcpInformation->getLkh($conn['token']);
+        $items = $this->kcpInformation->getLkh($this->token);
 
         $successCount = 0;
 
@@ -83,7 +86,7 @@ class DeliveryOrderTable extends Component
             DB::rollBack();
 
             // Menangkap error dan menampilkan pesan
-            session()->flash('error', 'Error during synchronization: ' . $e);
+            session()->flash('error', 'Error during synchronization');
         }
     }
 

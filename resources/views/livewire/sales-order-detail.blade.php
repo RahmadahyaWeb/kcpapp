@@ -164,7 +164,7 @@
                                 </div>
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
                                     <button type="submit" class="btn btn-primary" wire:loading.attr="disabled"
-                                        wire:target="saveProgram">
+                                        wire:target="saveProgram,nama_program,search_program,nominal_program">
                                         <span wire:loading.remove wire:target="saveProgram">Tambah Program</span>
                                         <span wire:loading wire:target="saveProgram">Loading...</span>
                                     </button>

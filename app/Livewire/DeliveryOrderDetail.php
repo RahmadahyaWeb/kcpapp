@@ -9,40 +9,46 @@ use Livewire\Component;
 
 class DeliveryOrderDetail extends Component
 {
+    public $token;
+    public $kcpInformation;
+
     public $lkh;
     public $items = [];
-
-    public function checkApiConn()
-    {
-        $kcpInformation = new KcpInformation;
-
-        $login = $kcpInformation->login();
-
-        return $login;
-    }
+    public $header;
 
     public function mount($lkh)
     {
         $this->lkh = $lkh;
+
+        $this->kcpInformation = new KcpInformation;
+
+        $conn = $this->kcpInformation->login();
+
+        if ($conn) {
+            $this->token = $conn['token'];
+        }
     }
 
     public function getLkhHeader()
     {
-        $conn = $this->checkApiConn();
-
-        if (!$conn) {
-            abort(500, 'Connection failed');
-        }
-
-        $kcpInformation = new KcpInformation;
-
-        $header = $kcpInformation->getLkhHeader($conn['token'], $this->lkh);
+        $header = $this->kcpInformation->getLkhHeader($this->token, $this->lkh);
 
         return $header['data'];
     }
 
+    public function getInvoice($invoice)
+    {
+        $invoice = $this->kcpInformation->getInvoice($this->token, $invoice);
+
+        return $invoice['data'];
+    }
+
     public function sendToBosnet()
     {
+        if (!$this->token) {
+            abort(500);
+        }
+
         if ($this->sendToBosnetApi()) {
             DB::table('trns_do_invoice')
                 ->where('no_lkh', $this->lkh)
@@ -57,26 +63,8 @@ class DeliveryOrderDetail extends Component
         }
     }
 
-    public function getInvoice($invoice)
-    {
-        $conn = $this->checkApiConn();
-
-        if (!$conn) {
-            abort(500);
-        }
-
-        $kcpInformation = new KcpInformation;
-
-        $invoice = $kcpInformation->getInvoice($conn['token'], $invoice);
-
-        return $invoice['data'];
-    }
-
     public function sendToBosnetApi()
     {
-        $header = $this->getLkhHeader();
-
-
         foreach ($this->items as $key => $value) {
 
             // PAYMENT TERM ID
@@ -104,7 +92,7 @@ class DeliveryOrderDetail extends Component
             // CEK SUPPORT PROGRAM
             $checkSupportProgram = DB::table('sales_order_program')
                 ->where('noinv', $value->noinv)
-                ->sum('nominal_program'); // Menghitung jumlah nominal_program\
+                ->sum('nominal_program');
 
             if ($checkSupportProgram) {
                 $item = [];
@@ -126,12 +114,12 @@ class DeliveryOrderDetail extends Component
                 "szOrderTypeId"         => "JUAL",
                 "dtmDelivery"           => date('Y-m-d H:i:s', strtotime($value->crea_date)),
                 "szCustId"              => $value->kd_outlet,
-                "szVehicleId"           => $header["plat_mobil"],
-                "szDriverId"            => $header["driver"],
+                "szVehicleId"           => $this->header["plat_mobil"],
+                "szDriverId"            => $this->header["driver"],
                 "szSalesId"             => $value->user_sales,
                 "szCarrierId"           => "",
-                "szVehicleNumber"       => $header["plat_mobil"],
-                "szDriverName"          => $header["driver"],
+                "szVehicleNumber"       => "",
+                "szDriverName"          => "",
                 "szRemark"              => "",
                 "szPaymentTermId"       => $paymentTermId . " HARI",
                 "szWorkplaceId"         => "KCP01001",
@@ -139,13 +127,19 @@ class DeliveryOrderDetail extends Component
                 "items"                 => $items,
             ];
 
-            dd(json_encode($dataToSent));
+            dd($dataToSent);
         }
     }
 
     public function render()
     {
+        if (!$this->token) {
+            abort(500);
+        }
+
         $header = $this->getLkhHeader();
+
+        $this->header = $header;
 
         $items = DB::table('trns_do_invoice as t')
             ->select([
