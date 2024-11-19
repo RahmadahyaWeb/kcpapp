@@ -28,20 +28,25 @@
         </div>
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">No LKH</label>
                     <input type="text" class="form-control" wire:model.live.debounce.1000ms="noLkh"
                         placeholder="Cari berdasarkan no lkh" wire:loading.attr="disabled">
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label">No SO</label>
+                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noSo"
+                        placeholder="Cari berdasarkan no so" wire:loading.attr="disabled">
+                </div>
             </div>
-            <div wire:loading.flex wire:target="noLkh, synchronization, gotoPage"
+            <div wire:loading.flex wire:target="noLkh, synchronization, gotoPage, noSo"
                 class="text-center justify-content-center align-items-center" style="height: 200px;">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
 
-            <div class="table-responsive" wire:loading.class="d-none" wire:target="noLkh, synchronization, gotoPage">
+            <div class="table-responsive" wire:loading.class="d-none" wire:target="noLkh, synchronization, gotoPage, noSo">
                 <table class="table table-hover">
                     <thead>
                         <tr>
@@ -86,7 +91,7 @@
             </div>
         </div>
         <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noLkh, synchronization, gotoPage">
+            <div wire:loading.class="d-none" wire:target="noLkh, synchronization, gotoPage, noSo">
                 {{ $items->links() }}
             </div>
         </div>

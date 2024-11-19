@@ -19,6 +19,7 @@ class DeliveryOrderTable extends Component
     public $kcpInformation;
 
     public $noLkh;
+    public $noSo;
 
     public function mount()
     {
@@ -94,6 +95,8 @@ class DeliveryOrderTable extends Component
     {
         $items = DB::table('trns_do_invoice')
             ->select(['trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date'])
+            ->where('trns_do_invoice.no_lkh', 'like', '%' . $this->noLkh . '%')
+            ->where('trns_do_invoice.noso', 'like', '%' . $this->noSo . '%')
             ->leftJoin('trns_do_invoice AS invoice', 'invoice.no_lkh', '=', 'trns_do_invoice.no_lkh')
             ->groupBy('trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date')
             ->orderBy('trns_do_invoice.no_lkh', 'desc')
