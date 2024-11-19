@@ -124,48 +124,52 @@
                     <hr>
                 </div>
                 <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>No. LKH</th>
-                                <th>Kode / Nama Toko</th>
-                                <th>No. Sales Order</th>
-                                <th>No. Invoice</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if ($items->isEmpty())
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td class="text-center" colspan="5">No Data</td>
+                                    <th>No. LKH</th>
+                                    <th>Kode / Nama Toko</th>
+                                    <th>No. Sales Order</th>
+                                    <th>No. Invoice</th>
+                                    <th>Status</th>
                                 </tr>
-                            @else
-                                @foreach ($items as $item)
+                            </thead>
+                            <tbody>
+                                @if ($items->isEmpty())
                                     <tr>
-                                        <td>{{ $item->no_lkh }}</td>
-                                        <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
-                                        <td>
-                                            <a href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
-                                        </td>
-                                        <td>
-                                            @if ($item->status == 'KCP')
-                                                <span class="badge text-bg-danger">
-                                                    SO masih di KCP
-                                                </span>
-                                            @else
-                                                <span class="badge text-bg-success">
-                                                    Siap dikirim
-                                                </span>
-                                            @endif
-                                        </td>
+                                        <td class="text-center" colspan="5">No Data</td>
                                     </tr>
-                                @endforeach
-                            @endif
-                        </tbody>
-                    </table>
+                                @else
+                                    @foreach ($items as $item)
+                                        <tr>
+                                            <td>{{ $item->no_lkh }}</td>
+                                            <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
+                                            <td>
+                                                <a
+                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
+                                            </td>
+                                            <td>
+                                                <a
+                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
+                                            </td>
+                                            <td>
+                                                @if ($item->status == 'KCP')
+                                                    <span class="badge text-bg-danger">
+                                                        SO masih di KCP
+                                                    </span>
+                                                @else
+                                                    <span class="badge text-bg-success">
+                                                        Siap dikirim
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
