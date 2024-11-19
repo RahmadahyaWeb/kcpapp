@@ -99,7 +99,7 @@ class SyncSalesOrder extends Command
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error during synchronization: ' . $e->getMessage());
+            Log::error('Error during synchronization (SO): ' . $e->getMessage());
         }
     }
 }

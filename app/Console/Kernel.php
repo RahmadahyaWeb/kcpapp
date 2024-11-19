@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('app:sync-sales-order')->everyMinute();
         $schedule->command('app:sync-program')->everyMinute();
+        $schedule->command('app:sync-delivery-order')->everyMinute();
     }
 
     /**
