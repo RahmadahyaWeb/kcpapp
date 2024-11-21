@@ -34,9 +34,15 @@ class SyncDeliveryOrder extends Command
 
         if (!$login) {
             Log::error('Failed to retrieve delivery orders from API.');
+            return;
         }
 
         $items = $kcpInformation->getLkh($login['token']);
+
+        if (isset($items['status']) && $items['status'] == 404) {
+            Log::error('Error during synchronization (DO)');
+            return;
+        }
 
         $successCount = 0;
 
@@ -84,7 +90,7 @@ class SyncDeliveryOrder extends Command
             DB::rollBack();
 
             // Menulis log untuk error yang terjadi
-            Log::error('Error during synchronization (DO): ' . $e->getMessage());
+            Log::error('Error during synchronization (DO)');
         }
     }
 }
