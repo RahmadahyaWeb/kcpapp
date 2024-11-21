@@ -87,136 +87,145 @@ class DksController extends Controller
         // VALIDASI CHECK IN / CHECK OUT
         $type = '';
 
-        $check = DB::table('trns_dks')
-            ->where('kd_toko', $kd_toko)
-            ->where('user_sales', $user)
-            ->where('type', '!=', 'katalog')
-            ->whereDate('tgl_kunjungan', '=', now()->toDateString())
-            ->count();
+        // Menggunakan locking untuk memastikan tidak ada transaksi yang bersaing
+        DB::transaction(function () use ($kd_toko, $user, $katalog, $keterangan, $latitude, $longitude, $distance, $type) {
 
-        // Jika belum ada kunjungan check-in
-        if ($check == 0) {
-            $type = 'in';
-
-            if ($katalog[6] == 'Y') {
-                return redirect()->back()->with('error', 'Tidak dapat scan katalog. Anda belum melakukan check in!');
-            }
-        } else if ($check == 2) {
-            if ($katalog[6] == 'Y') {
-                return redirect()->back()->with('error', 'Tidak dapat scan katalog. Anda sudah melakukan check out!');
-            }
-
-            return redirect()->back()->with('error', 'Anda sudah melakukan check out!');
-        } else if ($keterangan == 'ist') {
-            $type = 'out';
-
-            if ($katalog[6] == 'Y') {
-                return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog!');
-            }
-        } else {
-            $type = 'out';
-        }
-
-        // VALIDASI KATALOG
-        if ($katalog[6] == 'Y') {
-            $checkKatalog = DB::table('trns_dks')
+            // Mengunci tabel 'trns_dks' untuk mencegah race condition
+            $check = DB::table('trns_dks')
                 ->where('kd_toko', $kd_toko)
                 ->where('user_sales', $user)
-                ->where('type', '=', 'katalog')
+                ->where('type', '!=', 'katalog')
                 ->whereDate('tgl_kunjungan', '=', now()->toDateString())
+                ->lockForUpdate() // Mengunci baris yang akan diperiksa
                 ->count();
 
-            if ($checkKatalog > 0) {
-                return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog!');
-            }
-        }
+            if ($check == 0) {
+                $type = 'in';
 
-        // VALIDASI TOKO AKTIF
-        $provinsiToko = DB::table('master_toko')
-            ->select(['*'])
-            ->where('kd_toko', $kd_toko)
-            ->where('status', 'active')
-            ->first();
+                if ($katalog[6] == 'Y') {
+                    return redirect()->back()->with('error', 'Tidak dapat scan katalog. Anda belum melakukan check in!');
+                }
+            } else if ($check == 2) {
+                if ($katalog[6] == 'Y') {
+                    return redirect()->back()->with('error', 'Tidak dapat scan katalog. Anda sudah melakukan check out!');
+                }
 
-        if ($provinsiToko == null) {
-            return back()->with('error', "Toko dengan kode $kd_toko tidak aktif!");
-        }
+                return redirect()->back()->with('error', 'Anda sudah melakukan check out!');
+            } else if ($keterangan == 'ist') {
+                $type = 'out';
 
-        if ($provinsiToko->kd_provinsi == 2) {
-            $waktu_kunjungan = now()->modify('-1 hour');
-        } else {
-            $waktu_kunjungan = now();
-        }
-
-        // Cek jika lokasi ada dan belum ada data untuk hari ini
-        if ($latitude && $longitude) {
-            // Cek jika katalog dipilih
-            if ($katalog[6] == 'Y') {
-                // Pastikan belum ada data katalog untuk user dan toko ini pada hari ini
-                $existingKatalog = DB::table('trns_dks')
-                    ->where('kd_toko', $kd_toko)
-                    ->where('user_sales', $user)
-                    ->where('type', 'katalog')
-                    ->whereDate('tgl_kunjungan', '=', now()->toDateString())
-                    ->first();
-
-                if (!$existingKatalog) {
-                    // Jika belum ada, insert data katalog
-                    DB::table('trns_dks')
-                        ->insert(
-                            [
-                                'tgl_kunjungan'     => now(),
-                                'user_sales'        => $user,
-                                'kd_toko'           => $kd_toko,
-                                'waktu_kunjungan'   => $waktu_kunjungan,
-                                'type'              => 'katalog',
-                                'latitude'          => $latitude,
-                                'longitude'         => $longitude,
-                                'keterangan'        => $keterangan,
-                                'created_by'        => $user,
-                                'created_at'        => now(),
-                                'updated_at'        => now(),
-                                'katalog'           => 'Y',
-                                'katalog_at'        => $waktu_kunjungan
-                            ]
-                        );
-                    return redirect()->route('dks.scan')->with('success', "Berhasil scan katalog");
-                } else {
-                    return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog untuk toko ini!');
+                if ($katalog[6] == 'Y') {
+                    return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog!');
                 }
             } else {
-                // Jika tidak katalog, insert data check-in atau check-out
-                $existingVisit = DB::table('trns_dks')
+                $type = 'out';
+            }
+
+            // VALIDASI KATALOG
+            if ($katalog[6] == 'Y') {
+                // Cek apakah sudah ada data katalog sebelumnya
+                $checkKatalog = DB::table('trns_dks')
                     ->where('kd_toko', $kd_toko)
                     ->where('user_sales', $user)
+                    ->where('type', '=', 'katalog')
                     ->whereDate('tgl_kunjungan', '=', now()->toDateString())
-                    ->where('type', $type)
-                    ->first();
+                    ->lockForUpdate() // Mengunci baris katalog jika ada
+                    ->count();
 
-                if (!$existingVisit) {
-                    DB::table('trns_dks')
-                        ->insert(
-                            [
-                                'tgl_kunjungan'     => now(),
-                                'user_sales'        => $user,
-                                'kd_toko'           => $kd_toko,
-                                'waktu_kunjungan'   => $waktu_kunjungan,
-                                'type'              => $type,
-                                'latitude'          => $latitude,
-                                'longitude'         => $longitude,
-                                'keterangan'        => $keterangan,
-                                'created_by'        => $user,
-                                'created_at'        => now(),
-                                'updated_at'        => now(),
-                            ]
-                        );
-                    return redirect()->route('dks.scan')->with('success', "Berhasil melakukan check $type");
-                } else {
-                    return redirect()->back()->with('error', 'Anda sudah melakukan check-in atau check-out untuk toko ini!');
+                if ($checkKatalog > 0) {
+                    return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog!');
                 }
             }
-        } else {
-            return redirect()->back()->with('error', 'Lokasi tidak ditemukan!');
-        }
+
+            // VALIDASI TOKO AKTIF
+            $provinsiToko = DB::table('master_toko')
+                ->select(['*'])
+                ->where('kd_toko', $kd_toko)
+                ->where('status', 'active')
+                ->first();
+
+            if ($provinsiToko == null) {
+                return back()->with('error', "Toko dengan kode $kd_toko tidak aktif!");
+            }
+
+            if ($provinsiToko->kd_provinsi == 2) {
+                $waktu_kunjungan = now()->modify('-1 hour');
+            } else {
+                $waktu_kunjungan = now();
+            }
+
+            // Cek jika lokasi ada dan belum ada data untuk hari ini
+            if ($latitude && $longitude) {
+                // Cek jika katalog dipilih
+                if ($katalog[6] == 'Y') {
+                    // Pastikan belum ada data katalog untuk user dan toko ini pada hari ini
+                    $existingKatalog = DB::table('trns_dks')
+                        ->where('kd_toko', $kd_toko)
+                        ->where('user_sales', $user)
+                        ->where('type', 'katalog')
+                        ->whereDate('tgl_kunjungan', '=', now()->toDateString())
+                        ->lockForUpdate() // Mengunci data katalog jika ada
+                        ->first();
+
+                    if (!$existingKatalog) {
+                        // Jika belum ada, insert data katalog
+                        DB::table('trns_dks')
+                            ->insert(
+                                [
+                                    'tgl_kunjungan'     => now(),
+                                    'user_sales'        => $user,
+                                    'kd_toko'           => $kd_toko,
+                                    'waktu_kunjungan'   => $waktu_kunjungan,
+                                    'type'              => 'katalog',
+                                    'latitude'          => $latitude,
+                                    'longitude'         => $longitude,
+                                    'keterangan'        => $keterangan,
+                                    'created_by'        => $user,
+                                    'created_at'        => now(),
+                                    'updated_at'        => now(),
+                                    'katalog'           => 'Y',
+                                    'katalog_at'        => $waktu_kunjungan
+                                ]
+                            );
+                        return redirect()->route('dks.scan')->with('success', "Berhasil scan katalog");
+                    } else {
+                        return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog untuk toko ini!');
+                    }
+                } else {
+                    // Jika tidak katalog, insert data check-in atau check-out
+                    $existingVisit = DB::table('trns_dks')
+                        ->where('kd_toko', $kd_toko)
+                        ->where('user_sales', $user)
+                        ->whereDate('tgl_kunjungan', '=', now()->toDateString())
+                        ->where('type', $type)
+                        ->lockForUpdate() // Mengunci kunjungan jika ada
+                        ->first();
+
+                    if (!$existingVisit) {
+                        DB::table('trns_dks')
+                            ->insert(
+                                [
+                                    'tgl_kunjungan'     => now(),
+                                    'user_sales'        => $user,
+                                    'kd_toko'           => $kd_toko,
+                                    'waktu_kunjungan'   => $waktu_kunjungan,
+                                    'type'              => $type,
+                                    'latitude'          => $latitude,
+                                    'longitude'         => $longitude,
+                                    'keterangan'        => $keterangan,
+                                    'created_by'        => $user,
+                                    'created_at'        => now(),
+                                    'updated_at'        => now(),
+                                ]
+                            );
+                        return redirect()->route('dks.scan')->with('success', "Berhasil melakukan check $type");
+                    } else {
+                        return redirect()->back()->with('error', 'Anda sudah melakukan check-in atau check-out untuk toko ini!');
+                    }
+                }
+            } else {
+                return redirect()->back()->with('error', 'Lokasi tidak ditemukan!');
+            }
+        });
     }
 }
