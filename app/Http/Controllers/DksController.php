@@ -116,12 +116,6 @@ class DksController extends Controller
             }
 
             return redirect()->back()->with('error', 'Anda sudah melakukan check out!');
-        } else if ($keterangan == 'ist') {
-            $type = 'out';
-
-            if ($katalog[6] == 'Y') {
-                return redirect()->back()->with('error', 'Anda sudah melakukan scan katalog!');
-            }
         } else {
             $type = 'out';
         }
