@@ -89,7 +89,7 @@ class DksController extends Controller
         // VALIDASI LOKASI
         if (!$latitude || !$longitude) {
             return redirect()->back()->with('error', 'Lokasi tidak ditemukan!');
-        }        
+        }
 
         // JARAK ANTARA USER DENGAN TOKO DALAM METER
         $distance = $request->distance;
@@ -158,45 +158,53 @@ class DksController extends Controller
         }
 
         // JIKA ADA PARAMETER KATALOG
-        if ($katalog[6] == 'Y') {
-            DB::table('trns_dks')
-                ->insert(
-                    [
-                        'tgl_kunjungan'     => now(),
-                        'user_sales'        => $user,
-                        'kd_toko'           => $kd_toko,
-                        'waktu_kunjungan'   => $waktu_kunjungan,
-                        'type'              => 'katalog',
-                        'latitude'          => $latitude,
-                        'longitude'         => $longitude,
-                        'keterangan'        => $keterangan,
-                        'created_by'        => $user,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                        'katalog'           => 'Y',
-                        'katalog_at'        => $waktu_kunjungan
-                    ]
-                );
-            return redirect()->route('dks.scan')->with('success', "Berhasil scan katalog");
-        } else {
-            DB::table('trns_dks')
-                ->insert(
-                    [
-                        'tgl_kunjungan'     => now(),
-                        'user_sales'        => $user,
-                        'kd_toko'           => $kd_toko,
-                        'waktu_kunjungan'   => $waktu_kunjungan,
-                        'type'              => $type,
-                        'latitude'          => $latitude,
-                        'longitude'         => $longitude,
-                        'keterangan'        => $keterangan,
-                        'created_by'        => $user,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                    ]
-                );
+        DB::beginTransaction(); // Mulai transaksi
 
-            return redirect()->route('dks.scan')->with('success', "Berhasil melakukan check $type");
+        try {
+            if ($katalog[6] == 'Y') {
+                DB::table('trns_dks')
+                    ->insert(
+                        [
+                            'tgl_kunjungan'     => now(),
+                            'user_sales'        => $user,
+                            'kd_toko'           => $kd_toko,
+                            'waktu_kunjungan'   => $waktu_kunjungan,
+                            'type'              => 'katalog',
+                            'latitude'          => $latitude,
+                            'longitude'         => $longitude,
+                            'keterangan'        => $keterangan,
+                            'created_by'        => $user,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                            'katalog'           => 'Y',
+                            'katalog_at'        => $waktu_kunjungan
+                        ]
+                    );
+                DB::commit();
+                return redirect()->route('dks.scan')->with('success', "Berhasil scan katalog");
+            } else {
+                DB::table('trns_dks')
+                    ->insert(
+                        [
+                            'tgl_kunjungan'     => now(),
+                            'user_sales'        => $user,
+                            'kd_toko'           => $kd_toko,
+                            'waktu_kunjungan'   => $waktu_kunjungan,
+                            'type'              => $type,
+                            'latitude'          => $latitude,
+                            'longitude'         => $longitude,
+                            'keterangan'        => $keterangan,
+                            'created_by'        => $user,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ]
+                    );
+                DB::commit();
+                return redirect()->route('dks.scan')->with('success', "Berhasil melakukan check $type");
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('dks.scan')->with('error', 'Terjadi kesalahan saat melakukan transaksi.');
         }
     }
 }
