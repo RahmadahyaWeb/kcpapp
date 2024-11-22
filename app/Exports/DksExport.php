@@ -24,13 +24,15 @@ class DksExport implements WithMultipleSheets
 
         $sheets = [];
 
-        foreach ($sales as $user_sales) {
-            $sheets[] = new SalesSheet($user_sales, $this->fromDate, $this->toDate);
-        }
-
         $sheets[] = new KunjunganSheet($sales, $this->fromDate, $this->toDate);
 
         $sheets[] = new RekapSheet($sales, $this->fromDate, $this->toDate);
+
+        $sheets[] = new FrekuensiSheet($sales, $this->fromDate, $this->toDate);
+
+        foreach ($sales as $user_sales) {
+            $sheets[] = new SalesSheet($user_sales, $this->fromDate, $this->toDate);
+        }
 
         return $sheets;
     }
