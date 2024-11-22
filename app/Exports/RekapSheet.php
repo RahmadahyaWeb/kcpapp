@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -139,8 +138,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
     {
         $punishmentLupaCekInOut = 0;
         $punishmentCekInPertama = 0;
-        $punishment_istirahat   = 0;
-        $punishment_istirahat_jumat = 0;
+        $punishmentLamaPerjalanan = 0;
 
         foreach ($dates as $index => $date) {
             // PENGECEKAN HARI MINGGU
@@ -169,59 +167,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
                 if ($cekInPertama == null) {
                     $cekInPertama = '00:00:00';
                 } else {
-                    $cekInPertamaId = $cekInPertama->id;
-
                     $cekInPertama = \Carbon\Carbon::parse($cekInPertama->waktu_kunjungan)->format('H:i:s');
-
-                    $cekInSelanjutnya = DB::table('trns_dks')
-                        ->select(['*'])
-                        ->where('user_sales', $user_sales)
-                        ->whereDate('tgl_kunjungan', $date)
-                        ->where('type', 'in')
-                        ->where('id', '>', $cekInPertamaId)
-                        ->whereNotIn('kd_toko', $tokoAbsen)
-                        ->first();
-
-                    $cekOutPertama = DB::table('trns_dks')
-                        ->select(['*'])
-                        ->where('user_sales', $user_sales)
-                        ->where('tgl_kunjungan', $date)
-                        ->where('type', 'out')
-                        ->whereNotIn('kd_toko', $tokoAbsen)
-                        ->orderBy('waktu_kunjungan', 'asc')
-                        ->first();
-
-                    $lama_perjalanan = '00:00:00';
-
-                    if ($cekInSelanjutnya) {
-                        $cek_out = Carbon::parse($cekOutPertama->waktu_kunjungan);
-                        $cek_in  = Carbon::parse($cekInSelanjutnya->waktu_kunjungan);
-
-                        $selisih = $cek_out->diff($cek_in);
-                        $lama_perjalanan = sprintf('%02d:%02d:%02d', $selisih->h, $selisih->i, $selisih->s);
-                    }
-
-                    list($hours, $minutes, $seconds) = explode(':', $lama_perjalanan);
-                    $lama_perjalanan_dalam_menit = ($hours * 60) + $minutes;
-
-                    $max_durasi_lama_perjalanan = 40;
-                    $isFriday = Carbon::parse($date)->isFriday();
-                    $waktu_istirahat = $isFriday ? 105 : 75;
-
-                    $max_durasi_lama_perjalanan_plus_waktu_istirahat = $waktu_istirahat + $max_durasi_lama_perjalanan;
-
-                    if ($cekOutPertama !== null && strpos($cekOutPertama->keterangan, 'ist') !== false) {
-
-                        if ($isFriday) {
-                            if ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
-                                $punishment_istirahat_jumat += 1;
-                            }
-                        } else {
-                            if ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
-                                $punishment_istirahat += 1;
-                            }
-                        }
-                    }
                 }
 
                 // PUNISHMENT > 9.30
@@ -249,15 +195,10 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $rowNumber = 3;
 
         $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn);
-
         $sheet->mergeCells($columnLetter . $rowNumber . ':' . $columnLetter . $rowNumber + 1);
-
         $nextColumnLetter2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn + 1);
-
         $sheet->mergeCells($nextColumnLetter2 . $rowNumber . ':' . $nextColumnLetter2 . $rowNumber + 1);
-
         $nextColumnLetter3 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn + 2);
-
         $sheet->mergeCells($nextColumnLetter3 . $rowNumber . ':' . $nextColumnLetter3 . $rowNumber + 1);
 
         // BANYAK PUNISHMENT CEK IN CEK OUT
@@ -269,30 +210,11 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue($columnLetter . ($rowNumber + 2), str_replace('{row}', ($rowNumber + 2), $punishmentCekInPertama));
         // BAYAR PUNISHMENT CEK IN PERTAMA
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 2), str_replace('{row}', ($rowNumber) + 2, 25000 * $punishmentCekInPertama));
-
+    
         // BANYAK PUNISHMENT DURASI LAMA PERJALANAN TOKO
         $sheet->setCellValue($columnLetter . ($rowNumber + 3), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898)"));
         // BAYAR PUNISHMENT DURASI LAMA PERJALANAN TOKO
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 3), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898) * 25000"));
-
-        // BANYAK PUNISHMENT DURASI KUNJUNGAN TOKO
-        $sheet->setCellValue($columnLetter . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:K6898)"));
-        // BAYAR PUNISHMENT DURASI KUNJUNGAN TOKO
-        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:K6898) * 15000"));
-
-        // BANYAK PUNISHMENT ISTIRAHAT SELAIN JUMAT
-        $sheet->setCellValue($columnLetter . ($rowNumber + 5), str_replace('{row}', ($rowNumber + 2), $punishment_istirahat));
-        // BAYAR PUNISHMENT ISTIRAHAT SELAIN JUMAT
-        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 5), str_replace('{row}', ($rowNumber) + 2, 10000 * $punishment_istirahat));
-        // MERGE PUNISHMENT ISTIRAHAT SELAIN JUMAT
-        $sheet->mergeCells($nextColumnLetter3 . ($rowNumber + 5) . ':' . $nextColumnLetter3 . $rowNumber + 6);
-        $sheet->mergeCells($columnLetter . ($rowNumber + 5) . ':' . $columnLetter . $rowNumber + 6);
-        $sheet->mergeCells($nextColumnLetter2 . ($rowNumber + 5) . ':' . $nextColumnLetter2 . $rowNumber + 6);
-
-        // BANYAK PUNISHMENT ISTIRAHAT JUMAT
-        $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishment_istirahat_jumat));
-        // BAYAR PUNISHMENT ISTIRAHAT JUMAT
-        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 10000 * $punishment_istirahat_jumat));
     }
 
     private function autoSizeColumns($sheet)
