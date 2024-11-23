@@ -28,20 +28,10 @@ class ReportDKSController extends Controller
         return view('report-dks.index');
     }
 
-    public function export(Request $request)
+    public function rekap()
     {
         $this->guard();
 
-        $request->validate([
-            'fromDate'  => 'required',
-            'toDate'    => 'required',
-        ]);
-
-        $fromDateFormatted = \Carbon\Carbon::parse($request->fromDate)->format('Ymd');
-        $toDateFormatted = \Carbon\Carbon::parse($request->toDate)->format('Ymd');
-
-        $filename = "dks_{$fromDateFormatted}_-_{$toDateFormatted}.xlsx";
-
-        return Excel::download(new DksExport($request->fromDate, $request->toDate), $filename);
+        return view('report-dks.rekap-punishment');
     }
 }

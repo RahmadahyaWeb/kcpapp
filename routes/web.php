@@ -36,6 +36,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // REPORT DKS
     Route::get('report/dks', [ReportDKSController::class, 'index'])->name('report.dks');
 
+    // LAPORAN PUNISHMENT 
+    Route::get('report/dks/rekap-punishment', [ReportDKSController::class, 'rekap'])->name('report.dks-rekap-punishment');
+
     // EXPORT DKS
     Route::post('report/dks/export', [ReportDKSController::class, 'export'])->name('report-dks.export');
 

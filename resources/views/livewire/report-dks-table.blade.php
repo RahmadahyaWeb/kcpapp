@@ -23,61 +23,52 @@
             <hr>
         </div>
         <div class="card-body">
+            <div class="mb-3 d-flex gap-2 justify-content-end">
+                <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-success">Rekap Punishment</a>
+            </div>
+
             <div class="mb-3">
-                <form action="{{ route('report-dks.export') }}" method="POST">
-                    @csrf
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label for="fromDate" class="form-label">Dari tanggal</label>
-                            <input id="fromDate" type="date"
-                                class="form-control @error('fromDate') is-invalid @enderror" wire:model.live="fromDate"
-                                name="fromDate">
-                            @error('fromDate')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="toDate" class="form-label">Sampai tanggal</label>
-                            <input id="toDate" type="date"
-                                class="form-control @error('toDate') is-invalid @enderror" wire:model.live="toDate"
-                                name="toDate">
-                            @error('toDate')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="user_sales" class="form-label">Sales</label>
-                            <select name="user_sales" id="user_sales" class="form-select"
-                                wire:model.change="user_sales">
-                                <option value="" selected>Pilih Sales</option>
-                                @foreach ($sales as $user)
-                                    <option value="{{ $user->username }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kd_toko" class="form-label">Nama Toko</label>
-                            <select name="kd_toko" id="kd_toko" class="form-select" wire:model.change="kd_toko">
-                                <option value="" selected>Pilih Toko</option>
-                                @foreach ($dataToko as $toko)
-                                    <option value="{{ $toko->kd_toko }}">{{ $toko->nama_toko }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label for="fromDate" class="form-label">Dari tanggal</label>
+                        <input id="fromDate" type="date"
+                            class="form-control @error('fromDate') is-invalid @enderror" wire:model.live="fromDate"
+                            name="fromDate">
+                        @error('fromDate')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                    <div class="row mt-3">
-                        <div class="col d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bx bxs-download me-2"></i>
-                                Unduh
-                            </button>
-                        </div>
+                    <div class="col-md-6">
+                        <label for="toDate" class="form-label">Sampai tanggal</label>
+                        <input id="toDate" type="date" class="form-control @error('toDate') is-invalid @enderror"
+                            wire:model.live="toDate" name="toDate">
+                        @error('toDate')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                </form>
+                    <div class="col-md-6">
+                        <label for="user_sales" class="form-label">Sales</label>
+                        <select name="user_sales" id="user_sales" class="form-select" wire:model.change="user_sales">
+                            <option value="" selected>Pilih Sales</option>
+                            @foreach ($sales as $user)
+                                <option value="{{ $user->username }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="kd_toko" class="form-label">Nama Toko</label>
+                        <select name="kd_toko" id="kd_toko" class="form-select" wire:model.change="kd_toko">
+                            <option value="" selected>Pilih Toko</option>
+                            @foreach ($dataToko as $toko)
+                                <option value="{{ $toko->kd_toko }}">{{ $toko->nama_toko }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div wire:loading.flex wire:target="toDate, user_sales, kd_toko, gotoPage"

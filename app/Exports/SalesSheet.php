@@ -21,12 +21,14 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
     protected $user_sales;
     protected $fromDate;
     protected $toDate;
+    protected $items;
 
-    public function __construct($user_sales, $fromDate, $toDate)
+    public function __construct($user_sales, $fromDate, $toDate, $items)
     {
         $this->user_sales = $user_sales;
         $this->fromDate = $fromDate;
         $this->toDate = $toDate;
+        $this->items = $items;
     }
 
     public function startCell(): string
@@ -95,6 +97,30 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
                     $sheet->getColumnDimension($columnID)->setAutoSize(true);
                 }
 
+                // Mengatur alignment untuk kolom C
+                $sheet->getDelegate()->getStyle('C:C')->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                // Mengatur alignment untuk kolom E-F
+                $sheet->getDelegate()->getStyle('E:F')->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                // Mengatur alignment untuk kolom H-O
+                $sheet->getDelegate()->getStyle('H:O')->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
                 // FREEZE PANE
                 $event->sheet->getDelegate()->freezePane('H1');
             },
@@ -118,78 +144,59 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
 
     public function collection()
     {
-        $items = DB::table('trns_dks')
-            ->select(
-                'trns_dks.id',
-                'trns_dks.user_sales',
-                'master_toko.nama_toko',
-                'trns_dks.waktu_kunjungan AS waktu_cek_in',
-                'out_data.waktu_kunjungan AS waktu_cek_out',
-                'trns_dks.tgl_kunjungan',
-                'out_data.keterangan',
-                'trns_dks.kd_toko',
-                'katalog_data.katalog_at',
-                DB::raw('CASE 
-                            WHEN out_data.waktu_kunjungan IS NOT NULL 
-                            THEN TIMESTAMPDIFF(MINUTE, trns_dks.waktu_kunjungan, out_data.waktu_kunjungan) 
-                            ELSE NULL 
-                        END AS lama_kunjungan')
-            )
-            ->leftJoin('trns_dks AS out_data', function ($join) {
-                $join->on('trns_dks.user_sales', '=', 'out_data.user_sales')
-                    ->whereColumn('trns_dks.kd_toko', 'out_data.kd_toko')
-                    ->whereColumn('trns_dks.tgl_kunjungan', 'out_data.tgl_kunjungan')
-                    ->where('out_data.type', '=', 'out');
-            })
-            ->leftJoin('master_toko', 'trns_dks.kd_toko', '=', 'master_toko.kd_toko')
-            ->leftJoin('trns_dks AS katalog_data', function ($join) {
-                $join->on('trns_dks.user_sales', '=', 'katalog_data.user_sales')
-                    ->whereColumn('trns_dks.kd_toko', 'katalog_data.kd_toko')
-                    ->whereColumn('trns_dks.tgl_kunjungan', 'katalog_data.tgl_kunjungan')
-                    ->where('katalog_data.type', '=', 'katalog');
-            })
-            ->where('trns_dks.type', 'in')
-            ->where('trns_dks.user_sales', $this->user_sales)
-            ->whereBetween('trns_dks.tgl_kunjungan', [$this->fromDate, $this->toDate])
-            ->orderBy('trns_dks.created_at', 'asc')
-            ->orderBy('trns_dks.user_sales', 'desc')
-            ->get();
-
-        return $items;
+        // Ambil $items dari properti yang sudah ada
+        $items = collect($this->items);
+    
+        // Langsung kembalikan koleksi tanpa flatMap, cukup map untuk memodifikasi setiap row
+        return $items->map(function ($row) {
+            // Mungkin Anda bisa menambahkan proses lain di sini jika perlu
+            return $row; // Pastikan Anda mengembalikan struktur data asli
+        });
     }
+    
 
     public function map($row): array
     {
-        // WAKTU CEK IN
-        $waktu_cek_in = \Carbon\Carbon::parse($row->waktu_cek_in)->format('H:i:s');
+        $tokoAbsen = [
+            '6B',
+            '6C',
+            '6D',
+            '6F',
+            '6H',
+            'TX'
+        ];
 
-        // WAKTU CEK OUT
-        if ($row->waktu_cek_out) {
-            $waktu_cek_out = \Carbon\Carbon::parse($row->waktu_cek_out)->format('H:i:s');
-        } else {
-            $waktu_cek_out = $waktu_cek_in;
-        }
+        // NAMA LENGKAP SALES
+        $nama_lengkap_sales = $row->name;
 
         // TGL KUNJUNGAN
-        $tgl_kunjungan = Carbon::parse($row->tgl_kunjungan);
-        $excelDate = Date::dateTimeToExcel($tgl_kunjungan);
+        $tgl_kunjungan = Date::dateTimeToExcel(Carbon::parse($row->tgl_kunjungan));
+
+        // KODE TOKO
+        $kd_toko = $row->kd_toko;
+
+        // NAMA TOKO
+        $nama_toko = $row->nama_toko;
+
+        // WAKTU CEK IN
+        $waktu_cek_in = $row->waktu_cek_in ? Carbon::parse($row->waktu_cek_in)->format('H:i:s') : '';
+
+        // WAKTU CEK OUT
+        $waktu_cek_out = $row->waktu_cek_out ? Carbon::parse($row->waktu_cek_out)->format('H:i:s') : '';
 
         // KETERANGAN
         $keterangan = strtolower($row->keterangan);
 
-        // LAMA KUNJUNGAN
-        $lama_kunjungan = null;
+        /**
+         * PUNISHMENT DURASI LAMA KUNJUNGAN
+         * MINIMAL KUNJUNGAN ADALAH 30 MENIT
+         */
         $punishment_lama_kunjungan = 0;
 
         if ($row->lama_kunjungan !== null) {
             $hours = floor($row->lama_kunjungan / 60);
             $minutes = $row->lama_kunjungan % 60;
             $lama_kunjungan = sprintf('%02d:%02d:00', $hours, $minutes);
-
-            /**
-             * PUNISHMENT DURASI LAMA KUNJUNGAN
-             * MINIMAL KUNJUNGAN ADALAH 30 MENIT
-             */
 
             if ($row->lama_kunjungan < 30) {
                 $punishment_lama_kunjungan = 1;
@@ -201,49 +208,35 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
             $punishment_lama_kunjungan = 1;
         }
 
-        // LAMA DURASI PERJALANAN
-        $punishment_durasi_lama_perjalanan = 0;
-        $lama_perjalanan = '00:00:00';
-
-        $cekInSelanjutnya = DB::table('trns_dks')
-            ->select(['*'])
-            ->where('user_sales', $row->user_sales)
-            ->whereDate('tgl_kunjungan', $row->tgl_kunjungan)
-            ->where('type', 'in')
-            ->where('id', '>', $row->id)
-            ->first();
-
-        if ($cekInSelanjutnya) {
-            $cek_out = Carbon::parse($row->waktu_cek_out);
-            $cek_in  = Carbon::parse($cekInSelanjutnya->waktu_kunjungan);
-
-            $selisih = $cek_out->diff($cek_in);
-            $lama_perjalanan = sprintf('%02d:%02d:%02d', $selisih->h, $selisih->i, $selisih->s);
-        }
-
         /**
          * PUNISHMENT DURASI LAMA PERJALANAN
          * MAKSIMAL DURASI LAMA PERJALANAN ADALAH 4O MENIT
          * ISTIRAHAT JUMAT 1 JAM 45 MENIT + 40 MENIT
          * ISTIRAHAT SELAIN JUMAT 1 JAM 15 MENIT + 40 MENIT
          */
+        $durasi_perjalanan = $row->durasi_perjalanan;
 
-        list($hours, $minutes, $seconds) = explode(':', $lama_perjalanan);
-        $lama_perjalanan_dalam_menit = ($hours * 60) + $minutes;
+        if ($durasi_perjalanan != 0) {
+            list($hours, $minutes, $seconds) = explode(':', $durasi_perjalanan);
+            $lama_perjalanan_dalam_menit = ($hours * 60) + $minutes;
 
-        $max_durasi_lama_perjalanan = 40;
-        $isFriday = Carbon::parse($row->tgl_kunjungan)->isFriday();
-        $waktu_istirahat = $isFriday ? 105 : 75;
-        $max_durasi_lama_perjalanan_plus_waktu_istirahat = $waktu_istirahat + $max_durasi_lama_perjalanan;
+            $max_durasi_lama_perjalanan = 40;
+            $isFriday = Carbon::parse($row->tgl_kunjungan)->isFriday();
+            $waktu_istirahat = $isFriday ? 105 : 75;
+            $max_durasi_lama_perjalanan_plus_waktu_istirahat = $waktu_istirahat + $max_durasi_lama_perjalanan;
 
-        if (strpos($keterangan, 'ist') !== false) {
-            $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
+            if (strpos($keterangan, 'ist') !== false) {
+                $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
+            } else {
+                $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan) ? 1 : 0;
+            }
+
+            if ($lama_perjalanan_dalam_menit == 0) {
+                $durasi_perjalanan = '00:00:00';
+            }
         } else {
-            $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan) ? 1 : 0;
-        }
-
-        if ($lama_perjalanan_dalam_menit == 0) {
-            $lama_perjalanan = '00:00:00';
+            $durasi_perjalanan = '00:00:00';
+            $punishment_durasi_lama_perjalanan = 0;
         }
 
         // KUNJUNGAN
@@ -260,50 +253,46 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
             $punishment_cek_in_cek_out = 0;
         }
 
-        // UNTUK ABSEN SALESMAN
-        $tokoAbsen = [
-            '6B',
-            '6C',
-            '6D',
-            '6F',
-            '6H',
-            'TX'
-        ];
-
-        if (in_array($row->kd_toko, $tokoAbsen)) {
-            $punishment_lama_kunjungan = 0;
-            $punishment_durasi_lama_perjalanan = 0;
-            $punishment_cek_in_cek_out = 0;
-            $kunjungan = 'A';
-        }
-
         // KATALOG
         $katalog = $row->katalog_at;
 
         if ($katalog) {
             $tgl_katalog = Date::dateTimeToExcel(Carbon::parse($row->katalog_at));
-            $jam_katalog = \Carbon\Carbon::parse($row->katalog_at)->format('H:i:s');
+            $jam_katalog = Carbon::parse($row->katalog_at)->format('H:i:s');
         } else {
             $tgl_katalog = '';
             $jam_katalog = '';
         }
 
+        if (in_array($row->kd_toko, $tokoAbsen)) {
+            $punishment_lama_kunjungan = 0;
+            $punishment_durasi_lama_perjalanan = 0;
+            $punishment_cek_in_cek_out = 0;
+            $kunjungan = 'ABSEN';
+        }
+
+        if ($waktu_cek_in == '') {
+            $punishment_lama_kunjungan = 0;
+            $punishment_durasi_lama_perjalanan = 0;
+            $punishment_cek_in_cek_out = 0;
+        }
+
         return [
-            $row->user_sales,
-            $excelDate,
-            $row->kd_toko,
-            $row->nama_toko,
+            $nama_lengkap_sales,
+            $tgl_kunjungan,
+            $kd_toko,
+            $nama_toko,
             $waktu_cek_in,
             $waktu_cek_out,
-            $row->keterangan,
+            $keterangan,
             $lama_kunjungan,
             $punishment_lama_kunjungan,
-            $lama_perjalanan,
+            $durasi_perjalanan,
             $punishment_durasi_lama_perjalanan,
             $kunjungan,
             $punishment_cek_in_cek_out,
             $tgl_katalog,
-            $jam_katalog,
+            $jam_katalog
         ];
     }
 
