@@ -105,7 +105,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
         // REALISASI KUNJUNGAN
         $realisasi_kunjungan_data = DB::table('trns_dks')
-            ->where('user_sales', 'ANGGA')
+            ->where('user_sales', $this->sales->username)
             ->whereBetween('tgl_kunjungan', [$this->fromDate, $this->toDate])
             ->where('type', 'in')
             ->where('kd_toko', $kd_toko)
