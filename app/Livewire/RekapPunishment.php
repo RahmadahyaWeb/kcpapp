@@ -2,7 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Exports\DksExport;
+use App\Exports\RekapFrekuensiKunjungan;
+use App\Exports\RekapPunishmentExport;
 use App\Models\User;
 use Carbon\Carbon;
 use DateTime;
@@ -14,7 +15,8 @@ class RekapPunishment extends Component
 {
     public $fromDate;
     public $toDate;
-    public $user_sales;
+    public $user_sales = 'all';
+    public $laporan;
 
     public function render()
     {
@@ -28,11 +30,8 @@ class RekapPunishment extends Component
         $this->validate([
             'fromDate'      => 'required',
             'toDate'        => 'required',
+            'laporan'       => 'required'
         ]);
-
-        $dates = $this->getDateRange();
-
-        $usersData = [];
 
         $usersQuery = User::whereRaw('FIND_IN_SET("SALESMAN", role)');
 
@@ -41,6 +40,29 @@ class RekapPunishment extends Component
         }
 
         $users = $usersQuery->get();
+
+        if ($this->laporan == 'rekap_punishment') {
+            return $this->exportRekapPunishment($users);
+        } else if ($this->laporan == 'frekuensi_kunjungan') {
+            return $this->exportFrekuensiKunjungan($users);
+        }
+    }
+
+    public function exportFrekuensiKunjungan($users)
+    {
+        $fromDateFormatted = \Carbon\Carbon::parse($this->fromDate)->format('Ymd');
+        $toDateFormatted = \Carbon\Carbon::parse($this->toDate)->format('Ymd');
+
+        $filename = "frekuensi-kunjungan_{$fromDateFormatted}_-_{$toDateFormatted}.xlsx";
+
+        return Excel::download(new RekapFrekuensiKunjungan($this->fromDate, $this->toDate, $users), $filename);
+    }
+
+    public function exportRekapPunishment($users)
+    {
+        $dates = $this->getDateRange();
+
+        $usersData = [];
 
         foreach ($users as $user) {
             $userData = collect();
@@ -145,9 +167,9 @@ class RekapPunishment extends Component
         $fromDateFormatted = \Carbon\Carbon::parse($this->fromDate)->format('Ymd');
         $toDateFormatted = \Carbon\Carbon::parse($this->toDate)->format('Ymd');
 
-        $filename = "dks_{$fromDateFormatted}_-_{$toDateFormatted}.xlsx";
+        $filename = "rekap-punishment_{$fromDateFormatted}_-_{$toDateFormatted}.xlsx";
 
-        return Excel::download(new DksExport($this->fromDate, $this->toDate, $usersData), $filename);
+        return Excel::download(new RekapPunishmentExport($this->fromDate, $this->toDate, $usersData), $filename);
     }
 
     private function getDateRange()

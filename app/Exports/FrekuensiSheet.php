@@ -4,12 +4,16 @@ namespace App\Exports;
 
 use DateTime;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting
+class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, WithCustomStartCell, WithHeadings, FromCollection, WithMapping
 {
     protected $sales;
     protected $fromDate;
@@ -22,29 +26,45 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting
         $this->toDate = $toDate;
     }
 
+    public function startCell(): string
+    {
+        return 'A2';
+    }
+
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
                 $this->setHeader($sheet);
-                $dates = $this->getDateRange();
-                // $this->populateData($sheet, $dates);
                 $this->autoSizeColumns($sheet);
             }
         ];
     }
 
+
+    public function headings(): array
+    {
+        return [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ];
+    }
+
     public function setHeader($sheet)
     {
-        $sheet->setCellValue('A1', 'NO');
-        $sheet->setCellValue('B1', 'KODE TOKO');
-        $sheet->setCellValue('C1', 'TOKO');
-        $sheet->setCellValue('D1', 'KAB/KOTA');
-        $sheet->setCellValue('E1', 'PROVINSI');
-        $sheet->setCellValue('F1', 'SALES');
-        $sheet->setCellValue('G1', 'MINIMAL KUNJUNGAN');
-        $sheet->setCellValue('H1', 'REALISASI KUNJUNGAN');
+        $sheet->setCellValue('A1', 'KODE TOKO');
+        $sheet->setCellValue('B1', 'TOKO');
+        $sheet->setCellValue('C1', 'KAB/KOTA');
+        $sheet->setCellValue('D1', 'PROVINSI');
+        $sheet->setCellValue('E1', 'SALES');
+        $sheet->setCellValue('F1', 'MINIMAL KUNJUNGAN');
+        $sheet->setCellValue('G1', 'REALISASI KUNJUNGAN');
 
         $styleArray = [
             'alignment' => [
@@ -53,21 +73,55 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting
             ],
             'font' => ['bold' => true],
         ];
-        $sheet->getDelegate()->getStyle('A1:H1')->applyFromArray($styleArray);
+
+        $sheet->getDelegate()->getStyle('A1:G1')->applyFromArray($styleArray);
+
+        // Mengatur alignment untuk kolom A
+        $sheet->getDelegate()->getStyle('A:A')->applyFromArray([
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ]);
     }
 
-    private function getDateRange()
+    public function collection()
     {
-        $dateBeginLoop = new DateTime($this->fromDate);
-        $dateEndLoop = new DateTime($this->toDate);
-        $dates = [];
+        return DB::table('master_toko')
+            ->leftJoin('master_provinsi', 'master_provinsi.id', '=', 'master_toko.kd_provinsi')
+            ->where('user_sales', $this->sales->username)
+            ->where('status', 'active')
+            ->get();
+    }
 
-        while ($dateBeginLoop <= $dateEndLoop) {
-            $dates[] = $dateBeginLoop->format('Y-m-d');
-            $dateBeginLoop->modify('+1 day');
-        }
+    public function map($row): array
+    {
+        $kd_toko = $row->kd_toko;
+        $nama_toko = $row->nama_toko;
+        $alamat_toko = $row->alamat;
+        $nama_provinsi = $row->nama_provinsi;
+        $nama_sales = $this->sales->name;
+        $minimal_kunjungan = $row->frekuensi;
 
-        return $dates;
+        // REALISASI KUNJUNGAN
+        $realisasi_kunjungan_data = DB::table('trns_dks')
+            ->where('user_sales', 'ANGGA')
+            ->whereBetween('tgl_kunjungan', [$this->fromDate, $this->toDate])
+            ->where('type', 'in')
+            ->where('kd_toko', $kd_toko)
+            ->count();
+
+        $realisasi_kunjungan = (string) $realisasi_kunjungan_data;
+
+        return [
+            $kd_toko,
+            $nama_toko,
+            $alamat_toko,
+            $nama_provinsi,
+            $nama_sales,
+            $minimal_kunjungan,
+            $realisasi_kunjungan
+        ];
     }
 
     private function autoSizeColumns($sheet)
@@ -83,7 +137,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting
 
     public function title(): string
     {
-        return 'Frekuensi Kunjungan';
+        return $this->sales->name;
     }
 
     public function columnFormats(): array
