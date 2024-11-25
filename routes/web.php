@@ -56,10 +56,10 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::delete('master-toko/destroy/{kd_toko}', [MasterTokoController::class, 'destroy'])->name('master-toko.destroy');
 
     // AOP UPLOAD FILE
-    Route::get('/aop', [AopController::class, 'indexUpload'])->name('aop.index');
+    Route::get('/aop/upload', [AopController::class, 'indexUpload'])->name('aop.index');
 
     // AOP DETAIL
-    Route::get('/aop/detail/{invoiceAop}', [AopController::class, 'detail'])->name('aop.detail');
+    Route::get('/aop/upload/{invoiceAop}', [AopController::class, 'detail'])->name('aop.detail');
 
     // AOP Final
     Route::get('/aop/final', [AopController::class, 'final'])->name('aop.final');

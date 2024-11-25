@@ -85,11 +85,6 @@
                             <hr>
                         </div>
                         <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col d-flex justify-content-end">
-                                    <a href="{{ route('aop.final') }}" class="btn btn-warning">Data AOP Final</a>
-                                </div>
-                            </div>
                             <div class="row mb-3" wire:loading.class="d-none" wire:target="save, gotoPage">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Invoice AOP</label>
