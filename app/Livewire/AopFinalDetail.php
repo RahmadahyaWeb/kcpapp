@@ -48,13 +48,20 @@ class AopFinalDetail extends Component
         // ITEMS
         $items = [];
         foreach ($invoiceDetails as $value) {
+
             $item = [];
             $item['szProductId']           = $value->materialNumber;
             $item['decQty']                = $value->qty;
             $item['szUomId']               = "PCS";
-            $item['decPrize']              = $value->price;
-            $item['decDiscount']           = $value->extraPlafonDiscount;
+            $item['decPrice']              = $value->price / $value->qty;
+            $item['bTaxable']              = true;
+            $item['decDiscount']           = 0;
+            $item['decDiscPercentage']     = 0;
+            $item['decDPP']                = $value->price / 1.11;
+            $item['decPPN']                = ($value->price / 1.11) * 0.11;
+            $item['decAmount']             = $value->price;
             $item['purchaseITemTypeId']    = "BELI";
+            $item['deliveryList']          = ['qty' => $value->qty];
 
             $items[] = $item;
         }
@@ -66,28 +73,24 @@ class AopFinalDetail extends Component
         $paymentTermId = $billingDate->diffInDays($dueDate);
 
         $dataToSent = [
-            'szFpoId'                   => $invoiceHeader->invoiceAop,
-            'szFAPInvoiceId'            => $invoiceHeader->invoiceAop,
+            'szFPo_sId'                 => $invoiceHeader->invoiceAop,
             'dtmPO'                     => date('Y-m-d H:i:s', strtotime($invoiceHeader->billingDocumentDate)),
-            'dtmReceipt'                => "",
-            'bReturn'                   => 0,
-            'szRefDn'                   => $invoiceHeader->SPB,
-            'szWarehouseId'             => "KCP01001",
-            'szStockTypeId'             => "Good Stock",
             'szSupplierId'              => "AOP",
-            'paymentTermId'             => $paymentTermId . " HARI",
-            'szPOReceiptIdForReturn'    => "",
-            'szWorkplaceId'             => "KCP01001",
-            'szCarrierId'               => "",
-            'szVehicleId'               => "",
-            'szDriverId'                => "",
-            'szVehicleNumber'           => "",
-            'szDriverNm'                => "",
+            'bReturn'                   => false,
             'szDescription'             => "",
-            'items'                     => $items
+            'szCcyId'                   => "IDR",
+            'paymentTermId'             => $paymentTermId . " HARI",
+            'purchaseTypeId'            => "BELI",
+            'szPOReceiptIdForReturn'    => "",
+            'DocStatus'                 => [
+                'bApplied'              => true,
+            ],
+            'itemList'                  => $items
         ];
 
-        return true;
+        // return true;
+
+        dd($dataToSent);
 
         // PROSES HIT API
     }

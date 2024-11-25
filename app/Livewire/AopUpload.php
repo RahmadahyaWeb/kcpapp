@@ -285,6 +285,7 @@ class AopUpload extends Component
                             'price'                 => $data['BILLING_AMOUNT'],
                             'extraPlafonDiscount'   => $data['EXTRA_DISCOUNT'],
                             'amount'                => $data['BILLING_AMOUNT'] + $data['EXTRA_DISCOUNT'],
+                            'addDiscount'           => $data['ADD_DISCOUNT'],
                             'uploaded_by'           => Auth::user()->username,
                             'created_at'            => now(),
                             'updated_at'            => now()
