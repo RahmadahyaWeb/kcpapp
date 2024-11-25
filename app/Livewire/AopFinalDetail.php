@@ -73,6 +73,7 @@ class AopFinalDetail extends Component
         $paymentTermId = $billingDate->diffInDays($dueDate);
 
         $dataToSent = [
+            'appId'                     => "BDI.KCP",
             'szFPo_sId'                 => $invoiceHeader->invoiceAop,
             'dtmPO'                     => date('Y-m-d H:i:s', strtotime($invoiceHeader->billingDocumentDate)),
             'szSupplierId'              => "AOP",

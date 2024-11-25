@@ -99,33 +99,32 @@ class AopGrDetail extends Component
                 $item['szProductId']           = $value->materialNumber;
                 $item['decQty']                = $value->qty;
                 $item['szUomId']               = "PCS";
-                $item['decPrize']              = $value->price;
-                $item['decDiscount']           = $value->extraPlafonDiscount;
                 $item['purchaseITemTypeId']    = "BELI";
 
                 $items[] = $item;
             }
 
             $dataToSent[] = [
-                'szFpoId'                   => $invoiceHeader->invoiceAop,
-                'szFAPInvoiceId'            => $no_gr,
-                'dtmPO'                     => date('Y-m-d H:i:s', strtotime($invoiceHeader->billingDocumentDate)),
+                'appId'                     => "BDI.KCP",
+                'szPoId'                    => $invoiceHeader->invoiceAop,
+                'szFPoReceipt_sId'          => $no_gr,
                 'dtmReceipt'                => "2024-10-15 00:00:00",
-                'bReturn'                   => 0,
                 'szRefDn'                   => $invoiceHeader->SPB,
+                'dtmRefDn'                  => $invoiceHeader->billingDocumentDate,
                 'szWarehouseId'             => "KCP01001",
                 'szStockTypeId'             => "Good Stock",
-                'szSupplierId'              => "AOP",
                 'paymentTermId'             => $paymentTermId . " HARI",
-                'szPOReceiptIdForReturn'    => "",
                 'szWorkplaceId'             => "KCP01001",
                 'szCarrierId'               => "",
                 'szVehicleId'               => "",
                 'szDriverId'                => "",
                 'szVehicleNumber'           => "",
                 'szDriverNm'                => "",
-                'szDescription'             => "",
-                'items'                     => $items
+                'szDescription'             => "api",
+                'DocStatus'                 => [
+                    'bApplied'              => true,
+                ],
+                'itemList'                  => $items
             ];
 
             $itemsToUpdate[] = $items;
@@ -154,7 +153,7 @@ class AopGrDetail extends Component
 
     public function sendToBosnetAPI($dataToSent)
     {
-            dd(json_encode($dataToSent));
+        return true;
     }
 
     public function generateGRNumber($spb, $items)

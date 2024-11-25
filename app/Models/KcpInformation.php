@@ -101,7 +101,7 @@ class KcpInformation extends Model
     {
         $response = Http::withHeaders([
             'Authorization' => "Bearer $token",
-        ])->get("36.91.145.235/kcpapi/api/sales-order/address/$kdToko");
+        ])->get("http://36.91.145.235/kcpapi/api/sales-order/address/$kdToko");
 
         if ($response->successful()) {
             return $response->json();
@@ -145,7 +145,7 @@ class KcpInformation extends Model
     {
         $response = Http::withHeaders([
             'Authorization' => "Bearer $token",
-        ])->get("36.91.145.235/kcpapi/api/sales-order/lkh-header/$lkh");
+        ])->get("http://36.91.145.235/kcpapi/api/sales-order/lkh-header/$lkh");
 
         if ($response->successful()) {
             return $response->json();
@@ -158,7 +158,7 @@ class KcpInformation extends Model
     {
         $response = Http::withHeaders([
             'Authorization' => "Bearer $token",
-        ])->get("36.91.145.235/kcpapi/api/sales-order/bonus-header");
+        ])->get("http://36.91.145.235/kcpapi/api/sales-order/bonus-header");
 
         if ($response->successful()) {
             return $response->json();
@@ -171,7 +171,7 @@ class KcpInformation extends Model
     {
         $response = Http::withHeaders([
             'Authorization' => "Bearer $token",
-        ])->get("36.91.145.235/kcpapi/api/sales-order/bonus-detail/$idBonus");
+        ])->get("http://36.91.145.235/kcpapi/api/sales-order/bonus-detail/$idBonus");
 
         if ($response->successful()) {
             return $response->json();

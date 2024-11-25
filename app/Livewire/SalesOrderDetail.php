@@ -79,7 +79,7 @@ class SalesOrderDetail extends Component
         $billingDate = Carbon::parse($header->crea_date);
         $dueDate = Carbon::parse($header->tgl_jatuh_tempo);
 
-        $paymentTermId = $billingDate->diffInDays($dueDate);
+        $paymentTermId = $billingDate->diffInDays($dueDate);    
 
         // ITEMS
         $items = [];
@@ -91,10 +91,22 @@ class SalesOrderDetail extends Component
 
             $item['szOrderItemTypeId']  = "JUAL";
             $item['szProductId']        = $value['part_no'];
+            $item['decDiscProcent']     = 0;
             $item['decQty']             = $value['qty'];
             $item['szUomId']            = "PCS";
-            $item['decPrice']           = $value['hrg_pcs'];
-            $item['decDiscount']        = $value['nominal_disc'];
+            $item['decPrice']           = $value['nominal_total'] / $value['qty'];
+            $item['decDiscount']        = 0;
+            $item['bTaxable']           = true;
+            $item['decTax']             = ((($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11) * 0.11;
+            $item['decAmount']          = ($value['nominal_total'] / $value['qty']) * $value['qty'];
+            $item['decDPP']             = (($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11;
+            $item['szPaymentType']      = "NON";
+            $item['deliveryList']       = [
+                'dtmDelivery'           => date('Y-m-d H:i:s', strtotime($header->crea_date)),
+                'szCustId'              => $header->kd_outlet,
+                'decQty'                => $value['qty'],
+                'szFromWpId'            => 'KCP01001',
+            ];  
 
             $items[] = $item;
         }
@@ -112,18 +124,37 @@ class SalesOrderDetail extends Component
             $items[] = $item;
         }
 
-        return true;
+        // return true;
 
         $dataToSent = [
+            'appId'             => "BDI.KCP",
             'szFSoId'           => $header->noso,
             'szOrderTypeId'     => 'JUAL',
             'dtmOrder'          => date('Y-m-d H:i:s', strtotime($header->crea_date)),
             'szCustId'          => $header->kd_outlet,
+            'dlvAddress_J'      => [
+                'szContactPerson'   => '',
+                'szAddress_1'       => '',
+                'szAddress_2'       => '',
+                'szDistrict'        => '',
+                'szCity'            => '',
+                'szZipCode'         => '',
+                'szState'           => '',
+                'szCountry'         => '',
+                'szPhoneNo_1'       => '',
+
+            ],
             'szSalesId'         => $header->user_sales,
             'szRemark'          => '',
             'szPaymentTermId'   => $paymentTermId . " HARI",
-            'szWorkplaceId'     => 'KCP01001',
-            'items'             => $items
+            'decAmount'         => 0,
+            'decTax'            => 0,
+            'szShipToId'        => $header->kd_outlet,
+            'szStatus'          => "OPE",
+            'szCcyId'           => "IDR",
+            'szCcyRateId'       => "BI",
+            'dtmExpiration'     => date('Y-m-d H:i:s', strtotime('+7 days', strtotime($header->crea_date))),
+            'itemList'          => $items
         ];
 
         dd($dataToSent);

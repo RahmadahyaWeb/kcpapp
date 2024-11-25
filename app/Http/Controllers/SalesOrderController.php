@@ -7,6 +7,7 @@ use App\Models\KcpInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 
 class SalesOrderController extends Controller
 {
@@ -28,9 +29,17 @@ class SalesOrderController extends Controller
             abort(500);
         }
 
-        $details = new SalesOrderDetail;
+        $api = new KcpInformation;
 
-        $invoices = $details->getInvoice($invoice);
+        $invoices = $api->getInvoice($conn['token'], $invoice);
+
+        if (isset($invoices['status']) && $invoices['status'] == 404) {
+            $invoices = new Collection();
+        } else if (isset($invoices['data']) && $invoices['data']) {
+            $invoices = collect($invoices['data']);
+        } else {
+            $invoices = new Collection();
+        }
 
         $header = DB::table('invoice_header')
             ->where('noinv', $invoice)
@@ -58,8 +67,6 @@ class SalesOrderController extends Controller
             'suppProgram'    => $suppProgram,
         ];
 
-
-        $api = new KcpInformation;
 
         $alamat_toko = $api->getAddress($conn['token'], $header->kd_outlet);
         $alamat_toko = $alamat_toko['data']['almt_outlet'];
