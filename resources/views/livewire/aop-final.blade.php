@@ -35,7 +35,8 @@
             </div>
 
             @if ($invoiceAopHeader->isEmpty())
-                <div wire:loading.class="d-none" wire:target="save, gotoPage, invoiceAop, status" class="table-responsive">
+                <div wire:loading.class="d-none" wire:target="save, gotoPage, invoiceAop, status"
+                    class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -51,7 +52,8 @@
                     </table>
                 </div>
             @else
-                <div wire:loading.class="d-none" wire:target="save, gotoPage, invoiceAop, status" class="table-responsive">
+                <div wire:loading.class="d-none" wire:target="save, gotoPage, invoiceAop, status"
+                    class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -64,7 +66,7 @@
                             @foreach ($invoiceAopHeader as $invoice)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('aop.detail', $invoice->invoiceAop) }}">
+                                        <a href="{{ route('aop.final.detail', $invoice->invoiceAop) }}">
                                             {{ $invoice->invoiceAop }}
                                         </a>
                                     </td>

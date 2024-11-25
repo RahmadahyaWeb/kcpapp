@@ -63,6 +63,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
     // AOP Final
     Route::get('/aop/final', [AopController::class, 'final'])->name('aop.final');
+    
+    // AOP FINAL DETAIL
+    Route::get('/aop/final/{invoiceAop}', [AopController::class, 'finalDetail'])->name('aop.final.detail');
 
     // NON AOP
     Route::get('/non-aop', [NonAopController::class, 'index'])->name('non-aop.index');
