@@ -4,7 +4,7 @@
 
 @section('breadcrumb')
     <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Data AOP Final</li>
+        <li class="breadcrumb-item active"><a href="{{ route('aop.final') }}">Data AOP Final</a></li>
     </ol>
 @endsection
 
