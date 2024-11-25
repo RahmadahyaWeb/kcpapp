@@ -115,7 +115,7 @@ class AopDetail extends Component
 
         session()->flash('status', "Flag $invoiceAop berhasil disimpan. Silakan periksa data di list Data AOP Final.");
 
-        $this->redirect('/aop');
+        $this->redirect('/aop/upload');
     }
 
     public function sendToBosnet($invoiceAop)
