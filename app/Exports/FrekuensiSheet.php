@@ -113,6 +113,18 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
         $realisasi_kunjungan = (string) $realisasi_kunjungan_data;
 
+        // CEK TOKO
+        $realisasi_kunjungan_tq = DB::table('trns_dks')
+            ->where('user_sales', $this->sales->username)
+            ->whereBetween('tgl_kunjungan', [$this->fromDate, $this->toDate])
+            ->where('type', 'in')
+            ->whereIn('kd_toko', ['TQ', 'TQ2'])
+            ->count();
+
+        if ($row->kd_toko == 'TQ' || $row->kd_toko == 'TQ2') {
+            $realisasi_kunjungan = (string) $realisasi_kunjungan_tq;
+        }
+
         return [
             $kd_toko,
             $nama_toko,
