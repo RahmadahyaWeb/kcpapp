@@ -90,6 +90,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
         return DB::table('master_toko')
             ->leftJoin('master_provinsi', 'master_provinsi.id', '=', 'master_toko.kd_provinsi')
             ->where('user_sales', $this->sales->username)
+            ->whereNotIn('kd_toko', ['TQ2'])
             ->where('status', 'active')
             ->get();
     }
