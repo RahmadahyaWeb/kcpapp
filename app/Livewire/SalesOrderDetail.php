@@ -13,7 +13,7 @@ class SalesOrderDetail extends Component
 {
     public $token;
     public $kcpInformation;
-    
+
     public $invoice;
     public $nominalSuppProgram;
     public $header = [];
@@ -21,10 +21,8 @@ class SalesOrderDetail extends Component
     public $kd_outlet;
     public $nominal_program_display = 0;
 
-    #[Validate('required')]
     public $nama_program;
 
-    #[Validate('required')]
     public $nominal_program;
 
     public function mount($invoice)
@@ -57,17 +55,35 @@ class SalesOrderDetail extends Component
 
     public function sendToBosnet()
     {
-        if ($this->sendToBosnetApi()) {
-            DB::table('invoice_header')
+        try {
+            // Validasi apakah API pengiriman berhasil
+            $isSent = $this->sendToBosnetApi();
+
+            if (!$isSent) {
+                throw new \Exception('Gagal mengirim data ke BOSNET.');
+            }
+
+            // Validasi update status di invoice_header
+            $updated = DB::table('invoice_header')
                 ->where('noinv', $this->invoice)
                 ->update([
                     'status'        => 'BOSNET',
                     'sendToBosnet'  => now()
                 ]);
 
+            if (!$updated) {
+                throw new \Exception('Gagal memperbarui status invoice.');
+            }
+
+            // Set pesan sukses
             session()->flash('status', "Data SO berhasil dikirim!");
 
+            // Redirect ke halaman sales order
             $this->redirect('/sales-order');
+        } catch (\Exception $e) {
+            // Menangkap error dan mengembalikan pesan
+            session()->flash('error', $e->getMessage());
+            return back();
         }
     }
 
@@ -75,190 +91,269 @@ class SalesOrderDetail extends Component
     {
         $header = $this->header;
 
-        // PAYMENT TERM ID
-        $billingDate = Carbon::parse($header->crea_date);
-        $dueDate = Carbon::parse($header->tgl_jatuh_tempo);
+        // Calculate Payment Term ID
+        $paymentTermId = Carbon::parse($header->crea_date)
+            ->diffInDays(Carbon::parse($header->tgl_jatuh_tempo));
 
-        $paymentTermId = $billingDate->diffInDays($dueDate);    
+        // Initialize totals
+        $decDPPTotal = 0;
+        $decTaxTotal = 0;
 
-        // ITEMS
+        // Generate items for the invoice
+        $items = $this->generateInvoiceItems($decDPPTotal, $decTaxTotal);
+
+        // If there's a nominal supplementary program, add it to items
+        if ($this->nominalSuppProgram) {
+            $this->addSupplementaryProgramItem($items, $decDPPTotal, $decTaxTotal);
+        }
+
+        // Prepare the data to be sent
+        $dataToSent = $this->prepareDataToSend($header, $paymentTermId, $decDPPTotal, $decTaxTotal, $items);
+
+        dd($dataToSent);
+    }
+
+    private function generateInvoiceItems(&$decDPPTotal, &$decTaxTotal)
+    {
         $items = [];
-
         $invoiceItems = $this->getInvoice($this->invoice);
 
         foreach ($invoiceItems as $value) {
-            $item = [];
-
-            $item['szOrderItemTypeId']  = "JUAL";
-            $item['szProductId']        = $value['part_no'];
-            $item['decDiscProcent']     = 0;
-            $item['decQty']             = $value['qty'];
-            $item['szUomId']            = "PCS";
-            $item['decPrice']           = $value['nominal_total'] / $value['qty'];
-            $item['decDiscount']        = 0;
-            $item['bTaxable']           = true;
-            $item['decTax']             = ((($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11) * 0.11;
-            $item['decAmount']          = ($value['nominal_total'] / $value['qty']) * $value['qty'];
-            $item['decDPP']             = (($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11;
-            $item['szPaymentType']      = "NON";
-            $item['deliveryList']       = [
-                'dtmDelivery'           => date('Y-m-d H:i:s', strtotime($header->crea_date)),
-                'szCustId'              => $header->kd_outlet,
-                'decQty'                => $value['qty'],
-                'szFromWpId'            => 'KCP01001',
-            ];  
-
+            $item = $this->generateInvoiceItem($value, $decDPPTotal, $decTaxTotal);
             $items[] = $item;
         }
 
-        if ($this->nominalSuppProgram) {
-            $item = [];
+        return $items;
+    }
 
-            $item['szOrderItemTypeId']  = "DISKON";
-            $item['szProductId']        = "";
-            $item['decQty']             = 0;
-            $item['szUomId']            = "";
-            $item['decPrice']           = "";
-            $item['decDiscount']        = $this->nominalSuppProgram;
+    private function generateInvoiceItem($value, &$decDPPTotal, &$decTaxTotal)
+    {
+        $decTax = ((($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11) * 0.11;
+        $decAmount = ($value['nominal_total'] / $value['qty']) * $value['qty'];
+        $decDPP = (($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11;
+        $decPrice = $value['nominal_total'] / $value['qty'];
 
-            $items[] = $item;
-        }
+        // Update totals
+        $decDPPTotal += $decDPP;
+        $decTaxTotal += $decTax;
 
-        // return true;
+        return [
+            'szOrderItemTypeId'  => "JUAL",
+            'szProductId'        => $value['part_no'],
+            'decDiscProcent'     => 0,
+            'decQty'             => $value['qty'],
+            'szUomId'            => "PCS",
+            'decPrice'           => $decPrice,
+            'decDiscount'        => 0,
+            'bTaxable'           => true,
+            'decTax'             => $decTax,
+            'decAmount'          => $decAmount,
+            'decDPP'             => $decDPP,
+            'szPaymentType'      => "NON",
+            'deliveryList'       => [
+                'dtmDelivery'   => date('Y-m-d H:i:s', strtotime($this->header->crea_date)),
+                'szCustId'      => $this->header->kd_outlet,
+                'decQty'        => $value['qty'],
+                'szFromWpId'    => 'KCP01001',
+            ],
+        ];
+    }
 
-        $dataToSent = [
+    private function addSupplementaryProgramItem(&$items, &$decDPPTotal, &$decTaxTotal)
+    {
+        $item = [
+            'szOrderItemTypeId'  => "DISKON",
+            'szProductId'        => "",
+            'decDiscProcent'     => 0,
+            'decQty'             => 0,
+            'szUomId'            => "",
+            'decPrice'           => 0,
+            'decDiscount'        => $this->nominalSuppProgram,
+            'bTaxable'           => true,
+            'decTax'             => - ($this->nominalSuppProgram - ($this->nominalSuppProgram / 1.11)),
+            'decAmount'          => 0,
+            'decDPP'             => - ($this->nominalSuppProgram / 1.11),
+            'szPaymentType'      => "TDB",
+            'deliveryList'       => [],
+            'bonusSourceList'    => [],
+        ];
+
+        // Update totals
+        $decDPPTotal += $item['decDPP'];
+        $decTaxTotal += $item['decTax'];
+
+        $items[] = $item;
+    }
+
+    private function prepareDataToSend($header, $paymentTermId, $decDPPTotal, $decTaxTotal, $items)
+    {
+        return [
             'appId'             => "BDI.KCP",
             'szFSoId'           => $header->noso,
             'szOrderTypeId'     => 'JUAL',
             'dtmOrder'          => date('Y-m-d H:i:s', strtotime($header->crea_date)),
             'szCustId'          => $header->kd_outlet,
-            'dlvAddress_J'      => [
-                'szContactPerson'   => '',
-                'szAddress_1'       => '',
-                'szAddress_2'       => '',
-                'szDistrict'        => '',
-                'szCity'            => '',
-                'szZipCode'         => '',
-                'szState'           => '',
-                'szCountry'         => '',
-                'szPhoneNo_1'       => '',
-
-            ],
-            'szSalesId'         => $header->user_sales,
-            'szRemark'          => '',
-            'szPaymentTermId'   => $paymentTermId . " HARI",
-            'decAmount'         => 0,
-            'decTax'            => 0,
+            'dlvAddress_J'      => $this->prepareDeliveryAddress(),
+            'decAmount'         => $decDPPTotal,
+            'decTax'            => $decTaxTotal,
             'szShipToId'        => $header->kd_outlet,
             'szStatus'          => "OPE",
             'szCcyId'           => "IDR",
             'szCcyRateId'       => "BI",
+            'szSalesId'         => $header->user_sales,
+            'docStatus'         => ['bApplied' => false],
+            'szPaymentTermId'   => $paymentTermId . " HARI",
+            'szRemark'          => '',
             'dtmExpiration'     => date('Y-m-d H:i:s', strtotime('+7 days', strtotime($header->crea_date))),
             'itemList'          => $items
         ];
+    }
 
-        dd($dataToSent);
+    private function prepareDeliveryAddress()
+    {
+        return [
+            'szContactPerson'   => '',
+            'szAddress_1'       => '',
+            'szAddress_2'       => '',
+            'szDistrict'        => '',
+            'szCity'            => '',
+            'szZipCode'         => '',
+            'szState'           => '',
+            'szCountry'         => '',
+            'szPhoneNo_1'       => '',
+        ];
     }
 
     public function saveProgram()
     {
-        $this->validate();
+        $this->validate([
+            'nama_program'      => 'required',
+            'nominal_program'   => 'required'
+        ]);
 
         if ($this->nominal_program > $this->nominal_program_display) {
             $this->addError('nominal_program', 'Nominal tidak boleh melebihi ketentuan.');
+            return; // Keluar jika ada error
         }
 
-        $listOfError = $this->getErrorBag();
+        try {
+            DB::beginTransaction();
 
-        if (empty($listOfError->all())) {
-            $nama_program = DB::table('bonus_detail')->select(['nm_program'])->where('no_program', $this->nama_program)->first();
+            // Validasi nama program
+            $nama_program = DB::table('bonus_detail')
+                ->where('no_program', $this->nama_program)
+                ->value('nm_program');
 
-            DB::table('sales_order_program')
-                ->insert([
-                    'no_program'        => $this->nama_program,
-                    'noinv'             => $this->invoice,
-                    'nama_program'      => $nama_program->nm_program,
-                    'nominal_program'   => $this->nominal_program
-                ]);
+            if (!$nama_program) {
+                throw new \Exception('Program tidak ditemukan.');
+            }
 
-            $header = DB::table('invoice_header')
+            // Insert sales_order_program
+            $inserted = DB::table('sales_order_program')->insert([
+                'no_program'       => $this->nama_program,
+                'noinv'            => $this->invoice,
+                'nama_program'     => $nama_program,
+                'nominal_program'  => $this->nominal_program,
+            ]);
+
+            if (!$inserted) {
+                throw new \Exception('Gagal menyimpan program ke sales_order_program.');
+            }
+
+            // Update amount_total pada invoice_header
+            $updatedInvoice = DB::table('invoice_header')
                 ->where('noinv', $this->invoice)
-                ->select(['amount_total'])
-                ->first();
+                ->decrement('amount_total', $this->nominal_program);
 
-            DB::table('invoice_header')
-                ->where('noinv', $this->invoice)
-                ->update([
-                    'amount_total' => $header->amount_total - $this->nominal_program
-                ]);
+            if (!$updatedInvoice) {
+                throw new \Exception('Gagal memperbarui amount_total pada invoice_header.');
+            }
 
-            // KURANGI NOMINAL PROGRAM
-            $bonus = DB::table('bonus_detail')
+            // Kurangi nominal pada bonus_detail
+            $updatedBonus = DB::table('bonus_detail')
                 ->where('no_program', $this->nama_program)
                 ->where('kd_outlet', $this->kd_outlet)
-                ->first();
+                ->decrement('nominal', $this->nominal_program);
 
-            DB::table('bonus_detail')
-                ->where('no_program', $this->nama_program)
-                ->update([
-                    'nominal' => $bonus->nominal - $this->nominal_program
-                ]);
+            if (!$updatedBonus) {
+                throw new \Exception('Bonus detail tidak ditemukan atau gagal diperbarui.');
+            }
 
+            DB::commit();
+
+            // Reset input
             $this->reset('nama_program', 'nominal_program', 'search_program', 'nominal_program_display');
+
+            return back()->with('success', 'Program berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
         }
     }
 
     public function deleteProgram($id)
     {
-        $header = DB::table('invoice_header')
-            ->where('noinv', $this->invoice)
-            ->select(['amount_total'])
-            ->first();
+        try {
+            DB::beginTransaction();
 
-        $program = DB::table('sales_order_program')
-            ->where('id', $id)
-            ->select(['nominal_program', 'no_program'])
-            ->first();
+            // Ambil data yang diperlukan
+            $program = DB::table('sales_order_program')
+                ->where('id', $id)
+                ->select(['nominal_program', 'no_program'])
+                ->first();
 
-        DB::table('invoice_header')
-            ->where('noinv', $this->invoice)
-            ->update([
-                'amount_total' => $header->amount_total + $program->nominal_program
-            ]);
+            if (!$program) {
+                throw new \Exception('Program tidak ditemukan.');
+            }
 
-        // KURANGI NOMINAL PROGRAM
-        $bonus = DB::table('bonus_detail')
-            ->where('no_program', $program->no_program)
-            ->where('kd_outlet', $this->kd_outlet)
-            ->first();
+            // Update amount_total di invoice_header
+            $updatedInvoice = DB::table('invoice_header')
+                ->where('noinv', $this->invoice)
+                ->increment('amount_total', $program->nominal_program);
 
-        DB::table('bonus_detail')
-            ->where('no_program', $program->no_program)
-            ->update([
-                'nominal' => $bonus->nominal + $program->nominal_program
-            ]);
+            if (!$updatedInvoice) {
+                throw new \Exception('Gagal memperbarui amount_total pada invoice_header.');
+            }
 
-        $this->reset('nama_program', 'nominal_program', 'search_program', 'nominal_program_display');
+            // Update nominal di bonus_detail
+            $updatedBonus = DB::table('bonus_detail')
+                ->where('no_program', $program->no_program)
+                ->where('kd_outlet', $this->kd_outlet)
+                ->increment('nominal', $program->nominal_program);
 
-        DB::table('sales_order_program')
-            ->where('id', $id)
-            ->delete();
+            if (!$updatedBonus) {
+                throw new \Exception('Bonus detail tidak ditemukan atau gagal diperbarui.');
+            }
+
+            // Hapus data dari sales_order_program
+            $deletedProgram = DB::table('sales_order_program')
+                ->where('id', $id)
+                ->delete();
+
+            if (!$deletedProgram) {
+                throw new \Exception('Gagal menghapus program dari sales_order_program.');
+            }
+
+            DB::commit();
+
+            // Reset input
+            $this->reset('nama_program', 'nominal_program', 'search_program', 'nominal_program_display');
+
+            return back()->with('success', 'Program berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function updatedNamaProgram()
     {
-        if ($this->nama_program) {
-            $item = DB::table('bonus_detail')
+        $this->nominal_program_display = $this->nama_program
+            ? (int) DB::table('bonus_detail')
                 ->where('kd_outlet', $this->kd_outlet)
                 ->where('no_program', $this->nama_program)
-                ->first();
-
-            if ($item) {
-                $this->nominal_program_display = (int) $item->nominal;
-            }
-        } else {
-            $this->nominal_program_display = (int) 0;
-        }
+                ->value('nominal') ?? 0
+            : 0;
     }
 
     public function render()
@@ -267,36 +362,32 @@ class SalesOrderDetail extends Component
             abort(500);
         }
 
-        $invoices = $this->getInvoice($this->invoice);
-
-        $programs = DB::table('sales_order_program')
-            ->where('noinv', $this->invoice)
-            ->get();
-
         $header = DB::table('invoice_header')
             ->where('noinv', $this->invoice)
             ->first();
 
-        $this->kd_outlet = $header->kd_outlet;
+        if ($header) {
+            $this->kd_outlet = $header->kd_outlet;
+            $this->header = $header;
+        } else {
+            abort(404, 'Header invoice tidak ditemukan.');
+        }
 
-        $bonus = DB::table('bonus_detail')
-            ->where('nm_program', 'like', '%' . $this->search_program . '%')
-            ->where('kd_outlet', $this->kd_outlet)
-            ->get();
-
-        $nominalSuppProgram = DB::table('sales_order_program')
+        $this->nominalSuppProgram = DB::table('sales_order_program')
             ->where('noinv', $this->invoice)
             ->sum('nominal_program');
 
-        $this->nominalSuppProgram = $nominalSuppProgram;
-        $this->header = $header;
-
-        return view('livewire.sales-order-detail', compact(
-            'invoices',
-            'nominalSuppProgram',
-            'programs',
-            'header',
-            'bonus',
-        ));
+        return view('livewire.sales-order-detail', [
+            'invoices' => $this->getInvoice($this->invoice),
+            'programs' => DB::table('sales_order_program')
+                ->where('noinv', $this->invoice)
+                ->get(),
+            'header' => $this->header,
+            'bonus' => DB::table('bonus_detail')
+                ->where('nm_program', 'like', '%' . $this->search_program . '%')
+                ->where('kd_outlet', $this->kd_outlet)
+                ->get(),
+            'nominalSuppProgram' => $this->nominalSuppProgram,
+        ]);
     }
 }
