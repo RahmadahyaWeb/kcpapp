@@ -16,12 +16,15 @@ class RekapPunishmentExport implements WithMultipleSheets
         $this->fromDate = $fromDate;
         $this->toDate = $toDate;
         $this->items = $items;
-
     }
 
     public function sheets(): array
     {
         $sheets = [];
+
+        $sales = array_keys($this->items);
+
+        $sheets[] = new RekapSheet($sales, $this->fromDate, $this->toDate, $this->items);
 
         foreach ($this->items as $user_sales => $value) {
             $sheets[] = new SalesSheet($user_sales, $this->fromDate, $this->toDate, $value);

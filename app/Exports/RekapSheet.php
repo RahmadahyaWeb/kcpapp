@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -14,12 +15,23 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
     protected $sales;
     protected $fromDate;
     protected $toDate;
+    protected $items;
 
-    public function __construct($sales, $fromDate, $toDate)
+    protected $tokoAbsen = [
+        '6B',
+        '6C',
+        '6D',
+        '6F',
+        '6H',
+        'TX'
+    ];
+
+    public function __construct($sales, $fromDate, $toDate, $items)
     {
         $this->sales = $sales;
         $this->fromDate = $fromDate;
         $this->toDate = $toDate;
+        $this->items = $items;
     }
 
     public function registerEvents(): array
@@ -136,61 +148,19 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
 
     private function fillData($sheet, $dates, $startColumn, $user_sales)
     {
-        $punishmentLupaCekInOut = 0;
-        $punishmentCekInPertama = 0;
-        $punishmentLamaPerjalanan = 0;
+        // Filter untuk mengambil elemen dengan kunci 'user_sales'
+        $filtered = array_filter($this->items, function ($value, $key) use ($user_sales) {
+            return $key === $user_sales;
+        }, ARRAY_FILTER_USE_BOTH);
 
-        foreach ($dates as $index => $date) {
-            // PENGECEKAN HARI MINGGU
-            $isSunday = \Carbon\Carbon::parse($date)->isSunday();
+        $punishmentCekInPertama = count($this->punishmentCekInPertama($filtered, $user_sales));
 
-            if (!$isSunday) {
-                $tokoAbsen = [
-                    '6B',
-                    '6C',
-                    '6D',
-                    '6F',
-                    '6H',
-                    'TX'
-                ];
+        $punishmentCekInCekOut = count($this->punishmentCekInCekOut($filtered, $user_sales));
 
-                // CEK IN PERTAMA
-                $cekInPertama = DB::table('trns_dks')
-                    ->select(['*'])
-                    ->where('user_sales', $user_sales)
-                    ->where('tgl_kunjungan', $date)
-                    ->where('type', 'in')
-                    ->whereNotIn('kd_toko', $tokoAbsen)
-                    ->orderBy('waktu_kunjungan', 'asc')
-                    ->first();
+        $punishmentIstirahat = $this->punishmentIstirahat($filtered, $user_sales);
 
-                if ($cekInPertama == null) {
-                    $cekInPertama = '00:00:00';
-                } else {
-                    $cekInPertama = \Carbon\Carbon::parse($cekInPertama->waktu_kunjungan)->format('H:i:s');
-                }
-
-                // PUNISHMENT > 9.30
-                if ($cekInPertama > '09:30:00') {
-                    $punishmentCekInPertama += 1;
-                }
-
-                // PUNISHMENT LUPA CEK IN / CEK OUT
-                $cekOut = DB::table('trns_dks')
-                    ->select(['*'])
-                    ->where('user_sales', $user_sales)
-                    ->where('tgl_kunjungan', $date)
-                    ->where('type', 'out')
-                    ->orderBy('waktu_kunjungan', 'asc')
-                    ->first();
-
-                if ($cekInPertama == '00:00:00') {
-                    $punishmentLupaCekInOut += 1;
-                } else if ($cekOut == null) {
-                    $punishmentLupaCekInOut += 1;
-                }
-            }
-        }
+        $punishmentJumat = count($punishmentIstirahat['punishment_friday']);
+        $punishmentSelainJumat = count($punishmentIstirahat['punishment_other_days']);
 
         $rowNumber = 3;
 
@@ -202,20 +172,209 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->mergeCells($nextColumnLetter3 . $rowNumber . ':' . $nextColumnLetter3 . $rowNumber + 1);
 
         // BANYAK PUNISHMENT CEK IN CEK OUT
-        $sheet->setCellValue($columnLetter . $rowNumber, str_replace('{row}', $rowNumber, $punishmentLupaCekInOut));
+        $sheet->setCellValue($columnLetter . $rowNumber, str_replace('{row}', $rowNumber, $punishmentCekInCekOut));
         // BAYAR PUNISHMENT CEK IN CEK OUT
-        $sheet->setCellValue($nextColumnLetter3 . $rowNumber, str_replace('{row}', $rowNumber, 10000 * $punishmentLupaCekInOut));
+        $sheet->setCellValue($nextColumnLetter3 . $rowNumber, str_replace('{row}', $rowNumber, 10000 * $punishmentCekInCekOut));
 
         // BANYAK PUNISHMENT CEK IN PERTAMA
         $sheet->setCellValue($columnLetter . ($rowNumber + 2), str_replace('{row}', ($rowNumber + 2), $punishmentCekInPertama));
         // BAYAR PUNISHMENT CEK IN PERTAMA
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 2), str_replace('{row}', ($rowNumber) + 2, 25000 * $punishmentCekInPertama));
-    
+
         // BANYAK PUNISHMENT DURASI LAMA PERJALANAN TOKO
         $sheet->setCellValue($columnLetter . ($rowNumber + 3), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898)"));
         // BAYAR PUNISHMENT DURASI LAMA PERJALANAN TOKO
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 3), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898) * 25000"));
+
+        // BANYAK PUNISHMENT DURASI KUNJUNGAN TOKO
+        $sheet->setCellValue($columnLetter . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898)"));
+        // BAYAR PUNISHMENT DURASI KUNJUNGAN TOKO
+        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:I6898) * 25000"));
+
+        // BANYAK PUNISHMENT ISTIRAHAT SELAIN JUMAT
+        $sheet->setCellValue($columnLetter . ($rowNumber + 5), str_replace('{row}', ($rowNumber + 2), $punishmentSelainJumat));
+        // BAYAR PUNISHMENT ISTIRAHAT SELAIN JUMAT
+        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 5), str_replace('{row}', ($rowNumber) + 2, 10000 * $punishmentSelainJumat));
+
+        $sheet->mergeCells($columnLetter . ($rowNumber + 5) . ':' . $columnLetter . $rowNumber + 6);
+        $sheet->mergeCells($nextColumnLetter2 . ($rowNumber + 5) . ':' . $nextColumnLetter2 . $rowNumber + 6);
+        $sheet->mergeCells($nextColumnLetter3 . ($rowNumber + 5) . ':' . $nextColumnLetter3 . $rowNumber + 6);
+        
+        // BANYAK PUNISHMENT ISTIRAHAT JUMAT
+        $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishmentJumat));
+        // BAYAR PUNISHMENT ISTIRAHAT JUMAT
+        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 5000 * $punishmentJumat));
     }
+
+    public function punishmentIstirahat($filtered, $user_sales)
+    {
+        $punishmentDataFriday = [];
+        $punishmentDataOtherDays = [];
+
+        // Mengonversi Collection menjadi array
+        $itemsArray = $filtered[$user_sales]->toArray();
+
+        foreach ($itemsArray as $data) {
+            // Durasi perjalanan dalam format HH:MM:SS
+            $durasi_perjalanan = $data->durasi_perjalanan;
+
+            $punishment_durasi_lama_perjalanan = 0;
+
+            if ($durasi_perjalanan != '00:00:00' && !empty($durasi_perjalanan)) {
+                // Pisahkan durasi perjalanan menjadi jam, menit, dan detik
+                $timeParts = explode(':', $durasi_perjalanan);
+
+                // Pastikan ada 3 bagian (jam, menit, detik)
+                if (count($timeParts) === 3) {
+                    list($hours, $minutes, $seconds) = $timeParts;
+                } else {
+                    // Jika format tidak sesuai, set jam, menit, detik menjadi 0
+                    $hours = $minutes = $seconds = 0;
+                }
+
+                // Menghitung durasi perjalanan dalam menit
+                $lama_perjalanan_dalam_menit = ($hours * 60) + $minutes;
+
+                // Durasi maksimal perjalanan (40 menit) dan waktu istirahat
+                $max_durasi_lama_perjalanan = 40;
+
+                // Cek apakah hari ini adalah hari Jumat
+                $isFriday = Carbon::parse($data->tgl_kunjungan)->isFriday();
+                $waktu_istirahat = $isFriday ? 105 : 75; // Istirahat 1 jam 45 menit pada Jumat, selain Jumat 1 jam 15 menit
+
+                // Durasi maksimal perjalanan ditambah waktu istirahat
+                $max_durasi_lama_perjalanan_plus_waktu_istirahat = $waktu_istirahat + $max_durasi_lama_perjalanan;
+
+                // Cek apakah ada keterangan 'ist' (untuk istirahat)
+                if (strpos($data->keterangan, 'ist') !== false) {
+                    // Jika durasi perjalanan lebih dari maksimal + waktu istirahat, beri punishment
+                    $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
+                }
+            }
+
+            // Jika ada punishment, pisahkan berdasarkan hari Jumat atau selain Jumat
+            if ($punishment_durasi_lama_perjalanan == 1) {
+                $punishmentData = [
+                    'user_sales' => $data->user_sales,
+                    'nama_toko' => $data->nama_toko,
+                    'tgl_kunjungan' => $data->tgl_kunjungan,
+                    'durasi_perjalanan' => $data->durasi_perjalanan,
+                    'punishment' => 'Durasi perjalanan melebihi batas waktu yang ditentukan',
+                ];
+
+                if ($isFriday) {
+                    // Jika hari Jumat, masukkan ke array punishmentDataFriday
+                    $punishmentDataFriday[] = $punishmentData;
+                } else {
+                    // Jika bukan hari Jumat, masukkan ke array punishmentDataOtherDays
+                    $punishmentDataOtherDays[] = $punishmentData;
+                }
+            }
+        }
+
+        // Kembalikan data punishment untuk hari Jumat dan selain Jumat
+        return [
+            'punishment_friday' => $punishmentDataFriday,
+            'punishment_other_days' => $punishmentDataOtherDays,
+        ];
+    }
+
+    public function punishmentCekInPertama($filtered, $user_sales)
+    {
+        $punishmentData = [];
+
+        // Mengonversi Collection menjadi array
+        $itemsArray = $filtered[$user_sales]->toArray();
+
+        // Mengurutkan data berdasarkan tgl_kunjungan dan waktu_cek_in
+        usort($itemsArray, function ($a, $b) {
+            // Mengakses properti objek dengan notasi objek ($a->key)
+            return strtotime($a->tgl_kunjungan . ' ' . $a->waktu_cek_in) - strtotime($b->tgl_kunjungan . ' ' . $b->waktu_cek_in);
+        });
+
+        $firstVisitPerDay = []; // Menyimpan cek-in pertama tiap harinya
+
+        // Loop melalui data untuk menentukan cek-in pertama per tanggal
+        foreach ($itemsArray as $data) {
+            // Cek apakah sudah ada cek-in untuk tanggal ini
+            if (!isset($firstVisitPerDay[$data->tgl_kunjungan])) {
+                // Menyimpan cek-in pertama pada tanggal ini
+                $firstVisitPerDay[$data->tgl_kunjungan] = $data;
+            }
+        }
+
+        // Periksa apakah cek-in pertama melebihi pukul 09:30
+        foreach ($firstVisitPerDay as $data) {
+            // Cek apakah hari adalah Minggu
+            $isSunday = Carbon::parse($data->tgl_kunjungan)->isSunday();
+
+            // Skip jika hari Minggu
+            if ($isSunday) {
+                continue;
+            }
+
+            if (in_array($data->kd_toko, $this->tokoAbsen)) {
+                // Skip jika toko ada dalam array tokoAbsen
+                continue;
+            }
+
+            // Menggunakan Carbon untuk mem-parsing waktu cek-in
+            $waktuCekIn = Carbon::parse($data->waktu_cek_in);
+
+            // Tentukan batas waktu 09:30
+            $batasWaktu = Carbon::parse($data->tgl_kunjungan . ' 09:30');
+
+            // Jika waktu cek-in lebih dari 09:30, maka beri punishment
+            if ($waktuCekIn->greaterThan($batasWaktu)) {
+                // Tambahkan data punishment
+                $punishmentData[] = [
+                    'user_sales' => $data->user_sales,
+                    'nama_toko'  => $data->nama_toko,
+                    'tgl_kunjungan' => $data->tgl_kunjungan,
+                    'waktu_cek_in' => $data->waktu_cek_in,
+                    'punishment' => 'Melewati batas waktu cek-in (09:30)',
+                ];
+            }
+        }
+
+        return $punishmentData;
+    }
+
+    public function punishmentCekInCekOut($filtered, $user_sales)
+    {
+        $punishmentData = []; // Menyimpan data punishment
+
+        foreach ($filtered[$user_sales] as $data) {
+            // Cek apakah hari adalah Minggu
+            $isSunday = Carbon::parse($data->tgl_kunjungan)->isSunday();
+
+            // Skip jika hari Minggu
+            if ($isSunday) {
+                continue;
+            }
+
+            if (in_array($data->kd_toko, $this->tokoAbsen)) {
+                // Skip jika toko ada dalam array tokoAbsen
+                continue;
+            }
+
+            // Periksa jika waktu cek in dan cek out sama
+            if ($data->waktu_cek_in === $data->waktu_cek_out) {
+                // Jika sama, maka dianggap lupa cek in atau cek out
+                $punishmentData[] = [
+                    'user_sales' => $data->user_sales,
+                    'nama_toko'  => $data->nama_toko,
+                    'tgl_kunjungan' => $data->tgl_kunjungan,
+                    'waktu_cek_in' => $data->waktu_cek_in,
+                    'waktu_cek_out' => $data->waktu_cek_out,
+                    'punishment' => 'Lupa cek in atau cek out (waktu cek in dan cek out sama)',
+                ];
+            }
+        }
+
+        return $punishmentData;
+    }
+
 
     private function autoSizeColumns($sheet)
     {
@@ -227,7 +386,6 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
             $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
         }
     }
-
 
     private function getDateRange()
     {
