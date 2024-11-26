@@ -7,7 +7,7 @@
                     <hr>
                 </div>
                 <div class="card-body">
-                    <form wire:submit="export">
+                    <form wire:submit.prevent="export">
                         @csrf
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
