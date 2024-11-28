@@ -240,7 +240,7 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
         }
 
         // KUNJUNGAN
-        if (($row->lama_kunjungan % 60) > 0) {
+        if ($row->lama_kunjungan) {
             $kunjungan = 1;
         } else {
             $kunjungan = 0;
