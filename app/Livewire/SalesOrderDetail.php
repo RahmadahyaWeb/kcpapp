@@ -76,10 +76,7 @@ class SalesOrderDetail extends Component
             }
 
             // Set pesan sukses
-            session()->flash('status', "Data SO berhasil dikirim!");
-
-            // Redirect ke halaman sales order
-            $this->redirect('/sales-order');
+            session()->flash('success', "Data SO berhasil dikirim!");
         } catch (\Exception $e) {
             // Menangkap error dan mengembalikan pesan
             session()->flash('error', $e->getMessage());
@@ -110,7 +107,7 @@ class SalesOrderDetail extends Component
         // Prepare the data to be sent
         $dataToSent = $this->prepareDataToSend($header, $paymentTermId, $decDPPTotal, $decTaxTotal, $items);
 
-        dd($dataToSent);
+        return true;
     }
 
     private function generateInvoiceItems(&$decDPPTotal, &$decTaxTotal)

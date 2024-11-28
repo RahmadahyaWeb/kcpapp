@@ -1,4 +1,16 @@
 <div>
+    @if (session('success'))
+        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
     <div class="row gap-3">
         <div class="col-12">
             <div class="card">
@@ -146,15 +158,15 @@
                                             <td>{{ $item->no_lkh }}</td>
                                             <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
                                             <td>
-                                                <a
-                                                   target="_blank" href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
+                                                <a target="_blank"
+                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
                                             </td>
                                             <td>
-                                                <a
-                                                   target="_blank" href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
+                                                <a target="_blank"
+                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
                                             </td>
                                             <td>
-                                                @if ($item->status == 'KCP')
+                                                @if ($item->status_inv == 'KCP')
                                                     <span class="badge text-bg-danger">
                                                         SO masih di KCP
                                                     </span>

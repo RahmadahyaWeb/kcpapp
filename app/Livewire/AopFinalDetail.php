@@ -83,7 +83,7 @@ class AopFinalDetail extends Component
             'paymentTermId'             => $paymentTermId . " HARI",
             'purchaseTypeId'            => "BELI",
             'szPOReceiptIdForReturn'    => "",
-            'DocStatus'                 => [
+            'docStatus'                 => [
                 'bApplied'              => true,
             ],
             'itemList'                  => $items
