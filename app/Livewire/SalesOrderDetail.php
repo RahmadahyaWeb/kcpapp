@@ -193,7 +193,7 @@ class SalesOrderDetail extends Component
             'szOrderTypeId'     => 'JUAL',
             'dtmOrder'          => date('Y-m-d H:i:s', strtotime($header->crea_date)),
             'szCustId'          => $header->kd_outlet,
-            'dlvAddress_J'      => $this->prepareDeliveryAddress(),
+            'dlvAddress_J'      => $this->prepareDeliveryAddress($header),
             'decAmount'         => $decDPPTotal,
             'decTax'            => $decTaxTotal,
             'szShipToId'        => $header->kd_outlet,
@@ -209,18 +209,21 @@ class SalesOrderDetail extends Component
         ];
     }
 
-    private function prepareDeliveryAddress()
+    private function prepareDeliveryAddress($header)
     {
+        $addressDetail = $this->kcpInformation->getAddress($this->token, $header->kd_outlet);
+        $addressDetail = $addressDetail['data'];
+
         return [
-            'szContactPerson'   => '',
-            'szAddress_1'       => '',
-            'szAddress_2'       => '',
-            'szDistrict'        => '',
-            'szCity'            => '',
+            'szContactPerson'   => $addressDetail['nm_outlet'],
+            'szAddress_1'       => $addressDetail['almt_outlet'],
+            'szAddress_2'       => $addressDetail['almt_outlet'],
+            'szDistrict'        => $addressDetail['nm_area'],
+            'szCity'            => $addressDetail['nm_area'],
             'szZipCode'         => '',
-            'szState'           => '',
-            'szCountry'         => '',
-            'szPhoneNo_1'       => '',
+            'szState'           => $addressDetail['provinsi'],
+            'szCountry'         => 'Indonesia',
+            'szPhoneNo_1'       => $addressDetail['tlpn'] ? $addressDetail['tlpn'] : 0,
         ];
     }
 
