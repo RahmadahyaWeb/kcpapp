@@ -61,7 +61,7 @@
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">
                                     <hr>
-                                    <button type="submit" class="btn btn-warning">
+                                    <button type="submit" class="btn btn-warning" wire:offline.attr="disabled">
                                         <span wire:loading.remove wire:target="sendToBosnet">Kirim ke Bosnet</span>
                                         <span wire:loading wire:target="sendToBosnet">Loading...</span>
                                     </button>
