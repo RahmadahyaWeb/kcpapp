@@ -1,4 +1,5 @@
 <div>
+    <!-- Session Flash Messages -->
     @if (session('status'))
         <div class="alert alert-primary alert-dismissible fade show" role="alert">
             {{ session('status') }}
@@ -11,7 +12,9 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
     <div class="card">
+        <!-- Card Header -->
         <div class="card-header">
             <div class="row align-items-center">
                 <div class="col">
@@ -26,17 +29,20 @@
             </div>
             <hr>
         </div>
+
+        <!-- Card Body -->
         <div class="card-body">
+            <!-- Filter Section -->
             <div class="row mb-3 g-2">
                 <div class="col-md-4">
                     <label class="form-label">Sales Order</label>
-                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noSo"
-                        placeholder="Cari berdasarkan no sales order" wire:loading.attr="disabled">
+                    <input type="text" class="form-control" placeholder="Cari berdasarkan no sales order"
+                        wire:model.live.debounce.1000ms="noSo" wire:loading.attr="disabled">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Invoice</label>
-                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noInv"
-                        placeholder="Cari berdasarkan no invoice" wire:loading.attr="disabled">
+                    <input type="text" class="form-control" placeholder="Cari berdasarkan no invoice"
+                        wire:model.live.debounce.1000ms="noInv" wire:loading.attr="disabled">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Status</label>
@@ -48,6 +54,7 @@
                 </div>
             </div>
 
+            <!-- Loading Spinner -->
             <div wire:loading.flex wire:target="noSo, noInv, status, synchronization, gotoPage"
                 class="text-center justify-content-center align-items-center" style="height: 200px;">
                 <div class="spinner-border" role="status">
@@ -55,50 +62,49 @@
                 </div>
             </div>
 
+            <!-- Data Table -->
             <div class="table-responsive" wire:loading.class="d-none"
                 wire:target="noSo, noInv, status, synchronization, gotoPage">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th style="width: 18%;">No SO</th>
-                            <th style="">Kode Toko</th>
-                            <th style="">Nama Toko</th>
-                            <th style="">Nominal Invoice + PPn (Rp)</th>
+                            <th>Kode Toko</th>
+                            <th>Nama Toko</th>
+                            <th>Nominal Invoice + PPn (Rp)</th>
                             <th>Status</th>
                             <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if ($invoices->isEmpty())
+                        @forelse ($invoices as $invoice)
                             <tr>
-                                <td colspan="5" class="text-center">No Data</td>
+                                <td>
+                                    <a href="{{ route('so.detail', $invoice->noinv) }}">
+                                        {{ $invoice->noso }}
+                                    </a>
+                                </td>
+                                <td>{{ $invoice->kd_outlet }}</td>
+                                <td>{{ $invoice->nm_outlet }}</td>
+                                <td>{{ number_format($invoice->amount_total, 0, ',', '.') }}</td>
+                                <td>
+                                    <span class="badge text-bg-{{ $invoice->status == 'KCP' ? 'success' : 'warning' }}">
+                                        {{ $invoice->status }}
+                                    </span>
+                                </td>
+                                <td>{{ $invoice->crea_date }}</td>
                             </tr>
-                        @else
-                            @foreach ($invoices as $invoice)
-                                <tr>
-                                    <td>
-                                        <a href="{{ route('so.detail', $invoice->noinv) }}">
-                                            {{ $invoice->noso }}
-                                        </a>
-                                    </td>
-                                    <td>{{ $invoice->kd_outlet }}</td>
-                                    <td>{{ $invoice->nm_outlet }}</td>
-                                    <td>{{ number_format($invoice->amount_total, 0, ',', '.') }}</td>
-                                    <td>
-                                        @if ($invoice->status == 'KCP')
-                                            <span class="badge text-bg-success">{{ $invoice->status }}</span>
-                                        @else
-                                            <span class="badge text-bg-warning">{{ $invoice->status }}</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $invoice->crea_date }}</td>
-                                </tr>
-                            @endforeach
-                        @endif
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center">No Data</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Card Footer -->
         <div class="card-footer">
             <div wire:loading.class="d-none" wire:target="noSo, noInv, status, synchronization">
                 {{ $invoices->links() }}
