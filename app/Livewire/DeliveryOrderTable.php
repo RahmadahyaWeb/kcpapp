@@ -30,9 +30,11 @@ class DeliveryOrderTable extends Component
     /**
      * @var string|null $noLkh Filter berdasarkan nomor LKH
      * @var string|null $noSo Filter berdasarkan nomor SO
+     * @var string|null $status Filter berdasarkan status
      */
     public $noLkh;
     public $noSo;
+    public $status;
 
     /**
      * Inisialisasi komponen dan autentikasi API
@@ -112,6 +114,7 @@ class DeliveryOrderTable extends Component
             ->select(['trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date'])
             ->where('trns_do_invoice.no_lkh', 'like', '%' . $this->noLkh . '%')
             ->where('trns_do_invoice.noso', 'like', '%' . $this->noSo . '%')
+            ->where('trns_do_invoice.status', 'like', '%' . $this->status . '%')
             ->groupBy('trns_do_invoice.no_lkh', 'trns_do_invoice.status', 'trns_do_invoice.crea_date')
             ->orderBy('trns_do_invoice.no_lkh', 'desc')
             ->paginate(20);
