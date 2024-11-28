@@ -273,27 +273,31 @@ class SalesOrderDetail extends Component
      */
     public function render()
     {
-        if (!$this->token) {
-            abort(500);
+        try {
+            if (!$this->token) {
+                abort(500);
+            }
+
+            // Fetch the invoice header
+            $this->loadInvoiceHeader();
+
+            return view('livewire.sales-order-detail', [
+                'invoices' => $this->getInvoice($this->invoice),
+                'programs' => DB::table('sales_order_program')
+                    ->where('noinv', $this->invoice)
+                    ->get(),
+                'header' => $this->header,
+                'bonus' => DB::table('bonus_detail')
+                    ->where('nm_program', 'like', '%' . $this->search_program . '%')
+                    ->where('kd_outlet', $this->kd_outlet)
+                    ->get(),
+                'nominalSuppProgram' => DB::table('sales_order_program')
+                    ->where('noinv', $this->invoice)
+                    ->sum('nominal_program'),
+            ]);
+        } catch (\Exception $e) {
+            abort(500, 'An error occurred while rendering the component.');
         }
-
-        // Fetch the invoice header
-        $this->loadInvoiceHeader();
-
-        return view('livewire.sales-order-detail', [
-            'invoices' => $this->getInvoice($this->invoice),
-            'programs' => DB::table('sales_order_program')
-                ->where('noinv', $this->invoice)
-                ->get(),
-            'header' => $this->header,
-            'bonus' => DB::table('bonus_detail')
-                ->where('nm_program', 'like', '%' . $this->search_program . '%')
-                ->where('kd_outlet', $this->kd_outlet)
-                ->get(),
-            'nominalSuppProgram' => DB::table('sales_order_program')
-                ->where('noinv', $this->invoice)
-                ->sum('nominal_program'),
-        ]);
     }
 
     /**

@@ -59,7 +59,7 @@
                     <tbody>
                         @if ($items->isEmpty())
                             <tr>
-                                <td colspan="3" class="text-center">No Data</td>
+                                <td colspan="4" class="text-center">No Data</td>
                             </tr>
                         @else
                             @foreach ($items as $item)

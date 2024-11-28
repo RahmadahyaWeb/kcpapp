@@ -238,7 +238,6 @@ class SalesOrderController extends Controller
         // Example:
         // return Http::post('url_bosnet', $data);
 
-        dd($data);
         return true;
     }
 
