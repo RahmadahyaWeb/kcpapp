@@ -47,69 +47,7 @@
 <body>
     <!-- Content -->
 
-    <div class="container">
-        <div class="row min-vh-100 d-flex justify-content-center align-items-center">
-            <div class="col-md-4">
-                <div class="card px-sm-6 px-0">
-                    <div class="card-header text-center">
-                        <div class="app-brand justify-content-center">
-                            <img src="{{ asset('img/logo-hd.png') }}" alt="logo-kcp"
-                                style="width: 200px; height: auto;">
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <span class="mb-1 fs-2 fw-bold">
-                            KCP APP
-                        </span>
-
-                        <p class="mb-6 text-muted">Please login to your account and get started!</p>
-
-                        <hr>
-
-                        <form id="formAuthentication" class="mb-6" action="{{ route('login') }}" method="POST">
-                            @csrf
-                            <div class="mb-6">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control @error('username') is-invalid @enderror"
-                                    id="username" name="username" placeholder="Enter your username" autofocus
-                                    value="{{ old('username') }}" />
-
-                                @error('username')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
-                            <div class="mb-6 form-password-toggle">
-                                <label class="form-label" for="password">Password</label>
-
-                                <input type="password" id="password"
-                                    class="form-control @error('password') is-invalid @enderror" name="password"
-                                    placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-                                    aria-describedby="password" />
-                                @error('password')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-
-                            </div>
-                            <div class="mb-6">
-                                <button id="loginButton" class="btn btn-primary d-grid w-100" type="submit">
-                                    <div id="loginText">
-                                        Login
-                                    </div>
-                                    <div id="loading" class="d-none">
-                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                    </div>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @livewire('login')
 
     <!-- / Content -->
 
@@ -128,20 +66,6 @@
 
     <!-- Main JS -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
-
-    <script>
-        document.getElementById('formAuthentication').addEventListener('submit', function() {
-            var button = document.getElementById('loginButton');
-            button.disabled = true;
-
-            var text = document.getElementById('loginText');
-            text.classList.add('d-none');
-
-
-            var loading = document.getElementById('loading');
-            loading.classList.remove('d-none');
-        });
-    </script>
 
     <!-- Page JS -->
 </body>
