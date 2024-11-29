@@ -62,7 +62,6 @@ class DksController extends Controller
             ->count();
     }
 
-
     public function scan()
     {
         return view('dks.scan');
@@ -111,7 +110,7 @@ class DksController extends Controller
 
     private function redirectBackWithError($message)
     {
-        return redirect()->back()->with('error', $message);
+        return redirect()->route('dks.scan')->with('error', $message);
     }
 
     private function determineCheckType($kd_toko, $user, $katalog)
