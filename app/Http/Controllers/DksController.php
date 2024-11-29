@@ -23,42 +23,45 @@ class DksController extends Controller
     {
         $this->guard();
 
-        if ($kd_toko) {
-            $kd_toko = base64_decode($kd_toko);
-
-            $toko = DB::table('master_toko')
-                ->select([
-                    'kd_toko',
-                    'nama_toko',
-                    'latitude',
-                    'longitude',
-                ])
-                ->where('kd_toko', $kd_toko)
-                ->first();
-
-            $katalog = $request->get('katalog');
-
-            if ($toko) {
-                if ($katalog && $katalog[6] == 'Y') {
-                    $check = 'katalog';
-                } else {
-                    // CHECK TYPE APAKAH CEK IN ATAU CEK OUT
-                    $check = DB::table('trns_dks')
-                        ->where('kd_toko', $kd_toko)
-                        ->where('user_sales', Auth::user()->username)
-                        ->where('type', 'in')
-                        ->whereDate('tgl_kunjungan', '=', now()->toDateString())
-                        ->count();
-                }
-
-                return view('dks.submit', compact('toko', 'katalog', 'check'));
-            } else {
-                return redirect()->route('dks.scan')->with('error', "Kode toko tidak ditemukan.");
-            }
-        } else {
+        if (!$kd_toko) {
             return view('dks.index');
         }
+
+        $kd_toko = base64_decode($kd_toko);
+        $toko = $this->getTokoData($kd_toko);
+
+        if (!$toko) {
+            return redirect()->route('dks.scan')->with('error', "Kode toko tidak ditemukan.");
+        }
+
+        $katalog = $request->get('katalog');
+        $check = $this->determineCheckTypeForIndex($kd_toko, $katalog);
+
+        return view('dks.submit', compact('toko', 'katalog', 'check'));
     }
+
+    private function getTokoData(string $kd_toko)
+    {
+        return DB::table('master_toko')
+            ->select(['kd_toko', 'nama_toko', 'latitude', 'longitude'])
+            ->where('kd_toko', $kd_toko)
+            ->first();
+    }
+
+    private function determineCheckTypeForIndex(string $kd_toko, ?string $katalog)
+    {
+        if ($katalog && $katalog[6] === 'Y') {
+            return 'katalog';
+        }
+
+        return DB::table('trns_dks')
+            ->where('kd_toko', $kd_toko)
+            ->where('user_sales', Auth::user()->username)
+            ->where('type', 'in')
+            ->whereDate('tgl_kunjungan', now()->toDateString())
+            ->count();
+    }
+
 
     public function scan()
     {
