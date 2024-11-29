@@ -26,6 +26,8 @@ class RekapPunishmentExport implements WithMultipleSheets
 
         $sheets[] = new RekapSheet($sales, $this->fromDate, $this->toDate, $this->items);
 
+        $sheets[] = new KunjunganSheet($sales, $this->fromDate, $this->toDate);
+
         foreach ($this->items as $user_sales => $value) {
             $sheets[] = new SalesSheet($user_sales, $this->fromDate, $this->toDate, $value);
         }

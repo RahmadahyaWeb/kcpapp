@@ -14,10 +14,17 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
 {
-    protected $sales;
-    protected $fromDate;
-    protected $toDate;
+    protected $sales; // Daftar sales
+    protected $fromDate; // Tanggal mulai
+    protected $toDate;   // Tanggal akhir
 
+    /**
+     * Constructor untuk inisialisasi parameter.
+     * 
+     * @param array $sales Daftar sales.
+     * @param string $fromDate Tanggal awal (format Y-m-d).
+     * @param string $toDate Tanggal akhir (format Y-m-d).
+     */
     public function __construct($sales, $fromDate, $toDate)
     {
         $this->sales = $sales;
@@ -25,6 +32,11 @@ class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
         $this->toDate = $toDate;
     }
 
+    /**
+     * Register event yang digunakan pada Excel.
+     *
+     * @return array
+     */
     public function registerEvents(): array
     {
         return [
@@ -39,6 +51,11 @@ class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
         ];
     }
 
+    /**
+     * Set header untuk worksheet.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     */
     private function setHeader($sheet)
     {
         $sheet->mergeCells('A1:A2');
@@ -57,21 +74,31 @@ class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->getDelegate()->getStyle('A1:B2')->applyFromArray($styleArray);
     }
 
-    private function getDateRange()
+    /**
+     * Generate daftar tanggal dari $fromDate hingga $toDate.
+     *
+     * @return array
+     */
+    private function getDateRange(): array
     {
-        $dateBeginLoop = new DateTime($this->fromDate);
-        $dateEndLoop = new DateTime($this->toDate);
+        $start = new DateTime($this->fromDate);
+        $end = new DateTime($this->toDate);
         $dates = [];
 
-        while ($dateBeginLoop <= $dateEndLoop) {
-            $dates[] = $dateBeginLoop->format('Y-m-d');
-            $dateBeginLoop->modify('+1 day');
+        while ($start <= $end) {
+            $dates[] = $start->format('Y-m-d');
+            $start->modify('+1 day');
         }
 
         return $dates;
     }
 
-    private function getDaysMap()
+    /**
+     * Map nama hari dalam bahasa Inggris ke bahasa Indonesia.
+     *
+     * @return array
+     */
+    private function getDaysMap(): array
     {
         return [
             'Mon' => 'Senin',
@@ -84,159 +111,150 @@ class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
         ];
     }
 
+    /**
+     * Populate data ke dalam sheet berdasarkan tanggal dan sales.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     * @param array $dates
+     * @param array $daysMap
+     */
     private function populateData($sheet, $dates, $daysMap)
     {
         $startColumn = 3;
-        foreach ($this->sales as $user_sales) {
-            $this->setSalesHeaders($sheet, $startColumn, $user_sales);
-            $this->fillData($sheet, $dates, $daysMap, $startColumn, $user_sales);
-            $startColumn += 5;
+
+        foreach ($this->sales as $salesName) {
+            $this->setSalesHeaders($sheet, $startColumn, $salesName);
+            $this->fillSalesData($sheet, $dates, $daysMap, $startColumn, $salesName);
+            $startColumn++;
         }
     }
 
-    private function setSalesHeaders($sheet, $startColumn, $user_sales)
+    /**
+     * Set header untuk setiap sales.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     * @param int $startColumn
+     * @param string $salesName
+     */
+    private function setSalesHeaders($sheet, $startColumn, $salesName)
     {
-        $endColumn = $startColumn + 4;
-        $sheet->mergeCellsByColumnAndRow($startColumn, 1, $endColumn, 1);
-        $sheet->setCellValueByColumnAndRow($startColumn, 1, $user_sales);
-        $this->styleSalesHeader($sheet, $startColumn);
-
-        $sheet->setCellValueByColumnAndRow($startColumn, 2, 'Kunjungan');
-
-        $sheet->mergeCellsByColumnAndRow($startColumn + 1, 2, $startColumn + 2, 2);
-        $sheet->setCellValueByColumnAndRow($startColumn + 1, 2, 'Cek In Pertama');
-
-        $sheet->setCellValueByColumnAndRow($startColumn + 3, 2, 'Punishment');
-        $sheet->mergeCellsByColumnAndRow($startColumn + 3, 2, $startColumn + 4, 2);
+        $sheet->setCellValueByColumnAndRow($startColumn, 1, $salesName);
+        $sheet->mergeCellsByColumnAndRow($startColumn, 1, $startColumn, 2);
+        $this->styleHeader($sheet, $startColumn);
     }
 
-    private function styleSalesHeader($sheet, $startColumn)
+    /**
+     * Apply style untuk header sales.
+     *
+     * @param int $column
+     */
+    private function styleHeader($sheet, $column)
     {
-        $sheet->getStyleByColumnAndRow($startColumn, 1)
+        $sheet->getStyleByColumnAndRow($column, 1)
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
             ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-        $sheet->getStyleByColumnAndRow($startColumn, 1)
+        $sheet->getStyleByColumnAndRow($column, 1)
             ->getFont()
             ->setBold(true);
     }
 
-    private function fillData($sheet, $dates, $daysMap, $startColumn, $user_sales)
+    /**
+     * Isi data kunjungan berdasarkan sales.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     * @param array $dates
+     * @param array $daysMap
+     * @param int $column
+     * @param string $salesName
+     */
+    private function fillSalesData($sheet, $dates, $daysMap, $column, $salesName)
     {
-        foreach ($dates as $index => $date) {
-            $rowNumber = $index + 3; // Start from row 3
-            $this->setVisitDate($sheet, $date, $rowNumber);
-            $this->setDay($sheet, $date, $rowNumber, $daysMap);
+        $excludedStores = ['6B', '6C', '6D', '6F', '6H', 'TX'];
 
-            // CARI JUMLAH KUNJUNGAN 
-            $totalKunjungan = DB::table('trns_dks')
-                ->select(['count(*) as total_kunjungan'])
-                ->where('user_sales', $user_sales)
+        foreach ($dates as $index => $date) {
+            $row = $index + 3;
+
+            // Set tanggal kunjungan
+            $this->setVisitDate($sheet, $date, $row);
+
+            // Set hari
+            $this->setDay($sheet, $date, $row, $daysMap);
+
+            // Ambil total kunjungan
+            $totalVisits = DB::table('trns_dks')
+                ->where('user_sales', $salesName)
                 ->where('tgl_kunjungan', $date)
+                ->whereNotIn('kd_toko', $excludedStores)
                 ->where('type', 'in')
                 ->count();
 
-            // TOTAL KUNJUNGAN
-            $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn);
-            $sheet->setCellValue($columnLetter . $rowNumber, str_replace('{row}', $rowNumber, $totalKunjungan));
-
-            // PENGECEKAN HARI MINGGU
-            $isSunday = \Carbon\Carbon::parse($date)->isSunday();
-
-            if ($isSunday) {
-                $punishmentLupaCekInOut = 0;
-            } else {
-                $tokoAbsen = [
-                    '6B',
-                    '6C',
-                    '6D',
-                    '6F',
-                    '6H',
-                    'TX'
-                ];
-
-                // CEK IN PERTAMA
-                $cekInPertama = DB::table('trns_dks')
-                    ->select(['*'])
-                    ->where('user_sales', $user_sales)
-                    ->where('tgl_kunjungan', $date)
-                    ->where('type', 'in')
-                    ->whereNotIn('kd_toko', $tokoAbsen)
-                    ->orderBy('waktu_kunjungan', 'asc')
-                    ->first();
-
-                if ($cekInPertama == null) {
-                    $cekInPertama = '00:00:00';
-                } else {
-                    $cekInPertama = \Carbon\Carbon::parse($cekInPertama->waktu_kunjungan)->format('H:i:s');
-                }
-
-                $nextColumnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn + 1);
-                $sheet->setCellValue($nextColumnLetter . $rowNumber, str_replace('{row}', $rowNumber, $cekInPertama));
-
-                // PUNISHMENT > 9.30
-                if ($cekInPertama > '09:30:00') {
-                    $punishmentCekInPertama = 1;
-                } else {
-                    $punishmentCekInPertama = 0;
-                }
-
-                $nextColumnLetter2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn + 2);
-                $sheet->setCellValue($nextColumnLetter2 . $rowNumber, str_replace('{row}', $rowNumber, $punishmentCekInPertama));
-
-                // PUNISHMENT LUPA CEK IN / CEK OUT
-                $punishmentLupaCekInOut = 0;
-                $cekOut = DB::table('trns_dks')
-                    ->select(['*'])
-                    ->where('user_sales', $user_sales)
-                    ->where('tgl_kunjungan', $date)
-                    ->where('type', 'out')
-                    ->orderBy('waktu_kunjungan', 'asc')
-                    ->first();
-
-                if ($cekInPertama == '00:00:00') {
-                    $punishmentLupaCekInOut = 1;
-                } else if ($cekOut == null) {
-                    $punishmentLupaCekInOut = 1;
-                }
-            }
-
-            $nextColumnLetter3 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startColumn + 3);
-            $sheet->setCellValue($nextColumnLetter3 . $rowNumber, str_replace('{row}', $rowNumber, $punishmentLupaCekInOut));
+            // Isi total kunjungan
+            $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($column);
+            $sheet->setCellValue("{$columnLetter}{$row}", $totalVisits);
         }
     }
 
-    private function setVisitDate($sheet, $date, $rowNumber)
+    /**
+     * Set tanggal kunjungan di kolom A.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     * @param string $date
+     * @param int $row
+     */
+    private function setVisitDate($sheet, $date, $row)
     {
         $excelDate = Date::dateTimeToExcel(Carbon::parse($date));
-        $sheet->setCellValue("A{$rowNumber}", $excelDate);
-        $sheet->getStyle("A{$rowNumber}")->getNumberFormat()->setFormatCode('dd/mm/yyyy');
+        $sheet->setCellValue("A{$row}", $excelDate);
+        $sheet->getStyle("A{$row}")->getNumberFormat()->setFormatCode('dd/mm/yyyy');
     }
 
-    private function setDay($sheet, $date, $rowNumber, $daysMap)
+    /**
+     * Set nama hari di kolom B.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     * @param string $date
+     * @param int $row
+     * @param array $daysMap
+     */
+    private function setDay($sheet, $date, $row, $daysMap)
     {
-        $dayInIndonesian = $daysMap[Carbon::parse($date)->format('D')] ?? '';
-        $sheet->setCellValue("B{$rowNumber}", $dayInIndonesian);
+        $dayName = $daysMap[Carbon::parse($date)->format('D')] ?? '';
+        $sheet->setCellValue("B{$row}", $dayName);
     }
 
+    /**
+     * Set auto-size untuk semua kolom.
+     *
+     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+     */
     private function autoSizeColumns($sheet)
     {
-        $highestColumn = $sheet->getHighestColumn(); // Mendapatkan kolom tertinggi
-        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn); // Mengonversi huruf kolom menjadi indeks
+        $highestColumn = $sheet->getHighestColumn();
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
 
-        // Mengatur ukuran kolom secara otomatis dari kolom 1 hingga kolom tertinggi
         foreach (range(1, $highestColumnIndex) as $columnIndex) {
-            $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex); // Mengonversi indeks kembali ke huruf kolom
+            $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex);
             $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
         }
     }
 
+    /**
+     * Nama worksheet.
+     *
+     * @return string
+     */
     public function title(): string
     {
         return 'Kunjungan';
     }
 
+    /**
+     * Format kolom dalam worksheet.
+     *
+     * @return array
+     */
     public function columnFormats(): array
     {
         return [
