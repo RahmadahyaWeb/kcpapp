@@ -86,8 +86,12 @@ class DksController extends Controller
             return $this->redirectBackWithError('Anda berada di luar radius toko!');
         }
 
-        // Validasi Check-In dan Check-Out
-        $type = $this->determineCheckType($kd_toko, $user, $katalog);
+        // Validasi Check-In dan Check-Out atau Katalog
+        try {
+            $type = $this->determineCheckType($kd_toko, $user, $katalog);
+        } catch (\Exception $e) {
+            return $this->redirectBackWithError($e->getMessage());
+        }
 
         // Validasi Toko Aktif
         $provinsiToko = $this->validateActiveStore($kd_toko);
