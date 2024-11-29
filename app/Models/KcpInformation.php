@@ -56,14 +56,14 @@ class KcpInformation extends Model
                 return $response->json();
             }
 
-            Log::error("Failed to get LKH data", [
+            Log::error("Failed to get intransit data", [
                 'status' => $response->status(),
                 'response' => $response->body()
             ]);
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Exception occurred while fetching LKH data", [
+            Log::error("Exception occurred while fetching intransit data", [
                 'error' => $e->getMessage()
             ]);
 
