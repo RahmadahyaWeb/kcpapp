@@ -133,7 +133,6 @@ class MasterTokoController extends Controller
             'longitude'     => 'required',
             'kd_provinsi'   => 'required',
             'category'      => 'required',
-            'user_sales'    => 'required',
         ], [
             'kd_toko.required'      => 'Kode toko harus diisi.',
             'kd_toko.unique'        => 'Kode toko sudah ada.',
@@ -145,7 +144,6 @@ class MasterTokoController extends Controller
             'kd_provinsi.required'  => 'Provinsi harus diisi.',
             'category.required'     => 'Category harus diisi.',
             'frekuensi.required'    => 'Frekuensi harus diisi.',
-            'user_sales.required'   => 'Sales harus diisi.',
         ]);
 
         try {
@@ -162,7 +160,7 @@ class MasterTokoController extends Controller
                 'updated_at'    => now(),
                 'updated_by'    => Auth::user()->username,
                 'frekuensi'     => $request->frekuensi,
-                'user_sales'    => $request->user_sales,
+                'user_sales'    => ($request->user_sales) ? $request->user_sales : NULL,
             ]);
 
             return redirect()->route('master-toko.index')->with('success', 'Data Toko berhasil diperbarui.');
