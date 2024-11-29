@@ -81,16 +81,13 @@ class DksController extends Controller
         if (!$latitude || !$longitude) {
             return $this->redirectBackWithError('Lokasi tidak ditemukan!');
         }
-        
+
         if ($distance > 50) {
             return $this->redirectBackWithError('Anda berada di luar radius toko!');
         }
 
         // Validasi Check-In dan Check-Out
         $type = $this->determineCheckType($kd_toko, $user, $katalog);
-        if (is_string($type)) {
-            return $this->redirectBackWithError($type);
-        }
 
         // Validasi Toko Aktif
         $provinsiToko = $this->validateActiveStore($kd_toko);
