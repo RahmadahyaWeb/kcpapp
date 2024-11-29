@@ -46,7 +46,8 @@
 
                             <div class="col-md-12 mb-3">
                                 <label for="laporan" class="form-label">Pilih Laporan</label>
-                                <select wire:model.change="laporan" class="form-select @error('laporan') is-invalid @enderror">
+                                <select wire:model.change="laporan"
+                                    class="form-select @error('laporan') is-invalid @enderror">
                                     <option value="">Pilih Laporan</option>
                                     <option value="rekap_punishment">Rekap Punishment</option>
                                     <option value="frekuensi_kunjungan">Frekuensi Kunjungan</option>
@@ -59,7 +60,8 @@
                             </div>
 
                             <div class="col-12 d-flex justify-content-end gap-2">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-success" wire:loading.attr="disabled"
+                                    wire:target="export">
                                     <span wire:loading.remove wire:target="export">Download</span>
                                     <span wire:loading wire:target="export">Downloading...</span>
                                 </button>
