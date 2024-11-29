@@ -106,7 +106,7 @@
 
         <!-- Card Footer -->
         <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noSo, noInv, status, synchronization">
+            <div wire:loading.class="d-none" wire:target="noSo, noInv, status, synchronization, gotoPage">
                 {{ $invoices->links() }}
             </div>
         </div>
