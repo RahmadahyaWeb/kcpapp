@@ -118,16 +118,16 @@ class DksController extends Controller
 
         if ($check == 0) {
             if ($katalog[6] == 'Y') {
-                return 'Tidak dapat scan katalog. Anda belum melakukan check in!';
+                throw new \Exception('Tidak dapat scan katalog. Anda belum melakukan check in!');
             }
             return 'in';
         }
 
         if ($check == 2) {
             if ($katalog[6] == 'Y') {
-                return 'Tidak dapat scan katalog. Anda sudah melakukan check out!';
+                throw new \Exception('Tidak dapat scan katalog. Anda sudah melakukan check out!');
             }
-            return 'Anda sudah melakukan check out!';
+            throw new \Exception('Anda sudah melakukan check out!');
         }
 
         return 'out';
