@@ -155,18 +155,22 @@ class DksController extends Controller
         DB::beginTransaction();
         try {
             // Validasi jeda waktu minimal 5 menit
-            // $lastRecord = DB::table('trns_dks')
-            //     ->where('kd_toko', $kd_toko)
-            //     ->where('user_sales', $user)
-            //     ->orderBy('waktu_kunjungan', 'desc')
-            //     ->first();
+            $lastRecord = DB::table('trns_dks')
+                ->where('kd_toko', $kd_toko)
+                ->where('user_sales', $user)
+                ->latest('waktu_kunjungan') // Kolom yang menjadi acuan waktu
+                ->first();
 
-            // if ($lastRecord) {
-            //     $lastVisitTime = \Carbon\Carbon::parse($lastRecord->waktu_kunjungan);
-            //     if ($waktu_kunjungan->diffInMinutes($lastVisitTime) < 5) {
-            //         throw new \Exception('Harus menunggu minimal 5 menit sebelum melakukan scan berikutnya.');
-            //     }
-            // }
+            if ($lastRecord) {
+                $lastVisitTime = \Carbon\Carbon::parse($lastRecord->waktu_kunjungan);
+
+                // Selisih waktu dalam menit
+                $timeDifference = $lastVisitTime->diff($waktu_kunjungan)->i;
+
+                if ($timeDifference < 5) {
+                    throw new \Exception('Harus menunggu minimal 5 menit sebelum melakukan scan berikutnya.');
+                }
+            }
 
             // Data yang akan disimpan
             $data = [
