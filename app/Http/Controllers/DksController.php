@@ -179,7 +179,7 @@ class DksController extends Controller
             return redirect()->route('dks.scan')->with('success', "Berhasil melakukan $action");
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->redirectBackWithError('Terjadi kesalahan saat melakukan transaksi.');
+            return $this->redirectBackWithError($e);
         }
     }
 
