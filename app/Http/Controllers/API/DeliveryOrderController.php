@@ -159,9 +159,9 @@ class DeliveryOrderController extends Controller
 
         // Loop through each sales order item and calculate the amounts
         foreach ($salesOrderItems as $orderItem) {
-            $decTax = ((($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / 1.11) * 0.11;
+            $decTax = ((($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / config('tax.ppn_factor')) * config('tax.ppn_percentage');
             $decAmount = ($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty'];
-            $decDPP = (($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / 1.11;
+            $decDPP = (($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / config('tax.ppn_factor');
             $decPrice = $orderItem['nominal_total'] / $orderItem['qty'];
 
             // Update totals
@@ -244,9 +244,9 @@ class DeliveryOrderController extends Controller
                 'decPrice'           => 0,
                 'decDiscount'        => $supportProgram,
                 'bTaxable'           => true,
-                'decTax'             => - ($supportProgram - ($supportProgram / 1.11)),
+                'decTax'             => - ($supportProgram - ($supportProgram / config('tax.ppn_factor'))),
                 'decAmount'          => 0,
-                'decDPP'             => - ($supportProgram / 1.11),
+                'decDPP'             => - ($supportProgram / config('tax.ppn_factor')),
                 'szPaymentType'      => "TDB",
                 'deliveryList'       => [],
                 'bonusSourceList'    => [],

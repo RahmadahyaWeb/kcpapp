@@ -257,13 +257,13 @@
                         <tr>
                             <td align="right" style="text-align: left;">DPP</td>
                             <td align="right" style="text-align: right;">
-                                {{ number_format(($total - $totalProgram) / 1.11, 0, ',', '.') }}
+                                {{ number_format(($total - $totalProgram) / config('tax.ppn_factor'), 0, ',', '.') }}
                             </td>
                         </tr>
                         <tr>
                             <td align="right" style="text-align: left;">PPN</td>
                             <td align="right" style="text-align: right;">
-                                {{ number_format((($total - $totalProgram) / 1.11) * 0.11, 0, ',', '.') }}
+                                {{ number_format((($total - $totalProgram) / config('tax.ppn_factor')) * config('tax.ppn_percentage'), 0, ',', '.') }}
                             </td>
                         </tr>
                     </table>

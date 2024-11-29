@@ -58,9 +58,6 @@ class AopUpload extends Component
         $listOfError = $this->getErrorBag();
 
         if (empty($listOfError->all())) {
-
-            sleep(1);
-
             $this->explodeLines();
         }
     }
@@ -185,14 +182,16 @@ class AopUpload extends Component
             $groupedData[$billingNumber][] = $item;
         }
 
-        $invoiceHeader = $this->createInvoiceHeader($groupedData);
-        $invoiceDetail = $this->createInvoiceDetail($groupedArray);
+        try {
+            $invoiceHeader = $this->createInvoiceHeader($groupedData);
+            $invoiceDetail = $this->createInvoiceDetail($groupedArray);
 
-        if ($invoiceHeader && $invoiceDetail) {
             $this->notification = 'Upload berhasil';
             $this->dispatch('file-uploaded');
             $this->reset('surat_tagihan');
             $this->reset('rekap_tagihan');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
         }
     }
 
@@ -219,7 +218,7 @@ class AopUpload extends Component
 
             $price = $amount + $addDiscount;
             $netSales = $amount - $extraPlafonDiscount;
-            $tax = floor($netSales * 0.11);
+            $tax = floor($netSales * config('tax.ppn_percentage'));
             $grandTotal = intval($netSales + $tax);
 
             // CEK APAKAH DATA SUDAH ADA SEBELUMNYA 
@@ -227,9 +226,11 @@ class AopUpload extends Component
                 ->where('invoiceAop', $data[0]['BILLING_NUMBER'])
                 ->exists();
 
+            // PROSES PENYIMPANAN KE DALAM TABLE INVOICE_AOP_HEADER
             if (!$exists) {
-                // PROSES PENYIMPANAN KE DALAM TABLE INVOICE_AOP_HEADER
                 try {
+                    DB::beginTransaction();
+
                     DB::table('invoice_aop_header')->insert([
                         'invoiceAop'            => $data[0]['BILLING_NUMBER'],
                         'SPB'                   => $data[0]['SPB_NO'],
@@ -254,14 +255,14 @@ class AopUpload extends Component
                         'status'                => 'KCP',
                         'flag_selesai'          => 'N'
                     ]);
+
+                    DB::commit();
                 } catch (\Exception $e) {
-                    $this->notification = 'Error when uploading';
-                    return false;
+                    DB::rollBack();
+                    throw new \Exception('Error when uploading.');
                 }
             }
         }
-
-        return true;
     }
 
     public function createInvoiceDetail($groupedArray)
@@ -275,6 +276,8 @@ class AopUpload extends Component
 
             if (!$exists) {
                 try {
+                    DB::beginTransaction();
+
                     DB::table('invoice_aop_detail')
                         ->insert([
                             'invoiceAop'            => $data['BILLING_NUMBER'],
@@ -290,14 +293,14 @@ class AopUpload extends Component
                             'created_at'            => now(),
                             'updated_at'            => now()
                         ]);
+
+                    DB::commit();
                 } catch (\Exception $e) {
-                    $this->notification = 'Error when uploading';
-                    return false;
+                    DB::rollBack();
+                    throw new \Exception('Error when uploading.');
                 }
             }
         }
-
-        return true;
     }
 
     public $invoiceAop;
@@ -317,7 +320,7 @@ class AopUpload extends Component
             ->when($this->tanggalJatuhTempo, function ($query) {
                 return $query->where('tanggalJatuhTempo', $this->tanggalJatuhTempo);
             })
-            ->orderBy('billingDocumentDate', 'asc')
+            ->orderBy('billingDocumentDate', 'desc')
             ->paginate(20);
 
         return view('livewire.aop-upload', compact('invoiceAopHeader'));

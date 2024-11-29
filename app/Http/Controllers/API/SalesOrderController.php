@@ -133,9 +133,9 @@ class SalesOrderController extends Controller
                 'decPrice'           => 0,
                 'decDiscount'        => $supportProgram,
                 'bTaxable'           => true,
-                'decTax'             => - ($supportProgram - ($supportProgram / 1.11)),
+                'decTax'             => - ($supportProgram - ($supportProgram / config('tax.ppn_factor'))),
                 'decAmount'          => 0,
-                'decDPP'             => - ($supportProgram / 1.11),
+                'decDPP'             => - ($supportProgram / config('tax.ppn_factor')),
                 'szPaymentType'      => "TDB",
                 'deliveryList'       => [],
                 'bonusSourceList'    => [],
@@ -161,10 +161,11 @@ class SalesOrderController extends Controller
     private function generateInvoiceItem($value, &$decDPPTotal, &$decTaxTotal)
     {
         // Calculate DPP and PPN for the item
-        $decTax = ((($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11) * 0.11;
-        $decAmount = ($value['nominal_total'] / $value['qty']) * $value['qty'];
-        $decDPP = (($value['nominal_total'] / $value['qty']) * $value['qty']) / 1.11;
-        $decPrice = $value['nominal_total'] / $value['qty'];
+        $unitPrice = $value['nominal_total'] / $value['qty']; // Harga per unit
+        $decPrice = $unitPrice; // Alias untuk harga per unit
+        $decAmount = $value['nominal_total']; // Total nominal
+        $decDPP = $unitPrice * $value['qty'] / config('tax.ppn_factor'); // Dasar Pengenaan Pajak
+        $decTax = $decDPP * config('tax.ppn_percentage'); // PPN
 
         // Update total DPP and PPN
         $decDPPTotal += $decDPP;
@@ -237,7 +238,7 @@ class SalesOrderController extends Controller
         // Implement the data sending logic using Guzzle or cURL.
         // Example:
         // return Http::post('url_bosnet', $data);
-
+        dd($data);
         return true;
     }
 

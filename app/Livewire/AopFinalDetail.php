@@ -57,8 +57,8 @@ class AopFinalDetail extends Component
             $item['bTaxable']              = true;
             $item['decDiscount']           = 0;
             $item['decDiscPercentage']     = 0;
-            $item['decDPP']                = $value->price / 1.11;
-            $item['decPPN']                = ($value->price / 1.11) * 0.11;
+            $item['decDPP']                = $value->price / config('tax.ppn_factor');
+            $item['decPPN']                = ($value->price / config('tax.ppn_factor')) * config('tax.ppn_percentage');
             $item['decAmount']             = $value->price;
             $item['purchaseITemTypeId']    = "BELI";
             $item['deliveryList']          = ['qty' => $value->qty];
