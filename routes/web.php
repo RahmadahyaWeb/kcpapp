@@ -9,6 +9,7 @@ use App\Http\Controllers\MasterTokoController;
 use App\Http\Controllers\NonAopController;
 use App\Http\Controllers\ReportDKSController;
 use App\Http\Controllers\SalesOrderController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,7 +64,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
     // AOP Final
     Route::get('/aop/final', [AopController::class, 'final'])->name('aop.final');
-    
+
     // AOP FINAL DETAIL
     Route::get('/aop/final/{invoiceAop}', [AopController::class, 'finalDetail'])->name('aop.final.detail');
 
@@ -96,6 +97,13 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
     // DO DETAIL
     Route::get('delivery-order/detail/{lkh}', [DeliveryOrderController::class, 'detail'])->name('do.detail');
+
+    // TESTING CONNECTION
+    Route::get('/testing-conn', function () {
+        $intransit_header = DB::connection('kcpinformation')->select("SELECT * FROM kcpinformation.intransit_header WHERE status = 'i'");
+
+        dd($intransit_header);
+    });
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
