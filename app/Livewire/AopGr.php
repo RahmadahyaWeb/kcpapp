@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\KcpInformation;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
@@ -13,22 +12,8 @@ class AopGr extends Component
     use WithPagination, WithoutUrlPagination;
     protected $paginationTheme = 'bootstrap';
 
-    public $kcpInformation;
-    public $token;
-
     public $invoiceAop;
     public $spb;
-
-    public function mount()
-    {
-        $this->kcpInformation = new KcpInformation;
-
-        $conn = $this->kcpInformation->login();
-
-        if ($conn) {
-            $this->token = $conn['token'];
-        }
-    }
 
     public function getTotalQty($spb)
     {
@@ -52,18 +37,20 @@ class AopGr extends Component
         return $invoiceArray;
     }
 
-
     public function getIntransitBySpb($spb)
     {
-        $intransitStock = $this->kcpInformation->getIntransitBySpb($this->token, $spb);
+        $intransitStock = DB::connection('kcpinformation')
+            ->table('intransit_header as a')
+            ->join('intransit_details as b', 'a.no_sp_aop', '=', 'b.no_sp_aop')
+            ->where('a.no_sp_aop', '=', $spb)
+            ->select('a.no_sp_aop', 'a.kd_gudang_aop', 'a.tgl_packingsheet', 'b.no_packingsheet', 'b.no_doos', 'b.part_no', 'b.qty', 'b.qty_terima')
+            ->get();
 
         $totalQtyTerima = 0;
 
-        if (isset($intransitStock['data'])) {
-            foreach ($intransitStock as $items) {
-                foreach ($items as $item) {
-                    $totalQtyTerima += $item['qty_terima'];
-                }
+        if ($intransitStock) {
+            foreach ($intransitStock as $item) {
+                $totalQtyTerima += $item->qty_terima;
             }
         }
 
@@ -72,12 +59,9 @@ class AopGr extends Component
 
     public function render()
     {
-        if (!$this->token) {
-            abort(500);
-        }
-
         $invoiceAopHeader = DB::table('invoice_aop_header')
             ->select('SPB')
+            ->where('status', 'BOSNET')
             ->groupBy('SPB')
             ->get();
 
