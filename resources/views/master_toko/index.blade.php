@@ -15,8 +15,7 @@
                     </a>
                 </div>
             </div>
-            <hr>
         </div>
-            @livewire('master-toko-table')
+        @livewire('master-toko-table')
     </div>
 @endsection

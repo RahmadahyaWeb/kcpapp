@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <div class="table-responsive" wire:loading.class="d-none" wire:target="nama_toko, kode_toko, gotoPage">
+    <div class="table-responsive mb-6" wire:loading.class="d-none" wire:target="nama_toko, kode_toko, gotoPage">
         <table class="table table-hover table-sm">
             <thead>
                 <tr>
@@ -69,7 +69,7 @@
     </div>
 
     <div class="container">
-        <div class="mt-6" wire:loading.class="d-none" wire:target="nama_toko, kode_toko, gotoPage">
+        <div wire:loading.class="d-none" wire:target="nama_toko, kode_toko, gotoPage">
             {{ $items->links() }}
         </div>
     </div>
