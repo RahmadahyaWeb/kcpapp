@@ -17,8 +17,6 @@
             </div>
             <hr>
         </div>
-        <div class="card-body">
             @livewire('master-toko-table')
-        </div>
     </div>
 @endsection

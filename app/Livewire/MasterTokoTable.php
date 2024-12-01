@@ -11,7 +11,8 @@ class MasterTokoTable extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
-    public $search = '';
+    public $nama_toko = '';
+    public $kode_toko = '';
 
     public function search()
     {
@@ -28,8 +29,8 @@ class MasterTokoTable extends Component
                 'latitude',
                 'longitude'
             ])
-            ->where('master_toko.nama_toko', 'like', '%' . $this->search . '%')
-            ->orWhere('master_toko.kd_toko', 'like', '%' . $this->search . '%')
+            ->where('master_toko.nama_toko', 'like', '%' . $this->nama_toko . '%')
+            ->where('master_toko.kd_toko', 'like', '%' . $this->kode_toko . '%')
             ->orderBy('kd_toko', 'asc')
             ->paginate(50);
 

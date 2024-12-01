@@ -23,10 +23,6 @@ class MasterTokoController extends Controller
     {
         $this->guard();
 
-        $title = 'Hapus Data!';
-        $text = "Apakah Anda yakin ingin hapus data?";
-        confirmDelete($title, $text);
-
         return view('master_toko.index');
     }
 
