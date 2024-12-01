@@ -13,6 +13,12 @@
 @endphp
 
 <div>
+    <div class="row g-2 mb-3">
+        <div class="col-md-3 d-grid">
+            <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-success">Rekap Punishment</a>
+        </div>
+    </div>
+
     <div class="card mb-3">
         <div class="card-header">
             <div class="row align-items-center">
@@ -23,10 +29,6 @@
         </div>
 
         <div class="card-body">
-            <div class="mb-3 d-flex gap-2 justify-content-end">
-                <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-success">Rekap Punishment</a>
-            </div>
-
             <div class="row g-2 mb-3">
                 <div class="col-md-6">
                     <label for="fromDate" class="form-label">Dari tanggal</label>
