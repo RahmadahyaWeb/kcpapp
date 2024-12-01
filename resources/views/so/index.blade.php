@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Data Sales Order')
+@section('title', 'Sales Order')
 
 @section('breadcrumb')
     <ol class="breadcrumb">
-        <li class="breadcrumb-item active"><a href="{{ route('so.index') }}">Data Sales order</a></li>
+        <li class="breadcrumb-item active"><a href="{{ route('so.index') }}">Sales order</a></li>
     </ol>
 @endsection
 

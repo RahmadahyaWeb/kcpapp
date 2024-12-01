@@ -21,6 +21,11 @@ class SalesOrderController extends Controller
         return view('so.detail', compact('invoice'));
     }
 
+    public function bosnet()
+    {
+        return view('so.so-bosnet');
+    }
+
     public function print($invoice)
     {
         $conn = $this->checkApiConn();

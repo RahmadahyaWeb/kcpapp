@@ -89,6 +89,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // SALES ORDER DETAIL
     Route::get('sales-order/detail/{invoice}', [SalesOrderController::class, 'detail'])->name('so.detail');
 
+    // SALES ORDDER BOSNET
+    Route::get('sales-order/bosnet', [SalesOrderController::class, 'bosnet'])->name('so-bosnet.index');
+
     // PRINT INVOICE 
     Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');
 

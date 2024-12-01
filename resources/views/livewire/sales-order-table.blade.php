@@ -1,114 +1,42 @@
 <div>
-    <!-- Session Flash Messages -->
-    @if (session('status'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('status') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <div class="mb-3">
+        <a href="{{ route('so-bosnet.index') }}" class="btn btn-warning">SO to Bosnet</a>
+    </div>
 
     <div class="card">
         <!-- Card Header -->
         <div class="card-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <b>Data Sales Order</b>
+                    <b>Sales Order</b>
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <button wire:click="synchronization" class="btn btn-success" wire:target="synchronization"
-                        wire:loading.attr="disabled">
-                        <i class='bx bx-sync me-1'></i> Sinkron
-                    </button>
+                    <a href="" class="btn btn-success">
+                        Buat SO Baru
+                    </a>
                 </div>
-            </div>
-            <hr>
-        </div>
-
-        <!-- Card Body -->
-        <div class="card-body">
-            <!-- Filter Section -->
-            <div class="row mb-3 g-2">
-                <div class="col-md-4">
-                    <label class="form-label">Sales Order</label>
-                    <input type="text" class="form-control" placeholder="Cari berdasarkan no sales order"
-                        wire:model.live.debounce.1000ms="noSo" wire:loading.attr="disabled">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Invoice</label>
-                    <input type="text" class="form-control" placeholder="Cari berdasarkan no invoice"
-                        wire:model.live.debounce.1000ms="noInv" wire:loading.attr="disabled">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Status</label>
-                    <select wire:model.change="status" class="form-select" wire:loading.attr="disabled">
-                        <option value="">Pilih Status</option>
-                        <option value="KCP">KCP</option>
-                        <option value="BOSNET">BOSNET</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Loading Spinner -->
-            <div wire:loading.flex wire:target="noSo, noInv, status, synchronization, gotoPage"
-                class="text-center justify-content-center align-items-center" style="height: 200px;">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
-            <!-- Data Table -->
-            <div class="table-responsive" wire:loading.class="d-none"
-                wire:target="noSo, noInv, status, synchronization, gotoPage">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 18%;">No SO</th>
-                            <th>Kode Toko</th>
-                            <th>Nama Toko</th>
-                            <th>Nominal Invoice + PPn (Rp)</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($invoices as $invoice)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('so.detail', $invoice->noinv) }}">
-                                        {{ $invoice->noso }}
-                                    </a>
-                                </td>
-                                <td>{{ $invoice->kd_outlet }}</td>
-                                <td>{{ $invoice->nm_outlet }}</td>
-                                <td>{{ number_format($invoice->amount_total, 0, ',', '.') }}</td>
-                                <td>
-                                    <span class="badge text-bg-{{ $invoice->status == 'KCP' ? 'success' : 'warning' }}">
-                                        {{ $invoice->status }}
-                                    </span>
-                                </td>
-                                <td>{{ $invoice->crea_date }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">No Data</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
         </div>
 
-        <!-- Card Footer -->
-        <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noSo, noInv, status, synchronization, gotoPage">
-                {{ $invoices->links() }}
-            </div>
+        <div class="table-responsive mb-6">
+            <table class="table table-hover table-sm">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Tgl. SO</th>
+                        <th>No Sales Order (SO)</th>
+                        <th>Back Order</th>
+                        <th>Kode Toko</th>
+                        <th>Nama Toko</th>
+                        <th>Nominal SP</th>
+                        <th>Nominal Plafond</th>
+                        <th>Nama Sales</th>
+                        <th>Approve SPV</th>
+                        <th>Mutasi</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
+</div>
 </div>

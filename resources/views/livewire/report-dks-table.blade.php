@@ -79,7 +79,7 @@
         <div class="table-responsive mb-6" wire:loading.class="d-none"
             wire:target="toDate, user_sales, kd_toko, gotoPage">
             <table class="table table-hover table-sm">
-                <thead>
+                <thead class="table-primary">
                     <tr>
                         <th>Nama</th>
                         <th>Tgl. Kunjungan</th>

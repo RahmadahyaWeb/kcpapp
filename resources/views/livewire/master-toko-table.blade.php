@@ -23,7 +23,7 @@
 
     <div class="table-responsive mb-6" wire:loading.class="d-none" wire:target="nama_toko, kode_toko, gotoPage">
         <table class="table table-hover table-sm">
-            <thead>
+            <thead class="table-primary">
                 <tr>
                     <th>Kode Toko</th>
                     <th>Nama Toko</th>
