@@ -98,6 +98,23 @@
                         <nav aria-label="breadcrumb">
                             @yield('breadcrumb')
                         </nav>
+
+                        @if (session('success'))
+                            <div id="success-alert" class="alert alert-primary alert-dismissible fade show"
+                                role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+                        @if (session('error'))
+                            <div id="error-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         @yield('content')
                     </div>
                     <!-- / Content -->
@@ -139,6 +156,22 @@
 
     <!-- Page JS -->
     <script src="{{ asset('assets/js/dashboards-analytics.js') }}"></script>
+
+    <!-- Delete Alert -->
+    <script>
+        setTimeout(function() {
+            let successAlert = document.getElementById('success-alert');
+            let errorAlert = document.getElementById('error-alert');
+
+            if (successAlert) {
+                successAlert.classList.add('d-none');
+            }
+
+            if (errorAlert) {
+                errorAlert.classList.add('d-none');
+            }
+        }, 10000); 
+    </script>
 
     @stack('scripts')
 

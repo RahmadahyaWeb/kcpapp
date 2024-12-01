@@ -53,9 +53,10 @@
 
                                     <div class="d-grid">
                                         <a href="{{ route('master-toko.destroy', $item->kd_toko) }}"
-                                            class="btn btn-sm btn-danger text-white">
-                                            <div class="ms-1">Hapus</div>
-                                        </a>
+                                            class="btn btn-sm btn-danger text-white"
+                                            onclick="return confirm('Apakah Anda yakin ingin menghapus item ini?');">
+                                             <div class="ms-1">Hapus</div>
+                                         </a>                                         
                                     </div>
                                 </div>
                             </td>
