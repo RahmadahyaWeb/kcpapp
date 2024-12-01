@@ -20,7 +20,7 @@
 
         <div class="table-responsive mb-6">
             <table class="table table-hover table-sm">
-                <thead class="table-primary">
+                <thead class="table-dark">
                     <tr>
                         <th>Tgl. SO</th>
                         <th>No Sales Order (SO)</th>
