@@ -13,10 +13,10 @@
     @endif
 
     <div class="mb-3 gap-2">
-        {{-- <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator"
+        <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator"
             wire:confirm="Yakin ingin reset?">
             Reset
-        </button> --}}
+        </button>
         <button type="button" class="btn btn-sm btn-success" wire:click="export">Download Excel</button>
     </div>
 
