@@ -109,7 +109,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     });
 
     // COMPARATOR
-    Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.name');
+    Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.index');
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
