@@ -67,8 +67,9 @@ class ComparatorTable extends Component
 
     public function render()
     {
-        $items = DB::table('comparator')
-            ->leftJoin('kcpinformation.mst_part', 'comparator.part_number', '=', 'mst_part.part_no')
+        $items = DB::connection('mysql') // untuk koneksi default
+            ->table('comparator')
+            ->leftJoin(DB::raw('kcpinformation.mst_part'), 'comparator.part_number', '=', 'mst_part.part_no')
             ->select(
                 'comparator.*',
                 DB::raw('IFNULL(mst_part.nm_part, "PART NUMBER TIDAK DIKENALI") as nm_part')
