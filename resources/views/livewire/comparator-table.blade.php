@@ -13,8 +13,11 @@
     @endif
 
     <div class="mb-3 gap-2">
-        <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator" wire:confirm="Yakin ingin reset?">Reset</button>
-        <button type="button" class="btn btn-sm btn-success" wire:click="export">Download Excel</button>        
+        <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator"
+            wire:confirm="Yakin ingin reset?">
+            Reset
+        </button>
+        <button type="button" class="btn btn-sm btn-success" wire:click="export">Download Excel</button>
     </div>
 
     <div class="card">
@@ -35,6 +38,7 @@
                             <th>Nama Part</th>
                             <th>Qty</th>
                             <th>Scan By</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,11 +48,17 @@
                                 <td>{{ $item->nm_part }}</td>
                                 <td>{{ $item->qty }}</td>
                                 <td>{{ $item->scan_by }}</td>
+                                <td>
+                                    <a class="btn btn-sm btn-danger"
+                                        href="{{ route('comparator.destroy', $item->part_number) }}">
+                                        Hapus
+                                    </a>
+                                </td>
                             </tr>
                         @empty
-                        <tr>
-                            <td colspan="4" class="text-center">No Data</td>
-                        </tr>
+                            <tr>
+                                <td colspan="5" class="text-center">No Data</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>

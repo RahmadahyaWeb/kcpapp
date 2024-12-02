@@ -16,7 +16,7 @@ class ComparatorTable extends Component
     public function store()
     {
         if (!$this->barcode) {
-            session()->flash('error', 'Barcode tidak boleh kosong.');
+            session()->flash('error', 'Barcode error.');
             return;
         }
 

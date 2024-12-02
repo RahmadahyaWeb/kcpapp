@@ -17,14 +17,31 @@ class ComparatorExport implements FromCollection, WithHeadings, WithEvents
      */
     public function collection()
     {
-        return DB::table('comparator')
-            ->leftJoin('kcpinformation.mst_part', 'comparator.part_number', '=', 'mst_part.part_no')
-            ->select(
-                'comparator.part_number',
-                DB::raw('IFNULL(mst_part.nm_part, "PART NUMBER TIDAK DIKENALI") as nm_part'),
-                'comparator.qty'
-            )
+        $comparatorItems = DB::connection('mysql')
+            ->table('comparator')
             ->get();
+
+        // Ambil data dari database 'kcpinformation'
+        $mstParts = DB::connection('kcpinformation')
+            ->table('mst_part')
+            ->select('part_no', 'nm_part')
+            ->get()
+            ->keyBy('part_no'); // Indeks data berdasarkan 'part_no'
+
+        // Gabungkan data secara manual dan susun dalam format tertentu
+        $items = $comparatorItems->map(function ($item) use ($mstParts) {
+            // Cari part di mstParts berdasarkan part_number
+            $nmPart = $mstParts->get($item->part_number)->nm_part ?? 'PART NUMBER TIDAK DIKENALI';
+
+            // Susun data sesuai urutan yang diinginkan
+            return [
+                'PART NUMBER' => $item->part_number,
+                'NAMA PART'   => $nmPart,
+                'QTY'         => $item->qty,
+            ];
+        });
+
+        return $items;
     }
 
     /**
