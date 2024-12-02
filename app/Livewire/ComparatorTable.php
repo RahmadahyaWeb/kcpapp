@@ -67,14 +67,28 @@ class ComparatorTable extends Component
 
     public function render()
     {
-        $items = DB::connection('mysql') // untuk koneksi default
+        // Ambil data dari database 'mysql' (default)
+        $comparatorItems = DB::connection('mysql')
             ->table('comparator')
-            ->leftJoin(DB::raw('kcpinformation.mst_part'), 'comparator.part_number', '=', 'mst_part.part_no')
-            ->select(
-                'comparator.*',
-                DB::raw('IFNULL(mst_part.nm_part, "PART NUMBER TIDAK DIKENALI") as nm_part')
-            )
             ->get();
+
+        // Ambil data dari database 'kcpinformation'
+        $mstParts = DB::connection('kcpinformation')
+            ->table('mst_part')
+            ->select('part_no', 'nm_part')
+            ->get()
+            ->keyBy('part_no'); // Indeks data berdasarkan 'part_no' untuk mempermudah pencarian
+
+        // Gabungkan data secara manual
+        $items = $comparatorItems->map(function ($item) use ($mstParts) {
+            // Cari part di mstParts berdasarkan part_number
+            $nmPart = $mstParts->get($item->part_number)->nm_part ?? 'PART NUMBER TIDAK DIKENALI';
+
+            // Tambahkan nama part ke item
+            $item->nm_part = $nmPart;
+
+            return $item;
+        });
 
         return view('livewire.comparator-table', compact('items'));
     }
