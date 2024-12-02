@@ -86,7 +86,7 @@
                 <table class="table table-hover table-sm">
                     <thead class="table-dark">
                         <tr>
-                            <th>Nama</th>
+                            <th>Sales</th>
                             <th>Tgl. Kunjungan</th>
                             <th>Kode Toko</th>
                             <th>Toko</th>
