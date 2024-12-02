@@ -101,6 +101,12 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // DO DETAIL
     Route::get('delivery-order/detail/{lkh}', [DeliveryOrderController::class, 'detail'])->name('do.detail');
 
+    Route::get('test-con', function () {
+        $test = DB::connection('kcpinformation')->table('user')->select('crea_date')->get();
+
+        dd($test);
+    });
+
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 });
