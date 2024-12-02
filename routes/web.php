@@ -3,6 +3,7 @@
 use App\Http\Controllers\AopController;
 use App\Http\Controllers\AopReceiptController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ComparatorController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\DksController;
 use App\Http\Controllers\MasterTokoController;
@@ -106,6 +107,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
         dd($test);
     });
+
+    // COMPARATOR
+    Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.name');
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
