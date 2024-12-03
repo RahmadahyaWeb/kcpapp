@@ -157,35 +157,35 @@
             @endphp
             @foreach ($invoices as $item)
                 @php
-                    $totalQty += $item['qty'];
-                    $totalHarga += $item['hrg_pcs'];
-                    $totalDisc += $item['nominal_disc'];
-                    $total += $item['nominal_total'];
+                    $totalQty += $item->qty;
+                    $totalHarga += $item->hrg_pcs;
+                    $totalDisc += $item->nominal_disc;
+                    $total += $item->nominal_total;
                 @endphp
                 <tr>
                     <td style="text-align:center;">
                         {{ $no++ }}
                     </td>
                     <td>
-                        {{ $item['part_no'] }}
+                        {{ $item->part_no }}
                     </td>
                     <td>
-                        {{ str_replace($item['part_no'], '', $item['nm_part']) }}
+                        {{ str_replace($item->part_no, '', $item->nm_part) }}
                     </td>
                     <td style="text-align:center;">
-                        {{ $item['qty'] }}
+                        {{ $item->qty }}
                     </td>
                     <td style="text-align:right;">
-                        {{ number_format($item['hrg_pcs'], 0, ',', '.') }}
+                        {{ number_format($item->hrg_pcs, 0, ',', '.') }}
                     </td>
                     <td style="text-align:right;">
-                        {{ number_format($item['nominal_disc'], 0, ',', '.') }}
+                        {{ number_format($item->nominal_disc, 0, ',', '.') }}
                     </td>
                     <td style="text-align:center;">
-                        {{ $item['disc'] }}%
+                        {{ $item->disc }}%
                     </td>
                     <td style="text-align:right;">
-                        {{ number_format($item['nominal_total'], 0, ',', '.') }}
+                        {{ number_format($item->nominal_total, 0, ',', '.') }}
                     </td>
                 </tr>
             @endforeach
@@ -219,7 +219,7 @@
                     <div>
                         <b>
                             Tanggal Jatuh Tempo :
-                            {{ date('d-m-Y', strtotime($header->tgl_jatuh_tempo)) }}
+                            {{ date('d-m-Y', strtotime($header->tgl_jth_tempo)) }}
                         </b>
                     </div>
                     <br>

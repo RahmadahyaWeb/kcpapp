@@ -56,7 +56,7 @@
                     </div>
 
                     <!-- Send to Bosnet Button (Only for KCP Status) -->
-                    @if ($header->status == 'KCP')
+                    @if ($header->status_bosnet == 'KCP' && $header->flag_print == 'Y')
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Add Support Program (Only for KCP Status) -->
-        @if ($header->status == 'KCP')
+        @if ($header->status_bosnet == 'KCP')
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
@@ -156,7 +156,7 @@
                                         <td>{{ $program->nama_program }}</td>
                                         <td>{{ number_format($program->nominal_program, 0, ',', '.') }}</td>
                                         <td>
-                                            @if ($header->status == 'KCP')
+                                            @if ($header->status_bosnet == 'KCP')
                                                 <button wire:click="deleteProgram({{ $program->id }})"
                                                     class="btn btn-sm btn-danger">Hapus</button>
                                             @endif
@@ -196,18 +196,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $total = 0; @endphp
                                 @forelse ($invoices as $invoice)
-                                    @php $total += $invoice['nominal_total']; @endphp
                                     <tr>
-                                        <td>{{ $invoice['part_no'] }}</td>
-                                        <td>{{ $invoice['nm_part'] }}</td>
-                                        <td>{{ $invoice['qty'] }}</td>
-                                        <td>{{ number_format($invoice['hrg_pcs'], 0, ',', '.') }}</td>
-                                        <td>{{ $invoice['disc'] }}</td>
-                                        <td>{{ number_format($invoice['nominal'], 0, ',', '.') }}</td>
-                                        <td>{{ number_format($invoice['nominal_disc'], 0, ',', '.') }}</td>
-                                        <td>{{ number_format($invoice['nominal_total'], 0, ',', '.') }}</td>
+                                        <td>{{ $invoice->part_no }}</td>
+                                        <td>{{ $invoice->nm_part }}</td>
+                                        <td>{{ $invoice->qty }}</td>
+                                        <td>{{ number_format($invoice->hrg_pcs, 0, ',', '.') }}</td>
+                                        <td>{{ $invoice->disc }}</td>
+                                        <td>{{ number_format($invoice->nominal, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->nominal_disc, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->nominal_total, 0, ',', '.') }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -216,7 +214,7 @@
                                 @endforelse
                                 <tr>
                                     <td colspan="7" class="fw-bold">Total</td>
-                                    <td>{{ number_format($total, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($sumTotalDPP, 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>
                                     <td colspan="7" class="fw-bold">Support Program</td>
@@ -224,7 +222,7 @@
                                 </tr>
                                 <tr>
                                     <td colspan="7" class="fw-bold">Grand Total</td>
-                                    <td>{{ number_format($total - $supportProgram, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($sumTotalDPP - $supportProgram, 0, ',', '.') }}</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -74,17 +74,7 @@
         <div class="card">
             <!-- Card Header -->
             <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <b>List Invoice</b>
-                    </div>
-                    <div class="col d-flex justify-content-end">
-                        <button wire:click="synchronization" class="btn btn-success" wire:target="synchronization"
-                            wire:loading.attr="disabled">
-                            <i class='bx bx-sync me-1'></i> Sinkron
-                        </button>
-                    </div>
-                </div>
+                <b>List Invoice</b>
             </div>
 
             <div class="card-body">

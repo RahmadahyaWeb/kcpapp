@@ -14,7 +14,6 @@ use Livewire\Component;
  */
 class SalesOrderDetail extends Component
 {
-    public $token;
     public $kcpInformation;
     public $invoice;
     public $header = [];
@@ -23,6 +22,8 @@ class SalesOrderDetail extends Component
     public $nominal_program_display = 0;
     public $nama_program;
     public $nominal_program;
+    public $details;
+    public $sumTotalDPP;
 
     /**
      * Initialize the component with an invoice.
@@ -32,37 +33,6 @@ class SalesOrderDetail extends Component
     public function mount($invoice)
     {
         $this->invoice = $invoice;
-        $this->kcpInformation = new KcpInformation;
-        $this->initializeConnection();
-    }
-
-    /**
-     * Initialize the connection to retrieve the authentication token.
-     */
-    private function initializeConnection()
-    {
-        $conn = $this->kcpInformation->login();
-
-        if ($conn) {
-            $this->token = $conn['token'];
-        }
-    }
-
-    /**
-     * Fetch the invoice details from the external API.
-     * 
-     * @param string $invoice Invoice number
-     * @return Collection Invoice details
-     */
-    public function getInvoice($invoice)
-    {
-        $invoiceData = $this->kcpInformation->getInvoice($this->token, $invoice);
-
-        if (isset($invoiceData['status']) && $invoiceData['status'] == 404) {
-            abort(404);
-        }
-
-        return collect($invoiceData['data'] ?? []);
     }
 
     /**
@@ -139,12 +109,12 @@ class SalesOrderDetail extends Component
      */
     private function updateInvoiceAmount()
     {
-        $updatedInvoice = DB::table('invoice_header')
+        $updatedInvoice = DB::table('invoice_bosnet')
             ->where('noinv', $this->invoice)
             ->decrement('amount_total', $this->nominal_program);
 
         if (!$updatedInvoice) {
-            throw new \Exception('Gagal memperbarui amount_total pada invoice_header.');
+            throw new \Exception('Gagal memperbarui amount_total pada invoice_bosnet.');
         }
     }
 
@@ -209,8 +179,8 @@ class SalesOrderDetail extends Component
      */
     private function revertInvoiceAndBonus($program)
     {
-        // Update the amount_total in invoice_header
-        DB::table('invoice_header')
+        // Update the amount_total in invoice_bosnet
+        DB::table('invoice_bosnet')
             ->where('noinv', $this->invoice)
             ->increment('amount_total', $program->nominal_program);
 
@@ -273,31 +243,22 @@ class SalesOrderDetail extends Component
      */
     public function render()
     {
-        try {
-            if (!$this->token) {
-                abort(500);
-            }
+        $this->loadInvoiceHeader();
 
-            // Fetch the invoice header
-            $this->loadInvoiceHeader();
-
-            return view('livewire.sales-order-detail', [
-                'invoices' => $this->getInvoice($this->invoice),
-                'programs' => DB::table('sales_order_program')
-                    ->where('noinv', $this->invoice)
-                    ->get(),
-                'header' => $this->header,
-                'bonus' => DB::table('bonus_detail')
-                    ->where('nm_program', 'like', '%' . $this->search_program . '%')
-                    ->where('kd_outlet', $this->kd_outlet)
-                    ->get(),
-                'nominalSuppProgram' => DB::table('sales_order_program')
-                    ->where('noinv', $this->invoice)
-                    ->sum('nominal_program'),
-            ]);
-        } catch (\Exception $e) {
-            abort(500, 'An error occurred while rendering the component.');
-        }
+        return view('livewire.sales-order-detail', [
+            'invoices' => $this->details,
+            'programs' => DB::table('sales_order_program')
+                ->where('noinv', $this->invoice)
+                ->get(),
+            'header' => $this->header,
+            'bonus' => DB::table('bonus_detail')
+                ->where('nm_program', 'like', '%' . $this->search_program . '%')
+                ->where('kd_outlet', $this->kd_outlet)
+                ->get(),
+            'nominalSuppProgram' => DB::table('sales_order_program')
+                ->where('noinv', $this->invoice)
+                ->sum('nominal_program'),
+        ]);
     }
 
     /**
@@ -307,15 +268,60 @@ class SalesOrderDetail extends Component
      */
     private function loadInvoiceHeader()
     {
-        $header = DB::table('invoice_header')
+        $header = DB::connection('kcpinformation')
+            ->table('trns_inv_header')
             ->where('noinv', $this->invoice)
             ->first();
 
-        if ($header) {
-            $this->kd_outlet = $header->kd_outlet;
-            $this->header = $header;
-        } else {
-            abort(404, 'Header invoice tidak ditemukan.');
+        $details = DB::connection('kcpinformation')
+            ->table('trns_inv_details')
+            ->where('noinv', $this->invoice)
+            ->get();
+
+        $this->details = $details;
+
+        $sumTotalNominal = 0;
+        $sumTotalDPP = 0;
+        $sumTotalDisc = 0;
+
+        foreach ($details as $value) {
+            $sumTotalNominal = $sumTotalNominal + $value->nominal;
+            $sumTotalDPP = $sumTotalDPP + $value->nominal_total;
+            $sumTotalDisc = $sumTotalDisc + $value->nominal_disc;
+            $nominalPPn = ($value->nominal_total / config('tax.ppn_factor')) * config('tax.ppn_percentage');
         }
+
+        $this->sumTotalDPP = $sumTotalDPP;
+
+        $dpp = round($sumTotalNominal) / config('tax.ppn_factor');
+        $nominalPPn = round($dpp) * config('tax.ppn_percentage');
+        $dppDisc = round($sumTotalDPP) / config('tax.ppn_factor');
+        $nominalPPnDisc = round($dppDisc * config('tax.ppn_percentage'));
+
+        $invoice_bosnet_exists = DB::table('invoice_bosnet')
+            ->where('noinv', $this->invoice)
+            ->first();
+
+        if (!$invoice_bosnet_exists) {
+            DB::table('invoice_bosnet')
+                ->insert([
+                    'noso'          => $header->noso,
+                    'noinv'         => $header->noinv,
+                    'kd_outlet'     => $header->kd_outlet,
+                    'nm_outlet'     => $header->nm_outlet,
+                    'amount_total'  => $sumTotalDPP,
+                    'amount'        => $sumTotalNominal,
+                    'amount_disc'   => $sumTotalDisc,
+                    'crea_date'     => $header->crea_date,
+                    'tgl_jth_tempo' => $header->tgl_jth_tempo,
+                    'user_sales'    => $header->user_sales,
+                ]);
+        }
+
+        $invoice_bosnet = DB::table('invoice_bosnet')
+            ->where('noinv', $this->invoice)
+            ->first();
+
+        $this->header = $invoice_bosnet;
     }
 }

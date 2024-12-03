@@ -45,14 +45,14 @@ class SalesOrderController extends Controller
 
         try {
             // Fetch the invoice header
-            $header = DB::table('invoice_header')->where('noinv', $invoice)->first();
+            $header = DB::table('invoice_bosnet')->where('noinv', $invoice)->first();
             if (!$header) {
                 throw new \Exception('Invoice not found');
             }
 
             // Calculate payment term
             $paymentTermId = Carbon::parse($header->crea_date)
-                ->diffInDays(Carbon::parse($header->tgl_jatuh_tempo));
+                ->diffInDays(Carbon::parse($header->tgl_jth_tempo));
 
             // Initialize totals
             $decDPPTotal = 0;
@@ -69,9 +69,9 @@ class SalesOrderController extends Controller
 
             if ($response) {
                 // Update the invoice status after successful data sending
-                DB::table('invoice_header')->where('noinv', $invoice)->update([
-                    'status' => 'BOSNET',
-                    'sendToBosnet' => now()
+                DB::table('invoice_bosnet')->where('noinv', $invoice)->update([
+                    'status_bosnet'     => 'BOSNET',
+                    'send_to_bosnet'    => now()
                 ]);
             } else {
                 throw new \Exception('Failed to send data to BOSNET');
@@ -150,21 +150,13 @@ class SalesOrderController extends Controller
         }
     }
 
-    /**
-     * Generate the individual invoice item details.
-     *
-     * @param array $value
-     * @param float $decDPPTotal
-     * @param float $decTaxTotal
-     * @return array
-     */
     private function generateInvoiceItem($value, &$decDPPTotal, &$decTaxTotal)
     {
         // Calculate DPP and PPN for the item
-        $unitPrice = $value['nominal_total'] / $value['qty']; // Harga per unit
+        $unitPrice = $value->nominal_total / $value->qty; // Harga per unit
         $decPrice = $unitPrice; // Alias untuk harga per unit
-        $decAmount = $value['nominal_total']; // Total nominal
-        $decDPP = $unitPrice * $value['qty'] / config('tax.ppn_factor'); // Dasar Pengenaan Pajak
+        $decAmount = $value->nominal_total; // Total nominal
+        $decDPP = $unitPrice * $value->qty / config('tax.ppn_factor'); // Dasar Pengenaan Pajak
         $decTax = $decDPP * config('tax.ppn_percentage'); // PPN
 
         // Update total DPP and PPN
@@ -173,9 +165,9 @@ class SalesOrderController extends Controller
 
         return [
             'szOrderItemTypeId' => "JUAL",
-            'szProductId' => $value['part_no'],
+            'szProductId' => $value->part_no,
             'decDiscProcent' => 0,
-            'decQty' => $value['qty'],
+            'decQty' => $value->qty,
             'szUomId' => "PCS",
             'decPrice' => $decPrice,
             'decDiscount' => 0,
@@ -185,9 +177,9 @@ class SalesOrderController extends Controller
             'decDPP' => $decDPP,
             'szPaymentType' => "NON",
             'deliveryList' => [
-                'dtmDelivery' => date('Y-m-d H:i:s', strtotime($value['crea_date'])),
-                'szCustId' => $value['kd_outlet'],
-                'decQty' => $value['qty'],
+                'dtmDelivery' => date('Y-m-d H:i:s', strtotime($value->crea_date)),
+                'szCustId' => $value->kd_outlet,
+                'decQty' => $value->qty,
                 'szFromWpId' => 'KCP01001',
             ],
         ];
@@ -238,7 +230,6 @@ class SalesOrderController extends Controller
         // Implement the data sending logic using Guzzle or cURL.
         // Example:
         // return Http::post('url_bosnet', $data);
-        dd($data);
         return true;
     }
 
@@ -275,12 +266,9 @@ class SalesOrderController extends Controller
      */
     private function getInvoice($invoice)
     {
-        $invoice = $this->kcpInformation->getInvoice($this->token, $invoice);
-
-        if (isset($invoice['status']) && $invoice['status'] == 404) {
-            throw new \Exception('Invoice not found');
-        }
-
-        return collect($invoice['data']);
+        return $details = DB::connection('kcpinformation')
+            ->table('trns_inv_details')
+            ->where('noinv', $invoice)
+            ->get();
     }
 }

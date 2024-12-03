@@ -98,7 +98,11 @@ class InvoiceController extends Controller
                     'crea_by'       => Auth::user()->username,
                 ]);
 
-            $details = $this->getInvoiceDetails($request->noso);
+            $details = DB::connection('kcpinformation')
+                ->table('trns_so_details')
+                ->where('noso', $request->noso)
+                ->orderBy('part_no')
+                ->get();
 
             $nominal_total = 0;
             foreach ($details as $value) {
@@ -153,15 +157,6 @@ class InvoiceController extends Controller
 
             return redirect()->route('inv.index')->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
-    }
-
-    public function getInvoiceDetails($noso)
-    {
-        return DB::connection('kcpinformation')
-            ->table('trns_so_details')
-            ->where('noso', $noso)
-            ->orderBy('part_no')
-            ->get();
     }
 
     public function getNoInv()
@@ -325,5 +320,8 @@ class InvoiceController extends Controller
             ->decrement('nominal_plafond', $nominal_total);
     }
 
-    public function detailPrint($noinv) {}
+    public function detailPrint($invoice)
+    {
+        return view('so.detail', compact('invoice'));
+    }
 }
