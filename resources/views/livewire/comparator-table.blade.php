@@ -13,11 +13,19 @@
     @endif
 
     <div class="mb-3 gap-2">
-        <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator"
-            wire:confirm="Yakin ingin reset?">
-            Reset
-        </button>
-        <button type="button" class="btn btn-sm btn-success" wire:click="export">Download Excel</button>
+        @php
+            $userRoles = explode(',', Auth::user()->role);
+
+            $allowedRoles = ['ADMIN', 'KEPALA-GUDANG', 'INVENTORY'];
+        @endphp
+
+        @if (!empty(array_intersect($allowedRoles, $userRoles)))
+            <button type="button" class="btn btn-sm btn-danger" wire:click="resetComparator"
+                wire:confirm="Yakin ingin reset?">
+                Reset
+            </button>
+            <button type="button" class="btn btn-sm btn-success" wire:click="export">Download Excel</button>
+        @endif
     </div>
 
     <div class="card">
