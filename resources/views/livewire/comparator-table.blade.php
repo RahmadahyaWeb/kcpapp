@@ -26,8 +26,8 @@
         </div>
         <div class="card-body">
             <div class="mb-3">
-                <input type="text" class="form-control" wire:model="barcode" wire:keydown.enter="store"
-                    placeholder="Scan barcode here" autofocus>
+                <input type="text" id="scan-barcode" class="form-control" wire:model="barcode"
+                    wire:keydown.enter="store" placeholder="Scan barcode here" autofocus>
             </div>
 
             <div class="table-responsive">
@@ -46,13 +46,27 @@
                             <tr>
                                 <td>{{ $item->part_number }}</td>
                                 <td>{{ $item->nm_part }}</td>
-                                <td>{{ $item->qty }}</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm"
+                                        wire:model="items.{{ $loop->index }}.qty"
+                                        wire:keydown.enter="updateQty($event.target.value, '{{ $item->part_number }}')">
+                                </td>
                                 <td>{{ $item->scan_by }}</td>
                                 <td>
-                                    <a class="btn btn-sm btn-danger"
-                                        href="{{ route('comparator.destroy', $item->part_number) }}">
-                                        Hapus
-                                    </a>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-success"
+                                            wire:click="increment('{{ $item->part_number }}')">
+                                            +
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            wire:click="decrement('{{ $item->part_number }}')">
+                                            -
+                                        </button>
+                                        <a class="btn btn-sm btn-danger"
+                                            href="{{ route('comparator.destroy', $item->part_number) }}">
+                                            Hapus
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -66,3 +80,12 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    @livewireScripts()
+    <script>
+        Livewire.on('qty-saved', () => {
+            document.getElementById('scan-barcode').focus();
+        });
+    </script>
+@endpush

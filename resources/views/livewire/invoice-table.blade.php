@@ -49,7 +49,7 @@
                                             </button>
 
                                             <div class="dropdown-menu">
-                                                <a href="" class="dropdown-item">
+                                                <a href="{{ route('inv.detail', $item->noso) }}" class="dropdown-item">
                                                     <i class='bx bx-check'></i> Ok
                                                 </a>
                                                 <a href="" class="dropdown-item">

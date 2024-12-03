@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ComparatorTable extends Component
 {
     public $barcode;
+    public $items = [];
 
     public function store()
     {
@@ -65,6 +66,51 @@ class ComparatorTable extends Component
         return Excel::download(new ComparatorExport(), $filename);
     }
 
+    public function updateQty($qty, $part_number)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Validate qty
+            if ($qty < 1) {
+                session()->flash('error', 'Qty tidak bisa kurang dari 1.');
+                return;
+            }
+
+            // Update qty in the database
+            DB::table('comparator')
+                ->where('part_number', $part_number)
+                ->update(['qty' => $qty]);
+
+            DB::commit(); // Commit transaction
+
+            $this->dispatch('qty-saved');
+
+            session()->flash('success', "Qty berhasil diperbarui.");
+        } catch (\Exception $e) {
+            DB::rollBack(); // Rollback transaction if error occurs
+            session()->flash('error', "Terjadi kesalahan saat memperbarui qty.");
+        }
+    }
+
+    public function increment($part_number)
+    {
+        DB::table('comparator')
+            ->where('part_number', $part_number)
+            ->increment('qty', 1);
+
+        $this->dispatch('qty-saved');
+    }
+
+    public function decrement($part_number)
+    {
+        DB::table('comparator')
+            ->where('part_number', $part_number)
+            ->decrement('qty', 1);
+
+        $this->dispatch('qty-saved');
+    }
+
     public function render()
     {
         // Ambil data dari database 'mysql' (default)
@@ -89,6 +135,8 @@ class ComparatorTable extends Component
 
             return $item;
         });
+
+        $this->items = $items;
 
         return view('livewire.comparator-table', compact('items'));
     }

@@ -101,7 +101,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('/invoice', [InvoiceController::class, 'index'])->name('inv.index');
 
     // INVOICE DETAILS
-    // Route::get('/invoice/detail/{noso}', [InvoiceController::clas])
+    Route::get('/invoice/detail/{noso}', [InvoiceController::class, 'detail'])->name('inv.detail');
 
     // PRINT INVOICE 
     Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');
