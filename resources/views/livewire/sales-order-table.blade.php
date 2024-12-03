@@ -1,26 +1,20 @@
 <div>
-    <div class="mb-3">
-        <a href="{{ route('so-bosnet.index') }}" class="btn btn-warning">SO to Bosnet</a>
+    <div class="row g-2 mb-3">
+        <div class="col-md-3 d-grid">
+            <a href="" class="btn btn-success">Buat SO Baru</a>
+        </div>
     </div>
 
     <div class="card">
         <!-- Card Header -->
         <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <b>Sales Order</b>
-                </div>
-                <div class="col d-flex justify-content-end">
-                    <a href="" class="btn btn-success">
-                        Buat SO Baru
-                    </a>
-                </div>
-            </div>
+            <b>Sales Order</b>
         </div>
 
         <div class="card-body">
             <div class="alert alert-warning" role="alert">
-                <h3 class="m-0 text-danger fw-bold text-center">SALES ORDER MAKS. 3 HARI, MOHON DIJADIKAN BACK ORDER.</h3>
+                <h3 class="m-0 text-danger fw-bold text-center">SALES ORDER MAKS. 3 HARI, MOHON DIJADIKAN BACK ORDER.
+                </h3>
             </div>
 
             <!-- Loading Spinner -->

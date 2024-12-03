@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class SalesOrderBosnet extends Component
+class InvoiceTable extends Component
 {
     use WithPagination;
 
@@ -81,7 +81,7 @@ class SalesOrderBosnet extends Component
                 'header.noso',
                 DB::raw('round(sum(details.nominal_total)) as nominal_total_ppn')
             ])
-            ->where('header.status', 'C')
+            ->where('header.status', 'O')
             ->where('header.flag_batal', 'N')
             ->whereDate('header.crea_date', '>=', Carbon::now()->startOfMonth()->toDateString())
             ->groupBy('header.noinv')
@@ -158,19 +158,41 @@ class SalesOrderBosnet extends Component
 
     public function render()
     {
-        $invoices = $this->getFilteredInvoices();
-        return view('livewire.sales-order-bosnet', compact('invoices'));
-    }
+        $so_belum_invoice = DB::connection('kcpinformation')
+            ->table('trns_so_header as header')
+            ->join('trns_so_details as details', 'header.noso', '=', 'details.noso')
+            ->where('header.status', 'C')
+            ->where('header.flag_selesai', 'Y')
+            ->where('header.flag_cetak_gudang', 'Y')
+            ->where('header.flag_vald_gudang', 'Y')
+            ->where('header.flag_packingsheet', 'Y')
+            ->where('header.flag_invoice', 'N')
+            ->where('header.flag_reject', 'N')
+            ->whereIn('header.no_packingsheet', function ($query) {
+                $query->select('nops')
+                    ->from('trns_packingsheet_header')
+                    ->where('status', 'C');
+            })
+            ->groupBy('header.noso', 'header.area_so', 'header.kd_outlet', 'header.nm_outlet', 'header.user_sales')
+            ->select(
+                'header.noso',
+                'header.area_so',
+                'header.kd_outlet',
+                'header.nm_outlet',
+                DB::raw('SUM(details.nominal_total_gudang) as nominal_total'),
+                'header.user_sales'
+            )
+            ->get();
 
-    /**
-     * Retrieve filtered invoices for the table.
-     */
-    private function getFilteredInvoices()
-    {
-        return DB::table('invoice_bosnet')
+        $invoices = DB::table('invoice_bosnet')
             ->where('noso', 'like', '%' . $this->noSo . '%')
             ->where('noinv', 'like', '%' . $this->noInv . '%')
             ->where('status_bosnet', 'like', '%' . $this->status . '%')
-            ->paginate(20);
+            ->get();
+
+        return view('livewire.invoice-table', compact(
+            'invoices',
+            'so_belum_invoice'
+        ));
     }
 }

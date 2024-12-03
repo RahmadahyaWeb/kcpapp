@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComparatorController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\DksController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MasterTokoController;
 use App\Http\Controllers\NonAopController;
 use App\Http\Controllers\ReportDKSController;
@@ -90,23 +91,20 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // SALES ORDER DETAIL
     Route::get('sales-order/detail/{invoice}', [SalesOrderController::class, 'detail'])->name('so.detail');
 
-    // SALES ORDDER BOSNET
-    Route::get('sales-order/bosnet', [SalesOrderController::class, 'bosnet'])->name('so-bosnet.index');
-
-    // PRINT INVOICE 
-    Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');
-
     // DO
     Route::get('delivery-order', [DeliveryOrderController::class, 'index'])->name('do.index');
 
     // DO DETAIL
     Route::get('delivery-order/detail/{lkh}', [DeliveryOrderController::class, 'detail'])->name('do.detail');
 
-    Route::get('test-con', function () {
-        $test = DB::connection('kcpinformation')->table('user')->select('crea_date')->get();
+    // INVOICE 
+    Route::get('/invoice', [InvoiceController::class, 'index'])->name('inv.index');
 
-        dd($test);
-    });
+    // INVOICE DETAILS
+    // Route::get('/invoice/detail/{noso}', [InvoiceController::clas])
+
+    // PRINT INVOICE 
+    Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');
 
     // COMPARATOR
     Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.index');
