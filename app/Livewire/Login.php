@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class Login extends Component
@@ -18,11 +17,8 @@ class Login extends Component
             'password' => 'required'
         ]);
 
-        if (Auth::attempt($this->only('username', 'password'))) {
-
-            session()->regenerate();
-
-            return redirect()->intended('dashboard');
+        if (Auth::attempt($this->only('username', 'password'))) {   
+            return $this->redirectIntended('/');;
         }
 
         $this->addError('username', 'Username atau password salah.');
