@@ -359,7 +359,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
             }
 
             // Periksa jika waktu cek in dan cek out sama
-            if ($data->waktu_cek_in === $data->waktu_cek_out) {
+            if ($data->waktu_cek_in == $data->waktu_cek_out) {
                 // Jika sama, maka dianggap lupa cek in atau cek out
                 $punishmentData[] = [
                     'user_sales' => $data->user_sales,
