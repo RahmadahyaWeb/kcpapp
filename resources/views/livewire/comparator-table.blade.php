@@ -34,7 +34,7 @@
         </div>
         <div class="card-body">
             <div class="mb-3">
-                <input type="text" id="scan-barcode" class="form-control" wire:model.live.debounce.250ms="barcode"
+                <input type="text" id="scan-barcode" class="form-control" wire:model.live.debounce.100ms="barcode"
                     wire:keydown.enter="store" placeholder="Scan barcode here" autofocus>
             </div>
 
@@ -45,6 +45,7 @@
                             <th>Part Number</th>
                             <th>Nama Part</th>
                             <th>Qty</th>
+                            <th>Qty</th>
                             <th>Scan By</th>
                             <th>Aksi</th>
                         </tr>
@@ -54,6 +55,7 @@
                             <tr>
                                 <td>{{ $item->part_number }}</td>
                                 <td>{{ $item->nm_part }}</td>
+                                <td>{{ $item->qty }}</td>
                                 <td>
                                     <input type="number" class="form-control form-control-sm"
                                         wire:model="items.{{ $loop->index }}.qty"
@@ -79,7 +81,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">No Data</td>
+                                <td colspan="6" class="text-center">No Data</td>
                             </tr>
                         @endforelse
                     </tbody>
