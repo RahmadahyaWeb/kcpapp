@@ -14,15 +14,46 @@ class InvoiceController extends Controller
 
     public function detail($noso)
     {
-        $item = DB::connection('kcpinformation')
+        $dataSO = DB::connection('kcpinformation')
+            ->table('trns_so_header')
+            ->select([
+                'trns_so_header.*',
+                'mst_outlet.*'
+            ])
+            ->join('mst_outlet', 'mst_outlet.kd_outlet', '=', 'trns_so_header.kd_outlet')
+            ->where('noso', $noso)
+            ->first();
+
+        $items = DB::connection('kcpinformation')
             ->table('trns_so_details')
-            ->select(['trns_so_details.*', 'mst_outlet.nm_outlet'])
+            ->select([
+                'trns_so_details.*',
+                'mst_outlet.nm_outlet',
+            ])
             ->join('mst_outlet', 'mst_outlet.kd_outlet', '=', 'trns_so_details.kd_outlet')
             ->where('trns_so_details.status', 'C')
             ->where('trns_so_details.noso', $noso)
             ->orderBy('trns_so_details.part_no')
             ->get();
 
-        return view('invoice.detail', compact('item'));
+        $nominal_gudang = 0;
+        $total = 0;
+        foreach ($items as $item) {
+            $total += $item->qty_gudang * $item->hrg_pcs;
+            $nominal_gudang += $item->nominal_gudang;
+        }
+
+        $nominal_total = DB::connection('kcpinformation')
+            ->table('trns_so_details')
+            ->where('noso', $noso)
+            ->sum('nominal_total_gudang');
+
+        return view('invoice.detail', compact(
+            'items',
+            'dataSO',
+            'nominal_gudang',
+            'total',
+            'nominal_total'
+        ));
     }
 }
