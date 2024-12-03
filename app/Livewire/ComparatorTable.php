@@ -66,6 +66,11 @@ class ComparatorTable extends Component
         return Excel::download(new ComparatorExport(), $filename);
     }
 
+    public function updatedBarcode()
+    {
+        $this->store();
+    }
+
     public function updateQty($qty, $part_number)
     {
         try {
