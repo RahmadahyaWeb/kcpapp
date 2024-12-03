@@ -100,8 +100,14 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // INVOICE 
     Route::get('/invoice', [InvoiceController::class, 'index'])->name('inv.index');
 
-    // INVOICE DETAILS
+    // INVOICE DETAIL
     Route::get('/invoice/detail/{noso}', [InvoiceController::class, 'detail'])->name('inv.detail');
+
+    // CREATE INVOICE
+    Route::post('/invoice/store', [InvoiceController::class, 'createInvoice'])->name('inv.store');
+
+    // INVOICE DETAIL PRINT
+    Route::get('/invoice/detail-print/{invoice}', [InvoiceController::class, 'detailPrint'])->name('inv.detail-print');
 
     // PRINT INVOICE 
     Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');

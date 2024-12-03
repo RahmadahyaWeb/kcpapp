@@ -93,36 +93,45 @@
                     <table class="table table-hover">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width: 18%;">No Invoice</th>
-                                <th style="width: 18%;">No SO</th>
+                                <th style="width: 20%;">No Invoice</th>
+                                <th style="width: 20%;">No SO</th>
+                                <th>Kode Toko</th>
+                                <th>Nama Toko</th>
+                                <th>Nominal Invoice</th>
                                 <th>Nominal Invoice + PPn (Rp)</th>
-                                <th>Status</th>
-                                <th>Sent to Bosnet</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($invoices as $invoice)
                                 <tr>
                                     <td>
-                                        {{ $invoice->noinv }}
+                                        KCP/{{ $invoice->area_inv }}/{{ $invoice->noinv }}
                                     </td>
                                     <td>
-                                        {{ $invoice->noso }}
-                                    </td>
-                                    <td>{{ number_format($invoice->amount_total, 0, ',', '.') }}</td>
-                                    <td>
-                                        <span
-                                            class="badge text-bg-{{ $invoice->status_bosnet == 'KCP' ? 'success' : 'warning' }}">
-                                            {{ $invoice->status_bosnet }}
-                                        </span>
+                                        KCP/{{ $invoice->area_inv }}/{{ $invoice->noso }}
                                     </td>
                                     <td>
-                                        {{ $invoice->send_to_bosnet }}
+                                        {{ $invoice->kd_outlet }}
+                                    </td>
+                                    <td>
+                                        {{ $invoice->nm_outlet }}
+                                    </td>
+                                    <td>
+                                        {{ number_format($invoice->nominal_total_noppn, 0, ',', '.') }}
+                                    </td>
+                                    <td>
+                                        {{ number_format($invoice->nominal_total_ppn, 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('inv.detail-print', $invoice->noinv) }}">
+                                            Detail
+                                        </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">No Data</td>
+                                    <td colspan="7" class="text-center">No Data</td>
                                 </tr>
                             @endforelse
                         </tbody>

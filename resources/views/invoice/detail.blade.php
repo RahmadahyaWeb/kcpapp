@@ -11,9 +11,13 @@
 @section('content')
     @if ($nominal_gudang == $total)
         <div class="row g-2 mb-3">
-            <div class="col-md-3 d-grid">
-                <a href="" class="btn btn-success">Buat Invoice</a>
-            </div>
+            <form action="{{ route('inv.store') }}" method="POST">
+                <div class="col-md-3 d-grid">
+                    @csrf
+                    <input type="hidden" name="noso" value="{{ $noso }}">
+                    <button type="submit" class="btn btn-success">Buat Invoice</button>
+                </div>
+            </form>
         </div>
     @else
         <div class="alert alert-danger " role="alert">
