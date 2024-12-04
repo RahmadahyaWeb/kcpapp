@@ -187,7 +187,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 3), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:K6898) * 25000"));
 
         // BANYAK PUNISHMENT DURASI KUNJUNGAN TOKO
-        $sheet->setCellValue($columnLetter . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!K3:I6898)"));
+        $sheet->setCellValue($columnLetter . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:I6898)"));
         // BAYAR PUNISHMENT DURASI KUNJUNGAN TOKO
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:I6898) * 25000"));
 
