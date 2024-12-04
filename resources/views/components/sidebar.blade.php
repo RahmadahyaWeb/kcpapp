@@ -11,6 +11,22 @@
             $menuList[$menu->id]['submenus'] = [];
         }
     }
+
+    // Convert $menuList to an indexed array
+    $menuListIndexed = array_values($menuList);
+
+    // Sort the indexed array by order_num
+    usort($menuListIndexed, function ($a, $b) {
+        return $a['order_num'] <=> $b['order_num'];
+    });
+
+    // Re-index the array back to its original structure
+    $menuListSorted = [];
+    foreach ($menuListIndexed as $menu) {
+        $menuListSorted[$menu['id']] = $menu;
+    }
+
+    $menuList = $menuListSorted;
 @endphp
 
 
