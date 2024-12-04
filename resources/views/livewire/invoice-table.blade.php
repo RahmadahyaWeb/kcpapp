@@ -12,6 +12,12 @@
             </div>
         @endif
 
+        <div class="row g-2 mb-3">
+            <div class="col-md-3 d-grid">
+                <a href="" class="btn btn-success">Invoice Bosnet</a>
+            </div>
+        </div>
+
         <!-- SALES ORDER YANG BELUM INVOICE -->
         <div class="card mb-3">
             <!-- Card Header -->

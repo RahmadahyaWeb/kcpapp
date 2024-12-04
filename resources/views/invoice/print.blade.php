@@ -73,7 +73,7 @@
 <body>
 
     @php
-        use App\Http\Controllers\SalesOrderController;
+        use App\Http\Controllers\InvoiceController;
     @endphp
 
     <hr>
@@ -227,7 +227,7 @@
                         <b>Terbilang</b>
                         <br>
                         @php
-                            $terbilang = SalesOrderController::convert($total);
+                            $terbilang = InvoiceController::convert($total);
                         @endphp
                         {{ $terbilang }}
                     </div>

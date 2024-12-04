@@ -352,7 +352,7 @@ class InvoiceController extends Controller
 
     public function detailPrint($invoice)
     {
-        return view('so.detail', compact('invoice'));
+        return view('invoice.detail-print', compact('invoice'));
     }
 
     public function batal($noso)
@@ -506,7 +506,28 @@ class InvoiceController extends Controller
             'alamat_toko'    => $alamat_toko
         ];
 
-        $pdf = Pdf::loadView('so.print', $data);
+        $pdf = Pdf::loadView('invoice.print', $data);
         return $pdf->stream('invoice.pdf');
+    }
+
+    public static function convert($x)
+    {
+        $abil = array("", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas");
+        if ($x < 12)
+            return $abil[$x];
+        elseif ($x < 20)
+            return InvoiceController::convert($x - 10) . " belas ";
+        elseif ($x < 100)
+            return InvoiceController::convert($x / 10) . " puluh " . InvoiceController::convert($x % 10);
+        elseif ($x < 200)
+            return " seratus " . InvoiceController::convert($x - 100);
+        elseif ($x < 1000)
+            return InvoiceController::convert($x / 100) . " ratus " . InvoiceController::convert($x % 100);
+        elseif ($x < 2000)
+            return " seribu " . InvoiceController::convert($x - 1000);
+        elseif ($x < 1000000)
+            return InvoiceController::convert($x / 1000) . " ribu " . InvoiceController::convert($x % 1000);
+        elseif ($x < 1000000000)
+            return InvoiceController::convert($x / 1000000) . " juta " . InvoiceController::convert($x % 1000000);
     }
 }

@@ -12,7 +12,7 @@ use Livewire\Component;
 /**
  * Component for managing the details of a sales order.
  */
-class SalesOrderDetail extends Component
+class InvoiceDetailPrint extends Component
 {
     public $kcpInformation;
     public $invoice;
@@ -246,7 +246,7 @@ class SalesOrderDetail extends Component
     {
         $this->loadInvoiceHeader();
 
-        return view('livewire.sales-order-detail', [
+        return view('livewire.invoice-detail-print', [
             'invoices' => $this->details,
             'programs' => DB::table('sales_order_program')
                 ->where('noinv', $this->invoice)
