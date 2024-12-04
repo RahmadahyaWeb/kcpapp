@@ -199,7 +199,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->mergeCells($columnLetter . ($rowNumber + 5) . ':' . $columnLetter . $rowNumber + 6);
         $sheet->mergeCells($nextColumnLetter2 . ($rowNumber + 5) . ':' . $nextColumnLetter2 . $rowNumber + 6);
         $sheet->mergeCells($nextColumnLetter3 . ($rowNumber + 5) . ':' . $nextColumnLetter3 . $rowNumber + 6);
-        
+
         // BANYAK PUNISHMENT ISTIRAHAT JUMAT
         $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishmentJumat));
         // BAYAR PUNISHMENT ISTIRAHAT JUMAT
@@ -318,22 +318,23 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
                 continue;
             }
 
-            // Menggunakan Carbon untuk mem-parsing waktu cek-in
-            $waktuCekIn = Carbon::parse($data->waktu_cek_in);
+            if ($data->waktu_cek_in) {
+                // Menggunakan Carbon untuk mem-parsing waktu cek-in
+                $waktuCekIn = Carbon::parse($data->waktu_cek_in);
 
-            // Tentukan batas waktu 09:30
-            $batasWaktu = Carbon::parse($data->tgl_kunjungan . ' 09:30');
+                // Tentukan batas waktu 09:30
+                $batasWaktu = Carbon::parse($data->tgl_kunjungan . ' 09:30');
 
-            // Jika waktu cek-in lebih dari 09:30, maka beri punishment
-            if ($waktuCekIn->greaterThan($batasWaktu)) {
-                // Tambahkan data punishment
-                $punishmentData[] = [
-                    'user_sales' => $data->user_sales,
-                    'nama_toko'  => $data->nama_toko,
-                    'tgl_kunjungan' => $data->tgl_kunjungan,
-                    'waktu_cek_in' => $data->waktu_cek_in,
-                    'punishment' => 'Melewati batas waktu cek-in (09:30)',
-                ];
+                if ($waktuCekIn->greaterThan($batasWaktu)) {
+                    // Tambahkan data punishment
+                    $punishmentData[] = [
+                        'user_sales' => $data->user_sales,
+                        'nama_toko'  => $data->nama_toko,
+                        'tgl_kunjungan' => $data->tgl_kunjungan,
+                        'waktu_cek_in' => $data->waktu_cek_in,
+                        'punishment' => 'Melewati batas waktu cek-in (09:30)',
+                    ];
+                }
             }
         }
 
