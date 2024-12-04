@@ -34,8 +34,8 @@
         </div>
         <div class="card-body">
             <div class="mb-3">
-                <input type="text" id="scan-barcode" class="form-control" wire:model.live.debounce.100ms="barcode"
-                    wire:keydown.enter="store" placeholder="Scan barcode here" autofocus>
+                <input type="text" id="scan-barcode" class="form-control" wire:model="barcode" wire:keydown.enter="store"
+                    placeholder="Scan barcode here" autofocus>
             </div>
 
             <div class="table-responsive">
