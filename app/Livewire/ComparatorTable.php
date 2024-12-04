@@ -115,6 +115,17 @@ class ComparatorTable extends Component
         $this->dispatch('qty-saved');
     }
 
+    public function destroy($part_number)
+    {
+        DB::table('comparator')
+            ->where('part_number', $part_number)
+            ->delete();
+
+        $this->dispatch('qty-saved');
+
+        session()->flash('success', "Data berhasil dihapus.");
+    }
+
     public function render()
     {
         // Ambil data dari database 'mysql' (default)

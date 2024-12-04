@@ -34,8 +34,8 @@
         </div>
         <div class="card-body">
             <div class="mb-3">
-                <input type="text" id="scan-barcode" class="form-control" wire:model="barcode" wire:keydown.enter="store"
-                    placeholder="Scan barcode here" wire:loading.attr="disabled" autofocus>
+                <input type="text" id="scan-barcode" class="form-control" wire:model="barcode"
+                    wire:keydown.enter="store" placeholder="Scan barcode here" wire:loading.attr="disabled" autofocus>
             </div>
 
             <div class="table-responsive">
@@ -45,7 +45,7 @@
                             <th>Part Number</th>
                             <th>Nama Part</th>
                             <th>Qty</th>
-                            <th>Qty</th>
+                            <th style="width: 20%">Qty</th>
                             <th>Scan By</th>
                             <th>Aksi</th>
                         </tr>
@@ -72,10 +72,10 @@
                                             wire:click="decrement('{{ $item->part_number }}')">
                                             -
                                         </button>
-                                        <a class="btn btn-sm btn-danger"
-                                            href="{{ route('comparator.destroy', $item->part_number) }}">
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            wire:click="destroy('{{ $item->part_number }}')">
                                             Hapus
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

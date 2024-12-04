@@ -25,15 +25,4 @@ class ComparatorController extends Controller
         
         return view('comparator.index');
     }
-
-    public function destroy($part_number)
-    {
-        $this->guard();
-
-        DB::table('comparator')
-            ->where('part_number', $part_number)
-            ->delete();
-
-        return back()->with('success', 'Data berhasil dihapus');
-    }
 }
