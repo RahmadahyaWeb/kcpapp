@@ -123,22 +123,29 @@ class ComparatorTable extends Component
             ->table('comparator')
             ->get();
 
-        // Ambil data dari database 'kcpinformation'
+        // Ambil daftar part_number dari comparatorItems
+        $partNumbers = $comparatorItems->pluck('part_number')->unique();
+
+        // Ambil data hanya untuk part_no yang ada di $partNumbers
         $mstParts = DB::connection('kcpinformation')
             ->table('mst_part')
+            ->whereIn('part_no', $partNumbers)
             ->select('part_no', 'nm_part')
             ->get()
-            ->keyBy('part_no'); // Indeks data berdasarkan 'part_no' untuk mempermudah pencarian
+            ->mapWithKeys(function ($part) {
+                return [(string) $part->part_no => $part];
+            });
 
-        // Gabungkan data secara manual
+        // Gabungkan data secara manual dan tambahkan 'nm_part' ke setiap item
         $items = $comparatorItems->map(function ($item) use ($mstParts) {
+            // Pastikan part_number di-cast ke string untuk konsistensi pencocokan
+            $partNumber = (string) $item->part_number;
+
             // Cari part di mstParts berdasarkan part_number
-            $nmPart = $mstParts->get($item->part_number)->nm_part ?? 'PART NUMBER TIDAK DIKENALI';
+            $nmPart = $mstParts->get($partNumber)->nm_part ?? 'PART NUMBER TIDAK DIKENALI';
 
-            // Tambahkan nama part ke item
-            $item->nm_part = $nmPart;
-
-            return $item;
+            // Mengubah objek stdClass menjadi array dan menambahkan 'nm_part'
+            return (object) array_merge((array) $item, ['nm_part' => $nmPart]);
         });
 
         $this->items = $items;
