@@ -530,4 +530,9 @@ class InvoiceController extends Controller
         elseif ($x < 1000000000)
             return InvoiceController::convert($x / 1000000) . " juta " . InvoiceController::convert($x % 1000000);
     }
+
+    public function invoiceBosnet()
+    {
+        return view('invoice.invoice-bosnet');
+    }
 }

@@ -14,7 +14,7 @@
 
         <div class="row g-2 mb-3">
             <div class="col-md-3 d-grid">
-                <a href="" class="btn btn-success">Invoice Bosnet</a>
+                <a href="{{ route('inv.bosnet') }}" class="btn btn-success">Invoice Bosnet</a>
             </div>
         </div>
 

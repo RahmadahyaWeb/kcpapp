@@ -88,9 +88,6 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // SALES ORDER
     Route::get('sales-order', [SalesOrderController::class, 'index'])->name('so.index');
 
-    // SALES ORDER DETAIL
-    Route::get('sales-order/detail/{invoice}', [SalesOrderController::class, 'detail'])->name('so.detail');
-
     // DO
     Route::get('delivery-order', [DeliveryOrderController::class, 'index'])->name('do.index');
 
@@ -111,6 +108,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
     // INVOICE BATAL
     Route::get('/invoice/batal/{invoice}', [InvoiceController::class, 'batal'])->name('inv.batal');
+
+    // INVOICE BOSNET
+    Route::get('/invoice/bosnet', [InvoiceController::class, 'invoiceBosnet'])->name('inv.bosnet');
 
     // PRINT INVOICE 
     Route::get('/invoice/print/{invoice}', [InvoiceController::class, 'print'])->name('inv.print');

@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Invoice')
+@section('title', 'Invoice Detail')
 
 @section('breadcrumb')
     <ol class="breadcrumb">
-        <li class="breadcrumb-item active"><a href="">Invoice</a></li>
+        <li class="breadcrumb-item"><a href="/invoice">Invoice</a></li>
+        <li class="breadcrumb-item active"><a href="">Invoice Detail</a></li>
     </ol>
 @endsection
 
