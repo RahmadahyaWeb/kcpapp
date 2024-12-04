@@ -231,6 +231,7 @@ class SalesOrderDetail extends Component
             $controller = new SalesOrderController();
             $controller->sendToBosnet(new Request(['invoice' => $this->invoice]));
             session()->flash('success', "Data SO berhasil dikirim!");
+            $this->redirect('/invoice');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -300,6 +301,7 @@ class SalesOrderDetail extends Component
 
         $invoice_bosnet_exists = DB::table('invoice_bosnet')
             ->where('noinv', $this->invoice)
+            ->where('noso', $header->noso)
             ->first();
 
         if (!$invoice_bosnet_exists) {

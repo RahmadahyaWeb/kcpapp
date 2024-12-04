@@ -50,10 +50,10 @@
 
                                             <div class="dropdown-menu">
                                                 <a href="{{ route('inv.detail', $item->noso) }}" class="dropdown-item">
-                                                    <i class='bx bx-check'></i> Ok
+                                                    Detail
                                                 </a>
                                                 <a href="" class="dropdown-item">
-                                                    <i class='bx bx-x'></i> Batal
+                                                    Batal
                                                 </a>
                                             </div>
                                         </div>
@@ -114,9 +114,25 @@
                                         {{ number_format($invoice->nominal_total_ppn, 0, ',', '.') }}
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('inv.detail-print', $invoice->noinv) }}">
-                                            Detail
-                                        </a>
+
+
+                                        <div class="dropdown">
+                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                                data-bs-toggle="dropdown">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+
+                                            <div class="dropdown-menu">
+                                                <a href="{{ route('inv.detail-print', $invoice->noinv) }}"
+                                                    class="dropdown-item">
+                                                    Detail
+                                                </a>
+                                                <a href="{{ route('inv.batal', $invoice->noso) }}"
+                                                    class="dropdown-item">
+                                                    Batal
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

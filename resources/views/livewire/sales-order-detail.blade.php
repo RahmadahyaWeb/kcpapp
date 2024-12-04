@@ -24,7 +24,7 @@
                         </div>
                         <div class="col d-flex justify-content-end">
                             <!-- Print Button -->
-                            <a href="{{ route('so.print', $header->noinv) }}"
+                            <a href="{{ route('inv.print', $header->noinv) }}"
                                 class="btn btn-success {{ $header->flag_print == 'Y' ? 'disabled' : '' }}">
                                 <i class='bx bxs-printer me-1'></i> Print
                             </a>

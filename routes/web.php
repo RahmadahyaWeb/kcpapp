@@ -109,8 +109,11 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // INVOICE DETAIL PRINT
     Route::get('/invoice/detail-print/{invoice}', [InvoiceController::class, 'detailPrint'])->name('inv.detail-print');
 
+    // INVOICE BATAL
+    Route::get('/invoice/batal/{invoice}', [InvoiceController::class, 'batal'])->name('inv.batal');
+
     // PRINT INVOICE 
-    Route::get('sales-order/print/{invoice}', [SalesOrderController::class, 'print'])->name('so.print');
+    Route::get('/invoice/print/{invoice}', [InvoiceController::class, 'print'])->name('inv.print');
 
     // COMPARATOR
     Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.index');

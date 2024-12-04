@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,100 +62,111 @@ class InvoiceController extends Controller
 
     public function createInvoice(Request $request)
     {
+        // Retrieve the sales order header and outlet details from the database
         $header = DB::connection('kcpinformation')
             ->table('trns_so_header')
             ->join('mst_outlet', 'mst_outlet.kd_outlet', '=', 'trns_so_header.kd_outlet')
             ->where('noso', $request->noso)
             ->first();
 
+        // Check if the invoice for this sales order has already been created
         if ($header->flag_invoice == 'Y') {
-            return redirect()->route('inv.index')->with('error', 'Invoice sudah pernahh dibuat coba periksa list invoice.');
+            return redirect()->route('inv.index')->with('error', 'Invoice sudah pernah dibuat coba periksa list invoice.');
         }
 
+        // Generate the invoice number and format it according to the current year and month
         $noinv = $this->getNoInv();
         $noinv_formatted = 'INV-' . date('Ym') . '-' . $noinv;
+
+        // Calculate the due date by adding the "jth_tempo" (due period) to the current date
         $jatuh_tempo = date('Y-m-d', strtotime('+' . $header->jth_tempo . ' days'));
 
         try {
-            // Mulai transaksi
+            // Start a transaction to ensure atomicity of the entire operation
             $connection = DB::connection('kcpinformation');
-
             $connection->beginTransaction();
 
-            // Insert data ke dalam tabel trns_inv_header
+            // Insert data into the 'trns_inv_header' table to create the invoice header
             DB::connection('kcpinformation')
                 ->table('trns_inv_header')
                 ->insert([
-                    'noinv'         => $noinv_formatted,
-                    'area_inv'      => $header->area_so,
-                    'noso'          => $header->noso,
-                    'kd_outlet'     => $header->kd_outlet,
-                    'nm_outlet'     => $header->nm_outlet,
-                    'status'        => 'O',
-                    'ket_status'    => 'OPEN',
-                    'user_sales'    => $header->user_sales,
-                    'tgl_jth_tempo' => $jatuh_tempo,
-                    'crea_date'     => now(),
-                    'crea_by'       => Auth::user()->username,
+                    'noinv'         => $noinv_formatted,  // Invoice number
+                    'area_inv'      => $header->area_so,  // Sales area
+                    'noso'          => $header->noso,     // Sales order number
+                    'kd_outlet'     => $header->kd_outlet, // Outlet code
+                    'nm_outlet'     => $header->nm_outlet, // Outlet name
+                    'status'        => 'O',               // Status of the invoice (Open)
+                    'ket_status'    => 'OPEN',            // Status description
+                    'user_sales'    => $header->user_sales, // Salesperson responsible
+                    'tgl_jth_tempo' => $jatuh_tempo,     // Due date
+                    'crea_date'     => now(),            // Creation date
+                    'crea_by'       => Auth::user()->username, // Created by (user)
                 ]);
 
+            // Retrieve sales order details
             $details = DB::connection('kcpinformation')
                 ->table('trns_so_details')
                 ->where('noso', $request->noso)
                 ->orderBy('part_no')
                 ->get();
 
+            // Initialize total nominal (amount) for the invoice
             $nominal_total = 0;
+
+            // Loop through each sales order detail and insert corresponding data into the invoice details table
             foreach ($details as $value) {
                 DB::connection('kcpinformation')
                     ->table('trns_inv_details')
                     ->insert([
-                        'noinv'         => $noinv_formatted,
-                        'area_inv'      => $value->area_so,
-                        'kd_outlet'     => $value->kd_outlet,
-                        'part_no'       => $value->part_no,
-                        'nm_part'       => $value->nm_part,
-                        'qty'           => $value->qty_gudang,
-                        'hrg_pcs'       => $value->hrg_pcs,
-                        'disc'          => $value->disc,
-                        'nominal'       => $value->nominal_gudang,
-                        'nominal_disc'  => $value->nominal_disc_gudang,
-                        'nominal_total' => $value->nominal_total_gudang,
-                        'status'        => 'O',
-                        'crea_date'     => now(),
-                        'crea_by'       => Auth::user()->username
+                        'noinv'         => $noinv_formatted,      // Invoice number
+                        'area_inv'      => $value->area_so,       // Sales area
+                        'kd_outlet'     => $value->kd_outlet,     // Outlet code
+                        'part_no'       => $value->part_no,       // Part number
+                        'nm_part'       => $value->nm_part,       // Part name
+                        'qty'           => $value->qty_gudang,    // Quantity in warehouse
+                        'hrg_pcs'       => $value->hrg_pcs,       // Price per piece
+                        'disc'          => $value->disc,          // Discount applied
+                        'nominal'       => $value->nominal_gudang, // Nominal value (pre-discount)
+                        'nominal_disc'  => $value->nominal_disc_gudang, // Discounted nominal value
+                        'nominal_total' => $value->nominal_total_gudang, // Total nominal value (after discount)
+                        'status'        => 'O',                    // Status of the invoice detail (Open)
+                        'crea_date'     => now(),                 // Creation date
+                        'crea_by'       => Auth::user()->username // Created by (user)
                     ]);
 
+                // Accumulate total nominal for the invoice
                 $nominal_total += $value->nominal_total_gudang;
 
-                // PROSES PENGURANGAN STOCK
+                // Process stock reduction based on the quantity of goods in the warehouse
                 $this->penguranganStock($value->qty_gudang, 'GD1', $value->kd_outlet, $value->part_no);
 
-                // INSERT LOG STOCK
-                $this->logStock('GD1', $value->part_no, $value, $noinv);
+                // Insert a log for the stock movement
+                $this->logStock('GD1', $value->part_no, $value, $noinv_formatted);
             }
 
-            // PENGURANGAN PLAFOND
+            // Reduce the outlet's plafond (credit limit) based on the total nominal of the invoice
             $this->penguranganPlafond($header->kd_outlet, $nominal_total);
 
-            // UPDATE SO
+            // Update the sales order header to indicate that the invoice has been created
             DB::connection('kcpinformation')
                 ->table('trns_so_header')
                 ->where('noso', $request->noso)
                 ->update([
-                    'no_invoice'        => $noinv_formatted,
-                    'flag_invoice'      => 'Y',
-                    'flag_invoice_date' => now()
+                    'no_invoice'        => $noinv_formatted,  // Invoice number
+                    'flag_invoice'      => 'Y',                // Flag to indicate that the invoice is created
+                    'flag_invoice_date' => now()               // Invoice creation date
                 ]);
 
-            // Commit transaksi jika berhasil
+            // Commit the transaction if all operations are successful
             $connection->commit();
 
+            // Return a success response with a message
             return redirect()->route('inv.index')->with('success', 'Invoice berhasil dibuat silahkan cetak nota pada list.');
         } catch (\Exception $e) {
-            // Rollback jika terjadi error
+            // Rollback the transaction if any error occurs during the process
             $connection->rollBack();
 
+            // Return an error response with the exception message
             return redirect()->route('inv.index')->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
     }
@@ -188,30 +200,39 @@ class InvoiceController extends Controller
 
     public function penguranganStock($qty, $kdGudang, $kdOutlet, $partNo)
     {
+        // Retrieve the current stock information for the given part number and warehouse
         $dataStock = $this->cekStockPart($kdGudang, $partNo);
+
+        // Calculate the new stock and booking stock values after subtracting the ordered quantity
         $vQty = $dataStock->stock - $qty;
         $vQty_booking = $dataStock->stock_booking - $qty;
 
-        // Update stok utama
+        // Update the main stock and stock booking in the 'stock_part' table for the specific part and warehouse
         DB::connection('kcpinformation')
             ->table('stock_part')
-            ->where('part_no', $partNo)
-            ->where('kd_gudang', $kdGudang)
+            ->where('part_no', $partNo)   // Match part number
+            ->where('kd_gudang', $kdGudang) // Match warehouse code
             ->update([
-                'stock' => $vQty,
-                'stock_booking' => $vQty_booking
+                'stock' => $vQty,           // Update stock value
+                'stock_booking' => $vQty_booking // Update booking stock value
             ]);
 
+        // Check the outlet code to determine the specific rack condition for stock processing
         if ($kdOutlet == 'V2') {
+            // If outlet code is 'V2', use the 'Kon.Assa' rack condition
             $rakCondition = "kd_rak = 'Kon.Assa'";
         } elseif ($kdOutlet == 'NW') {
+            // If outlet code is 'NW', use the 'Kanvasan' rack condition
             $rakCondition = "kd_rak = 'Kanvasan'";
         } else {
+            // For all other outlet codes, exclude 'Kanvasan' and 'Kon.Assa' rack conditions
             $rakCondition = "kd_rak <> 'Kanvasan' AND kd_rak <> 'Kon.Assa'";
         }
 
+        // Call the 'prosesRak' function to process stock based on the determined rack condition
         $this->prosesRak($qty, $kdGudang, $partNo, $rakCondition, $kdOutlet);
     }
+
 
     private function cekStockPart($kdGudang, $partNo)
     {
@@ -224,36 +245,45 @@ class InvoiceController extends Controller
 
     private function prosesRak($qty, $kdGudang, $partNo, $rakCondition, $kdOutlet)
     {
+        // Retrieve stock part information for the given part number and warehouse code
         $stockPart = DB::connection('kcpinformation')
             ->table('stock_part')
-            ->where('part_no', $partNo)
-            ->where('kd_gudang', $kdGudang)
+            ->where('part_no', $partNo)  // Match part number
+            ->where('kd_gudang', $kdGudang) // Match warehouse code
             ->get();
 
+        // Get the ID of the stock part from the retrieved data
         $idStockPart = $stockPart[0]->id;
 
+        // Retrieve the racks associated with the stock part where quantity is greater than zero, and filter based on rack condition
         $cekRak = DB::connection('kcpinformation')
             ->table('stock_part_rak')
-            ->where('id_stock_part', $idStockPart)
-            ->where('qty', '>', 0)
-            ->whereRaw($rakCondition)
+            ->where('id_stock_part', $idStockPart) // Match the stock part ID
+            ->where('qty', '>', 0)  // Only consider racks with positive stock quantities
+            ->whereRaw($rakCondition)  // Apply the specific rack condition (e.g., based on outlet)
             ->get();
 
+        // Initialize the temporary quantity to track the remaining quantity to be processed
         $tempQty = 0;
-        $tempQty = $qty - $tempQty;
+        $tempQty = $qty - $tempQty;  // Set the initial quantity to the total requested quantity
 
+        // Loop through each rack entry and update the stock in the racks
         foreach ($cekRak as $value) {
+            // Get the rack ID and the quantity available in the rack
             $idRak = $value->id;
             $rakQty = $value->qty;
 
+            // Check if the quantity in the rack is greater than or equal to the remaining quantity to process
             if ($rakQty >= $tempQty) {
-                $this->updateRak($idRak, $rakQty - $tempQty);
-                $this->logRak($kdGudang, $value->kd_rak, $partNo, $tempQty, $rakQty - $tempQty, $kdOutlet);
-                break;
+                // If the rack has sufficient quantity, update the rack's quantity and log the transaction
+                $this->updateRak($idRak, $rakQty - $tempQty); // Update the rack with the remaining quantity
+                $this->logRak($kdGudang, $value->kd_rak, $partNo, $tempQty, $rakQty - $tempQty, $kdOutlet); // Log the stock movement
+                break;  // Exit the loop once the required quantity has been processed
             } else {
-                $this->updateRak($idRak, 0);
-                $this->logRak($kdGudang, $value->kd_rak, $partNo, $rakQty, 0, $kdOutlet);
-                $tempQty -= $rakQty;
+                // If the rack doesn't have enough quantity, set the rack's quantity to zero and process the next rack
+                $this->updateRak($idRak, 0); // Set the rack quantity to zero
+                $this->logRak($kdGudang, $value->kd_rak, $partNo, $rakQty, 0, $kdOutlet); // Log the stock movement for the full quantity in the rack
+                $tempQty -= $rakQty;  // Subtract the processed quantity from the remaining quantity
             }
         }
     }
@@ -323,5 +353,160 @@ class InvoiceController extends Controller
     public function detailPrint($invoice)
     {
         return view('so.detail', compact('invoice'));
+    }
+
+    public function batal($noso)
+    {
+        $kd_gudang = 'GD1';
+
+        try {
+            // Retrieve the SO and Invoice headers, and the SO details
+            $so_header = DB::connection('kcpinformation')->table('trns_so_header')->where('noso', $noso)->first();
+            $inv_header = DB::connection('kcpinformation')->table('trns_inv_header')->where('noso', $noso)->first();
+            $so_details = DB::connection('kcpinformation')->table('trns_so_details')->where('noso', $noso)->get();
+
+            DB::connection('kcpinformation')->beginTransaction();
+
+            // If there's no invoice header, adjust stock by decreasing booking quantity
+            if (!$inv_header) {
+                foreach ($so_details as $value) {
+                    $data_stock = $this->cekStockPart($kd_gudang, $value->part_no);
+
+                    // Calculate and update stock booking
+                    $v_stock_booking = $data_stock->stock_booking - $value->qty_gudang;
+
+                    DB::connection('kcpinformation')
+                        ->table('stock_part')
+                        ->where('id', $data_stock->id)
+                        ->update(['stock_booking' => $v_stock_booking]);
+                }
+            } else {
+                // If invoice exists, log the cancellation and update stock
+                $ket = 'PENJUALAN KCP/' . $inv_header->area_inv . '/' . $so_header->no_invoice;
+
+                // Remove logs related to this invoice
+                DB::connection('kcpinformation')->table('trns_log_stock')->where('keterangan', $ket)->delete();
+
+                foreach ($so_details as $value) {
+                    $data_stock = $this->cekStockPart($kd_gudang, $value->part_no);
+
+                    // Revert stock based on the quantity in the SO details
+                    $v_stock = $data_stock->stock + $value->qty_gudang;
+
+                    DB::connection('kcpinformation')
+                        ->table('stock_part')
+                        ->where('id', $data_stock->id)
+                        ->update(['stock' => $v_stock]);
+                }
+
+                // Update the invoice header to mark it as canceled
+                DB::connection('kcpinformation')
+                    ->table('trns_inv_header')
+                    ->where('noinv', $inv_header->noinv)
+                    ->update([
+                        'flag_batal' => 'Y',
+                        'flag_batal_date' => now(),
+                    ]);
+            }
+
+            // Mark the SO header as rejected
+            DB::connection('kcpinformation')
+                ->table('trns_so_header')
+                ->where('noso', $noso)
+                ->update([
+                    'flag_reject' => 'Y',
+                    'flag_reject_date' => now(),
+                    'flag_reject_keterangan' => 'Batal Invoice [SYSTEM]',
+                ]);
+
+            DB::connection('kcpinformation')->commit();
+
+            // Return success message after successful cancellation
+            return redirect()->route('inv.index')->with('success', 'Pembatalan invoice berhasil.');
+        } catch (\Exception $e) {
+            // Return error message to the user
+            return redirect()->route('inv.index')->with('error', 'Terjadi kesalahan saat membatalkan invoice. Silakan coba lagi.');
+        }
+    }
+
+    public function print($invoice)
+    {
+        $details = DB::connection('kcpinformation')
+            ->table('trns_inv_details')
+            ->where('noinv', $invoice)
+            ->get();
+
+        $sumTotalNominal = 0;
+        $sumTotalDPP = 0;
+        $sumTotalDisc = 0;
+
+        foreach ($details as $value) {
+            $sumTotalNominal = $sumTotalNominal + $value->nominal;
+            $sumTotalDPP = $sumTotalDPP + $value->nominal_total;
+            $sumTotalDisc = $sumTotalDisc + $value->nominal_disc;
+            $nominalPPn = ($value->nominal_total / config('tax.ppn_factor')) * config('tax.ppn_percentage');
+        }
+
+        $dpp = round($sumTotalNominal) / config('tax.ppn_factor');
+        $nominalPPn = round($dpp) * config('tax.ppn_percentage');
+        $dppDisc = round($sumTotalDPP) / config('tax.ppn_factor');
+        $nominalPPnDisc = round($dppDisc * config('tax.ppn_percentage'));
+
+        DB::connection('kcpinformation')
+            ->table('trns_inv_header')
+            ->where('noinv', $invoice)
+            ->update([
+                "amount_dpp"        => ROUND($dpp),
+                "amount_ppn"        => ROUND($nominalPPn),
+                "amount"            => ROUND($sumTotalNominal),
+                "amount_disc"       => ROUND($sumTotalDisc),
+                "amount_dpp_disc"   => ROUND($dppDisc),
+                "amount_ppn_disc"   => ROUND($nominalPPnDisc),
+                "amount_total"      => ROUND($sumTotalDPP),
+                "status"            => "C",
+                "ket_status"        => "CLOSE",
+            ]);
+
+        $header = DB::connection('kcpinformation')
+            ->table('trns_inv_header')
+            ->where('noinv', $invoice)
+            ->first();
+
+        $invoice_bosnet = DB::table('invoice_bosnet')
+            ->where('noinv', $invoice)
+            ->first();
+
+        // CEK FLAG PRINT
+        if ($invoice_bosnet->flag_print == 'Y') {
+            return redirect("/sales-order/detail/$invoice")->with('error', 'Invoice tidak dapat diprint lebih dari satu kali');
+        }
+
+        // UPDATE FLAG PRINT
+        DB::table('invoice_bosnet')
+            ->where('noinv', $invoice)
+            ->update([
+                'flag_print' => 'Y'
+            ]);
+
+        $suppProgram = DB::table('sales_order_program')
+            ->where('noinv', $invoice)
+            ->get();
+
+        $master_toko = DB::connection('kcpinformation')
+            ->table('mst_outlet')
+            ->where('kd_outlet', $header->kd_outlet)
+            ->first();
+
+        $alamat_toko = $master_toko->almt_outlet;
+
+        $data = [
+            'invoices'       => $details,
+            'header'         => $header,
+            'suppProgram'    => $suppProgram,
+            'alamat_toko'    => $alamat_toko
+        ];
+
+        $pdf = Pdf::loadView('so.print', $data);
+        return $pdf->stream('invoice.pdf');
     }
 }
