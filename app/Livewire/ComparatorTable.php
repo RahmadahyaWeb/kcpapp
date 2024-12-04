@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ComparatorTable extends Component
 {
     public $barcode;
+    public $number_update;
     public $items = [];
 
     public function store()
@@ -89,6 +90,8 @@ class ComparatorTable extends Component
             DB::commit(); // Commit transaction
 
             $this->dispatch('qty-saved');
+
+            $this->reset('number_update');
 
             session()->flash('success', "Qty berhasil diperbarui.");
         } catch (\Exception $e) {

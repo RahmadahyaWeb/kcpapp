@@ -57,8 +57,7 @@
                                 <td>{{ $item->nm_part }}</td>
                                 <td>{{ $item->qty }}</td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm"
-                                        wire:model="items.{{ $loop->index }}.qty"
+                                    <input type="number" class="form-control form-control-sm w-100" wire:model="number_update"
                                         wire:keydown.enter="updateQty($event.target.value, '{{ $item->part_number }}')">
                                 </td>
                                 <td>{{ $item->scan_by }}</td>
