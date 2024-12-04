@@ -35,7 +35,7 @@
         <div class="card-body">
             <div class="mb-3">
                 <input type="text" id="scan-barcode" class="form-control" wire:model="barcode" wire:keydown.enter="store"
-                    placeholder="Scan barcode here" autofocus>
+                    placeholder="Scan barcode here" wire:loading.attr="disabled" autofocus>
             </div>
 
             <div class="table-responsive">
