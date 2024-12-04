@@ -82,9 +82,11 @@ class ComparatorTable extends Component
                 return;
             }
 
+            $save_part_number = trim($part_number);
+
             // Update qty in the database
             DB::table('comparator')
-                ->where('part_number', $part_number)
+                ->where('part_number', $save_part_number)
                 ->update(['qty' => $qty]);
 
             DB::commit(); // Commit transaction
