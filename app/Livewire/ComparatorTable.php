@@ -78,7 +78,7 @@ class ComparatorTable extends Component
                 return;
             }
 
-            $save_part_number = trim($part_number);
+            $save_part_number = str_replace(' ', '', trim($part_number));
 
             // Update qty in the database
             DB::table('comparator')
