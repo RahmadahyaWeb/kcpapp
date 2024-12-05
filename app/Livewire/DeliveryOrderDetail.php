@@ -71,7 +71,11 @@ class DeliveryOrderDetail extends Component
                 'trns_so_header.nm_outlet',
                 'trns_inv_header.noinv',
                 'trns_lkh_header.crea_date',
-                'trns_inv_header.user_sales'
+                'trns_inv_header.user_sales',
+                'trns_lkh_details.no_packingsheet',
+                'trns_lkh_details.koli',
+                'trns_lkh_details.no_urut',
+                'trns_lkh_details.expedisi',
             ])
             ->join('trns_lkh_details', 'trns_lkh_details.no_lkh', '=', 'trns_lkh_header.no_lkh')
             ->join('trns_so_header', 'trns_so_header.no_packingsheet', '=', 'trns_lkh_details.no_packingsheet')

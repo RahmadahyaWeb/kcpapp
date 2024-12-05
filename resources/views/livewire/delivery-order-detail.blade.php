@@ -144,11 +144,14 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>No. LKH</th>
                                     <th>Kode / Nama Toko</th>
-                                    <th>No. Sales Order</th>
                                     <th>No. Invoice</th>
+                                    <th>No. PackingSheet</th>
+                                    <th>Koli</th>
+                                    <th>No. Urut</th>
+                                    <th>Ekspedisi</th>
                                     <th>Status</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,13 +162,21 @@
                                 @else
                                     @foreach ($items as $item)
                                         <tr>
-                                            <td>{{ $item->no_lkh }}</td>
                                             <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
                                             <td>
-                                                {{ $item->noso }}
+                                                {{ $item->noinv }}
                                             </td>
                                             <td>
-                                                {{ $item->noinv }}
+                                                <span class="badge text-bg-dark">{{ $item->no_packingsheet }}</span>
+                                            </td>
+                                            <td>
+                                                {{ $item->koli }}
+                                            </td>
+                                            <td>
+                                                {{ $item->no_urut }}
+                                            </td>
+                                            <td>
+                                                {{ $item->expedisi }}
                                             </td>
                                             <td>
                                                 @isset(DeliveryOrderDetail::cek_status($item->noinv)->status_bosnet)
@@ -179,10 +190,11 @@
                                                         </span>
                                                     @endif
                                                 @else
-                                                    <span class="badge text-bg-warning">
-                                                        SO / INV belum diprint.
-                                                    </span>
+                                                        SO / INV belum terintegrasi dengan Bosnet.
                                                 @endisset
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="">Terima SJ</a>
                                             </td>
                                         </tr>
                                     @endforeach
