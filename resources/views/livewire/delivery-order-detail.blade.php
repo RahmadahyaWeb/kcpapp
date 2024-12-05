@@ -11,11 +11,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
+    @php
+        use App\Livewire\DeliveryOrderDetail;
+    @endphp
     <div class="row gap-3">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    Detail LKH: <b>{{ $lkh }}</b>
+                    Detail LKH: <b>{{ $no_lkh }}</b>
                     <hr>
                 </div>
                 <div class="card-body">
@@ -29,7 +33,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['no_lkh'] }}</div>
+                                    <div>{{ $header->no_lkh }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -40,7 +44,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['driver'] }}</div>
+                                    <div>{{ $header->driver }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -51,7 +55,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['helper'] }}</div>
+                                    <div>{{ $header->helper }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -62,7 +66,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['plat_mobil'] }}</div>
+                                    <div>{{ $header->plat_mobil }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -73,7 +77,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['jam_berangkat'] }}</div>
+                                    <div>{{ $header->jam_berangkat }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -84,7 +88,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['jam_balik'] }}</div>
+                                    <div>{{ $header->jam_balik }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -95,7 +99,7 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['km_berangkat'] }}</div>
+                                    <div>{{ $header->km_berangkat }}</div>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -106,25 +110,23 @@
                                     :
                                 </div>
                                 <div class="col col-auto">
-                                    <div>{{ $header['km_balik'] }}</div>
+                                    <div>{{ $header->km_balik }}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    @if ($readyToSent)
-                        <div class="row">
-                            <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
-                                <div class="col d-grid">
-                                        <hr>
-                                        <button type="submit" class="btn btn-warning" wire:offline.attr="disabled">
-                                        <span wire:loading.remove wire:target="sendToBosnet">Kirim ke Bosnet</span>
-                                        <span wire:loading wire:target="sendToBosnet">Loading...</span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    @endif
+                    <div class="row">
+                        <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
+                            <div class="col d-grid">
+                                <hr>
+                                <button type="submit" class="btn btn-warning" wire:offline.attr="disabled">
+                                    <span wire:loading.remove wire:target="sendToBosnet">Kirim ke Bosnet</span>
+                                    <span wire:loading wire:target="sendToBosnet">Loading...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,7 +134,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    Detail LKH: <b>{{ $lkh }}</b>
+                    Detail LKH: <b>{{ $no_lkh }}</b>
                     <hr>
                 </div>
                 <div class="card-body">
@@ -158,23 +160,27 @@
                                             <td>{{ $item->no_lkh }}</td>
                                             <td>{{ $item->kd_outlet }} / {{ $item->nm_outlet }}</td>
                                             <td>
-                                                <a target="_blank"
-                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noso }}</a>
+                                                {{ $item->noso }}
                                             </td>
                                             <td>
-                                                <a target="_blank"
-                                                    href="{{ route('so.detail', $item->noinv) }}">{{ $item->noinv }}</a>
+                                                {{ $item->noinv }}
                                             </td>
                                             <td>
-                                                @if ($item->status_inv == 'KCP')
-                                                    <span class="badge text-bg-danger">
-                                                        SO masih di KCP
-                                                    </span>
+                                                @isset(DeliveryOrderDetail::cek_status($item->noinv)->status_bosnet)
+                                                    @if (DeliveryOrderDetail::cek_status($item->noinv)->status_bosnet == 'KCP')
+                                                        <span class="badge text-bg-danger">
+                                                            SO masih di KCP.
+                                                        </span>
+                                                    @else
+                                                        <span class="badge text-bg-success">
+                                                            Siap dikirim.
+                                                        </span>
+                                                    @endif
                                                 @else
-                                                    <span class="badge text-bg-success">
-                                                        Siap dikirim
+                                                    <span class="badge text-bg-warning">
+                                                        SO / INV belum diprint.
                                                     </span>
-                                                @endif
+                                                @endisset
                                             </td>
                                         </tr>
                                     @endforeach
