@@ -15,6 +15,7 @@ class DeliveryOrderDetail extends Component
     public $header;
     public $items;
     public $ready_to_sent = false;
+    public $status = false;
 
 
     /**
@@ -94,7 +95,7 @@ class DeliveryOrderDetail extends Component
             }
         }
 
-        if ($count_status_kcp == $count_status_bosnet) {
+        if ($count_status_bosnet == count($this->items)) {
             $this->ready_to_sent = true;
         }
 
@@ -102,6 +103,12 @@ class DeliveryOrderDetail extends Component
             ->table('trns_lkh_header')
             ->where('no_lkh', $this->no_lkh)
             ->first();
+
+        $total_status_sukses =   DB::table('do_bosnet')->where('no_lkh', $this->no_lkh)->where('status_bosnet', 'BOSNET')->count();
+
+        if ($total_status_sukses == count($this->items)) {
+            $this->status = true;
+        }
 
         return view('livewire.delivery-order-detail');
     }

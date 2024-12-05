@@ -4,8 +4,8 @@
         <b>List Invoice</b>
     </div>
 
-    <!-- Filter Section -->
-    <div class="container">
+    <div class="card-body">
+        <!-- Filter Section -->
         <div class="row mb-3 g-2">
             <div class="col-md-4">
                 <label class="form-label">Sales Order</label>
@@ -26,17 +26,15 @@
                 </select>
             </div>
         </div>
-    </div>
 
-    <!-- Loading Spinner -->
-    <div wire:loading.flex wire:target="noSo, noInv, status, synchronization, gotoPage"
-        class="text-center justify-content-center align-items-center" style="height: 200px;">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <!-- Loading Spinner -->
+        <div wire:loading.flex wire:target="noSo, noInv, status, synchronization, gotoPage"
+            class="text-center justify-content-center align-items-center" style="height: 200px;">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>
-    </div>
 
-    <div class="card-body">
         <!-- Data Table -->
         <div class="table-responsive mb-6" wire:loading.class="d-none"
             wire:target="noSo, noInv, status, synchronization, gotoPage">

@@ -14,6 +14,9 @@
 
         <div class="row g-2 mb-3">
             <div class="col-md-3 d-grid">
+                <a href="{{ route('inv.history') }}" class="btn btn-success">History Invoice</a>
+            </div>
+            <div class="col-md-3 d-grid">
                 <a href="{{ route('inv.bosnet') }}" class="btn btn-success">Invoice Bosnet</a>
             </div>
         </div>

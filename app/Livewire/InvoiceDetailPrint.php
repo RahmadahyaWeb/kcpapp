@@ -231,7 +231,7 @@ class InvoiceDetailPrint extends Component
             $controller = new SalesOrderController();
             $controller->sendToBosnet(new Request(['invoice' => $this->invoice]));
             session()->flash('success', "Data SO berhasil dikirim!");
-            $this->redirect('/invoice');
+            $this->redirect('/invoice/bosnet');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -245,6 +245,10 @@ class InvoiceDetailPrint extends Component
     public function render()
     {
         $this->loadInvoiceHeader();
+
+        if ($this->header == null) {
+            abort(404);
+        }
 
         return view('livewire.invoice-detail-print', [
             'invoices' => $this->details,
@@ -304,7 +308,7 @@ class InvoiceDetailPrint extends Component
             ->where('noso', $header->noso)
             ->first();
 
-        if (!$invoice_bosnet_exists) {
+        if (!$invoice_bosnet_exists && $header->status != 'C') {
             DB::table('invoice_bosnet')
                 ->insert([
                     'noso'          => $header->noso,

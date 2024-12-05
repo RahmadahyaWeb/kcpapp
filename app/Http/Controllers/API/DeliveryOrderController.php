@@ -64,19 +64,21 @@ class DeliveryOrderController extends Controller
                 $response = $this->sendDataToBosnet($dataToSend);
 
                 if ($response) {
-                    // Update the status in the database
-                    // DB::table('trns_do_invoice')
-                    //     ->where('no_lkh', $lkh)
-                    //     ->update([
-                    //         'status'       => 'BOSNET',
-                    //         'sendToBosnet' => now(),
-                    //     ]);
-                    DB::commit();
+                    DB::table('do_bosnet')
+                        ->where('no_lkh', $lkh)
+                        ->insert([
+                            'no_lkh'            => $lkh,
+                            'noinv'             => $item->noinv,
+                            'status_bosnet'     => 'BOSNET',
+                            'send_to_bosnet'    => now(),
+                        ]);
                 } else {
                     DB::rollBack();
                     throw new \Exception('Failed to send data to BOSNET.');
                 }
             }
+
+            DB::commit();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }

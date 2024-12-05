@@ -116,7 +116,7 @@
                         </div>
                     </div>
 
-                    @if ($ready_to_sent)
+                    @if ($ready_to_sent && $status == false)
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">

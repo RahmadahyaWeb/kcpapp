@@ -62,7 +62,7 @@
             <div class="table-responsive" wire:loading.class="d-none"
                 wire:target="noLkh, synchronization, gotoPage, noSo, status">
                 <table class="table table-hover">
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
                             <th>No LKH</th>
                             <th>Aksi</th>

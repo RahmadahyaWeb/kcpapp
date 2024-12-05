@@ -465,6 +465,7 @@ class InvoiceController extends Controller
                 "amount_total"      => ROUND($sumTotalDPP),
                 "status"            => "C",
                 "ket_status"        => "CLOSE",
+                "cetak"             => 1,
             ]);
 
         $header = DB::connection('kcpinformation')
@@ -534,5 +535,50 @@ class InvoiceController extends Controller
     public function invoiceBosnet()
     {
         return view('invoice.invoice-bosnet');
+    }
+
+    public function history()
+    {
+        return view('invoice.history');
+    }
+
+    public function historyDetail($noinv)
+    {
+        $header = DB::connection('kcpinformation')
+            ->table('trns_inv_header')
+            ->where('noinv', $noinv)
+            ->first();
+
+        $nominalSuppProgram = DB::table('sales_order_program')
+            ->where('noinv', $noinv)
+            ->sum('nominal_program');
+
+        $details = DB::connection('kcpinformation')
+            ->table('trns_inv_details')
+            ->where('noinv', $noinv)
+            ->get();
+
+        $sumTotalNominal = 0;
+        $sumTotalDPP = 0;
+        $sumTotalDisc = 0;
+
+        foreach ($details as $value) {
+            $sumTotalNominal = $sumTotalNominal + $value->nominal;
+            $sumTotalDPP = $sumTotalDPP + $value->nominal_total;
+            $sumTotalDisc = $sumTotalDisc + $value->nominal_disc;
+            $nominalPPn = ($value->nominal_total / config('tax.ppn_factor')) * config('tax.ppn_percentage');
+        }
+
+        $dpp = round($sumTotalNominal) / config('tax.ppn_factor');
+        $nominalPPn = round($dpp) * config('tax.ppn_percentage');
+        $dppDisc = round($sumTotalDPP) / config('tax.ppn_factor');
+        $nominalPPnDisc = round($dppDisc * config('tax.ppn_percentage'));
+
+        return view('invoice.history-detail', compact(
+            'header',
+            'nominalSuppProgram',
+            'sumTotalDPP',
+            'details'
+        ));
     }
 }

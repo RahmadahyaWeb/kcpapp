@@ -100,7 +100,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // INVOICE DETAIL
     Route::get('/invoice/detail/{noso}', [InvoiceController::class, 'detail'])->name('inv.detail');
 
-    // CREATE INVOICE
+    // INVOICE CREATE
     Route::post('/invoice/store', [InvoiceController::class, 'createInvoice'])->name('inv.store');
 
     // INVOICE DETAIL PRINT
@@ -111,6 +111,12 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
 
     // INVOICE BOSNET
     Route::get('/invoice/bosnet', [InvoiceController::class, 'invoiceBosnet'])->name('inv.bosnet');
+
+    // INVOICE HISTORY 
+    Route::get('/invoice/history', [InvoiceController::class, 'history'])->name('inv.history');
+
+    // INVOICE HISTORY DETAIL
+    Route::get('/invoice/history-detail/{invoice}', [InvoiceController::class, 'historyDetail'])->name('inv.history-detail');
 
     // PRINT INVOICE 
     Route::get('/invoice/print/{invoice}', [InvoiceController::class, 'print'])->name('inv.print');

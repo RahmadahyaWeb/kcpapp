@@ -24,13 +24,13 @@
                         </div>
                         <div class="col d-flex justify-content-end">
                             <!-- Print Button -->
-                            <a href="{{ route('inv.print', $header->noinv) }}"
-                                class="btn btn-success {{ $header->flag_print == 'Y' ? 'disabled' : '' }}">
-                                <i class='bx bxs-printer me-1'></i> Print
-                            </a>
+                            @if ($header->flag_print == 'N')
+                                <a href="{{ route('inv.print', $header->noinv) }}" class="btn btn-success">
+                                    <i class='bx bxs-printer me-1'></i> Print
+                                </a>
+                            @endif
                         </div>
                     </div>
-                    <hr>
                 </div>
 
                 <div class="card-body">
@@ -79,7 +79,6 @@
                 <div class="card">
                     <div class="card-header">
                         Form Tambah Support Program
-                        <hr>
                     </div>
                     <div class="card-body">
                         <form wire:submit="saveProgram">
@@ -136,7 +135,6 @@
             <div class="card">
                 <div class="card-header">
                     Support Program
-                    <hr>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
