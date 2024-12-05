@@ -34,13 +34,13 @@ class AuthController extends Controller
             $token = $user->createToken('kcpapplication')->plainTextToken;
 
             return response()->json([
-                'message' => 'Login successful',
-                'access_token' => $token,
-                'token_type' => 'Bearer',
+                'message'       => 'authorized',
+                'access_token'  => $token,
+                'token_type'    => 'Bearer',
             ], 200);
         }
 
         // Jika login gagal
-        return response()->json(['message' => 'Unauthorized'], 401);
+        return response()->json(['message' => 'unauthorized'], 401);
     }
 }
