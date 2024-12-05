@@ -26,17 +26,18 @@ class ComparatorTable extends Component
             DB::beginTransaction();
 
             // Periksa apakah part_number sudah ada
-            $existingRecord = DB::table('comparator')->where('part_number', $this->barcode)->first();
+            $save_part_number = str_replace(' ', '', trim($this->barcode));
+            $existingRecord = DB::table('comparator')->where('part_number', $save_part_number)->first();
 
             if ($existingRecord) {
                 // Jika ada, increment qty
                 DB::table('comparator')
-                    ->where('part_number', $this->barcode)
+                    ->where('part_number', $save_part_number)
                     ->increment('qty', 1);
             } else {
                 // Jika tidak ada, masukkan data baru
                 DB::table('comparator')->insert([
-                    'part_number' => $this->barcode,
+                    'part_number' => $save_part_number,
                     'qty'         => 1,
                     'scan_by'     => Auth::user()->username,
                     'created_at'  => now(),
