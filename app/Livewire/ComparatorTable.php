@@ -103,8 +103,6 @@ class ComparatorTable extends Component
         DB::table('comparator')
             ->where('part_number', $part_number)
             ->increment('qty', 1);
-
-        $this->dispatch('qty-saved');
     }
 
     public function decrement($part_number)
@@ -112,8 +110,6 @@ class ComparatorTable extends Component
         DB::table('comparator')
             ->where('part_number', $part_number)
             ->decrement('qty', 1);
-
-        $this->dispatch('qty-saved');
     }
 
     public function destroy($part_number)
