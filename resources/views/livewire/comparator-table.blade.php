@@ -45,7 +45,7 @@
                             <th>Part Number</th>
                             <th>Nama Part</th>
                             <th>Qty</th>
-                            <th style="width: 20%">Qty</th>
+                            <th>Edit Qty</th>
                             <th>Scan By</th>
                             <th>Aksi</th>
                         </tr>
@@ -57,8 +57,10 @@
                                 <td>{{ $item->nm_part }}</td>
                                 <td>{{ $item->qty }}</td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm w-100" wire:model="number_update"
-                                        wire:keydown.enter="updateQty($event.target.value, '{{ $item->part_number }}')">
+                                    <a href="" data-bs-toggle="modal"
+                                        data-bs-target="#modal-edit-qty-{{ $item->part_number }}">
+                                        Edit
+                                    </a>
                                 </td>
                                 <td>{{ $item->scan_by }}</td>
                                 <td>
@@ -78,6 +80,46 @@
                                     </div>
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="modal-edit-qty-{{ $item->part_number }}"
+                                data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                                aria-labelledby="modal-edit-qtyLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="modal-edit-qtyLabel">Edit Qty</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form action="{{ route('comparator.edit-qty') }}" method="POST">
+                                                @csrf
+                                                <div class="row g-2">
+                                                    <div class="col-12">
+                                                        <label class="form-label">Part Number</label>
+                                                        <input type="text" class="form-control"
+                                                            value="{{ $item->part_number }}" disabled>
+                                                        <input type="hidden" value="{{ $item->part_number }}"
+                                                            name="part_number">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label">Qty saat ini</label>
+                                                        <input type="text" class="form-control"
+                                                            value="{{ $item->qty }}" disabled>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label for="edited_qty" class="form-label">Qty baru</label>
+                                                        <input type="text" class="form-control" name="edited_qty">
+                                                    </div>
+                                                    <div class="col-12 d-grid">
+                                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center">No Data</td>

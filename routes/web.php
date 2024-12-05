@@ -118,6 +118,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // COMPARATOR
     Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.index');
     Route::get('/comparator/delete/{part_number}', [ComparatorController::class, 'destroy'])->name('comparator.destroy');
+    Route::post('/comparator/edit-qty', [ComparatorController::class, 'edit_qty'])->name('comparator.edit-qty');
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');

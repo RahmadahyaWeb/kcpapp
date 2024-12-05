@@ -25,4 +25,15 @@ class ComparatorController extends Controller
         
         return view('comparator.index');
     }
+
+    public function edit_qty(Request $request)
+    {
+        DB::table('comparator')
+            ->where('part_number', $request->part_number)
+            ->update([
+                'qty' => $request->edited_qty
+            ]);
+
+        return redirect()->route('comparator.index')->with('success', 'Qty berhasil diperbarui');
+    }
 }
