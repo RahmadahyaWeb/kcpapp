@@ -92,7 +92,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('delivery-order', [DeliveryOrderController::class, 'index'])->name('do.index');
 
     // DO DETAIL
-    Route::get('delivery-order/detail/{lkh}', [DeliveryOrderController::class, 'detail'])->name('do.detail');
+    Route::get('delivery-order/detail/{no_lkh}', [DeliveryOrderController::class, 'detail'])->name('do.detail');
 
     // INVOICE 
     Route::get('/invoice', [InvoiceController::class, 'index'])->name('inv.index');

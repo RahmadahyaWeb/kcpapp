@@ -11,8 +11,8 @@ class DeliveryOrderController extends Controller
         return view('do.index');
     }
 
-    public function detail($lkh)
+    public function detail($no_lkh)
     {
-        return view('do.detail', compact('lkh'));
+        return view('do.detail', compact('no_lkh'));
     }
 }

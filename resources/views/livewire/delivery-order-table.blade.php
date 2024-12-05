@@ -18,19 +18,7 @@
     <div class="card">
         <!-- Card Header with Synchronization Button -->
         <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <b>Data Delivery Order</b>
-                </div>
-                <div class="col d-flex justify-content-end">
-                    <!-- Synchronize Button -->
-                    <button wire:click="synchronization" class="btn btn-success" wire:target="synchronization"
-                        wire:loading.attr="disabled">
-                        <i class='bx bx-sync me-1'></i> Sinkron
-                    </button>
-                </div>
-            </div>
-            <hr>
+            <b>Data Delivery Order</b>
         </div>
 
         <!-- Card Body with Filters -->
@@ -77,9 +65,7 @@
                     <thead>
                         <tr>
                             <th>No LKH</th>
-                            <th>SO / Invoice</th>
-                            <th>Status</th>
-                            <th>Tanggal Dibuat</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,31 +78,11 @@
                             <!-- Loop through each item and display it -->
                             @foreach ($items as $item)
                                 <tr>
-                                    <!-- LKH Link -->
                                     <td>
-                                        <a href="{{ route('do.detail', $item->no_lkh) }}">{{ $item->no_lkh }}</a>
+                                        KCP/{{ $item->area_lkh }}/{{ $item->no_lkh }}
                                     </td>
-
-                                    <!-- Invoices List -->
                                     <td>
-                                        @foreach ($item->invoices as $invoice)
-                                            {{ $invoice }}
-                                            <br>
-                                        @endforeach
-                                    </td>
-
-                                    <!-- Status Badge -->
-                                    <td>
-                                        @if ($item->status == 'KCP')
-                                            <span class="badge text-bg-success">{{ $item->status }}</span>
-                                        @else
-                                            <span class="badge text-bg-warning">{{ $item->status }}</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Creation Date -->
-                                    <td>
-                                        {{ date('d-m-Y H:i:s', strtotime($item->crea_date)) }}
+                                        <a href="{{ route('do.detail', $item->no_lkh) }}">Detail</a>
                                     </td>
                                 </tr>
                             @endforeach

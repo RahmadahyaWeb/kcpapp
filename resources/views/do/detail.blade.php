@@ -10,5 +10,5 @@
 @endsection
 
 @section('content')
-    <livewire:delivery-order-detail :lkh="$lkh" />
+    <livewire:delivery-order-detail :no_lkh="$no_lkh" />
 @endsection
