@@ -48,8 +48,6 @@ class ComparatorTable extends Component
             // Reset field
             $this->barcode = '';
 
-            $this->dispatch('qty-saved');
-
             session()->flash('success', "Berhasil scan barcode.");
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback transaksi jika terjadi kesalahan
