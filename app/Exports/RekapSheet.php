@@ -240,7 +240,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
 
                 // Cek apakah hari ini adalah hari Jumat
                 $isFriday = Carbon::parse($data->tgl_kunjungan)->isFriday();
-                $waktu_istirahat = $isFriday ? 105 : 75; // Istirahat 1 jam 45 menit pada Jumat, selain Jumat 1 jam 15 menit
+                $waktu_istirahat = $isFriday ? 120 : 90; // Istirahat 2 jam pada Jumat, selain Jumat 1 jam 30 menit
 
                 // Durasi maksimal perjalanan ditambah waktu istirahat
                 $max_durasi_lama_perjalanan_plus_waktu_istirahat = $waktu_istirahat + $max_durasi_lama_perjalanan;
