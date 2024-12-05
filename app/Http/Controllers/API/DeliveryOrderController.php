@@ -43,6 +43,16 @@ class DeliveryOrderController extends Controller
         $items = $request->items;
         $header = $request->header;
 
+        foreach ($items as $value) {
+            $data = DB::connection('kcpinformation')
+                ->table('trns_inv_header')
+                ->where('noinv', $value->noinv)
+                ->first();
+
+            $value->tgl_jth_tempo = $data->tgl_jth_tempo;
+            $value->crea_date = date('Y-m-d', strtotime($data->crea_date));
+        }
+
         try {
             DB::beginTransaction();
 
@@ -55,12 +65,12 @@ class DeliveryOrderController extends Controller
 
                 if ($response) {
                     // Update the status in the database
-                    DB::table('trns_do_invoice')
-                        ->where('no_lkh', $lkh)
-                        ->update([
-                            'status'       => 'BOSNET',
-                            'sendToBosnet' => now(),
-                        ]);
+                    // DB::table('trns_do_invoice')
+                    //     ->where('no_lkh', $lkh)
+                    //     ->update([
+                    //         'status'       => 'BOSNET',
+                    //         'sendToBosnet' => now(),
+                    //     ]);
                     DB::commit();
                 } else {
                     DB::rollBack();
@@ -89,10 +99,6 @@ class DeliveryOrderController extends Controller
 
     /**
      * Prepares the data to be sent to BOSNET.
-     * 
-     * @param object $item
-     * @param array $header
-     * @return array The prepared data for BOSNET.
      */
     private function prepareBosnetData($item, $header)
     {
@@ -100,7 +106,7 @@ class DeliveryOrderController extends Controller
         $decTaxTotal = 0;
 
         // Calculate the payment term
-        $paymentTermId = $this->calculatePaymentTerm($item->crea_date, $item->tgl_jatuh_tempo);
+        $paymentTermId = $this->calculatePaymentTerm($item->crea_date, $item->tgl_jth_tempo);
 
         // Generate the list of sales order items
         $items = $this->generateSalesOrderItems($item, $decDPPTotal, $decTaxTotal, $header);
@@ -117,8 +123,8 @@ class DeliveryOrderController extends Controller
             "decTax"            => $decTaxTotal,
             "szCcyId"           => "IDR",
             "szCcyRateId"       => "BI",
-            "szVehicleId"       => $header["plat_mobil"],
-            "szDriverId"        => $header["driver"],
+            "szVehicleId"       => $header->plat_mobil,
+            "szDriverId"        => $header->driver,
             "szSalesId"         => $item->user_sales,
             "szCarrierId"       => "",
             "szRemark"          => "api",
@@ -145,12 +151,6 @@ class DeliveryOrderController extends Controller
 
     /**
      * Generates a list of sales order items for BOSNET.
-     * 
-     * @param object $item
-     * @param float $decDPPTotal Reference to the total DPP
-     * @param float $decTaxTotal Reference to the total tax
-     * @param array $header
-     * @return array The list of sales order items.
      */
     private function generateSalesOrderItems($item, &$decDPPTotal, &$decTaxTotal, $header)
     {
@@ -159,10 +159,10 @@ class DeliveryOrderController extends Controller
 
         // Loop through each sales order item and calculate the amounts
         foreach ($salesOrderItems as $orderItem) {
-            $decTax = ((($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / config('tax.ppn_factor')) * config('tax.ppn_percentage');
-            $decAmount = ($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty'];
-            $decDPP = (($orderItem['nominal_total'] / $orderItem['qty']) * $orderItem['qty']) / config('tax.ppn_factor');
-            $decPrice = $orderItem['nominal_total'] / $orderItem['qty'];
+            $decTax = ((($orderItem->nominal_total / $orderItem->qty) * $orderItem->qty) / config('tax.ppn_factor')) * config('tax.ppn_percentage');
+            $decAmount = ($orderItem->nominal_total / $orderItem->qty) * $orderItem->qty;
+            $decDPP = (($orderItem->nominal_total / $orderItem->qty) * $orderItem->qty) / config('tax.ppn_factor');
+            $decPrice = $orderItem->nominal_total / $orderItem->qty;
 
             // Update totals
             $decDPPTotal += $decDPP;
@@ -171,9 +171,9 @@ class DeliveryOrderController extends Controller
             // Add the item to the list
             $items[] = [
                 'szOrderItemTypeId'  => "JUAL",
-                'szProductId'        => $orderItem['part_no'],
+                'szProductId'        => $orderItem->part_no,
                 'decDiscProcent'     => 0,
-                'decQty'             => $orderItem['qty'],
+                'decQty'             => $orderItem->qty,
                 'szUomId'            => "PCS",
                 'decPrice'           => $decPrice,
                 'decDiscount'        => 0,
@@ -183,9 +183,9 @@ class DeliveryOrderController extends Controller
                 'decDPP'             => $decDPP,
                 'szPaymentType'      => "NON",
                 'deliveryList'       => [
-                    'dtmDelivery'   => date('Y-m-d H:i:s', strtotime($header['crea_date'])),
+                    'dtmDelivery'   => date('Y-m-d H:i:s', strtotime($header->crea_date)),
                     'szCustId'      => $item->kd_outlet,
-                    'decQty'        => $orderItem['qty'],
+                    'decQty'        => $orderItem->qty,
                     'szFromWpId'    => 'KCP01001',
                 ],
             ];
@@ -207,17 +207,10 @@ class DeliveryOrderController extends Controller
      */
     public function getInvoice($invoiceNumber)
     {
-        try {
-            $response = $this->kcpInformation->getInvoice($this->token, $invoiceNumber);
-
-            if (!isset($response['data'])) {
-                throw new \UnexpectedValueException('Invalid response structure: "data" key is missing.');
-            }
-
-            return $response['data'];
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Unable to retrieve invoice data.');
-        }
+        return DB::connection('kcpinformation')
+            ->table('trns_inv_details')
+            ->where('noinv', $invoiceNumber)
+            ->get();
     }
 
     /**

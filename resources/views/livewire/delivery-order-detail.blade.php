@@ -116,17 +116,19 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
-                            <div class="col d-grid">
-                                <hr>
-                                <button type="submit" class="btn btn-warning" wire:offline.attr="disabled">
-                                    <span wire:loading.remove wire:target="sendToBosnet">Kirim ke Bosnet</span>
-                                    <span wire:loading wire:target="sendToBosnet">Loading...</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                    @if ($ready_to_sent)
+                        <div class="row">
+                            <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
+                                <div class="col d-grid">
+                                    <hr>
+                                    <button type="submit" class="btn btn-warning" wire:offline.attr="disabled">
+                                        <span wire:loading.remove wire:target="sendToBosnet">Kirim ke Bosnet</span>
+                                        <span wire:loading wire:target="sendToBosnet">Loading...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

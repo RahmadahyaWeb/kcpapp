@@ -12,6 +12,10 @@ use Livewire\Component;
 class DeliveryOrderDetail extends Component
 {
     public $no_lkh;
+    public $header;
+    public $items;
+    public $ready_to_sent = false;
+
 
     /**
      * Initialize component and authenticate to fetch token.
@@ -33,7 +37,7 @@ class DeliveryOrderDetail extends Component
         try {
             $controller = new DeliveryOrderController();
             $controller->sendToBosnet(new Request([
-                'lkh'    => $this->lkh,
+                'lkh'    => $this->no_lkh,
                 'items'  => $this->items,
                 'header' => $this->header,
             ]));
@@ -57,7 +61,7 @@ class DeliveryOrderDetail extends Component
      */
     public function render()
     {
-        $items = DB::connection('kcpinformation')
+        $this->items = DB::connection('kcpinformation')
             ->table('trns_lkh_header')
             ->select([
                 'trns_lkh_header.no_lkh',
@@ -66,6 +70,7 @@ class DeliveryOrderDetail extends Component
                 'trns_so_header.nm_outlet',
                 'trns_inv_header.noinv',
                 'trns_lkh_header.crea_date',
+                'trns_inv_header.user_sales'
             ])
             ->join('trns_lkh_details', 'trns_lkh_details.no_lkh', '=', 'trns_lkh_header.no_lkh')
             ->join('trns_so_header', 'trns_so_header.no_packingsheet', '=', 'trns_lkh_details.no_packingsheet')
@@ -73,14 +78,31 @@ class DeliveryOrderDetail extends Component
             ->where('trns_lkh_header.no_lkh', $this->no_lkh)
             ->get();
 
-        $header = DB::connection('kcpinformation')
+        $count_status_kcp = 0;
+        $count_status_bosnet = 0;
+        foreach ($this->items as $value) {
+            $status = DeliveryOrderDetail::cek_status($value->noinv) ? DeliveryOrderDetail::cek_status($value->noinv)->status_bosnet : null;
+
+            if (isset($status)) {
+                if ($status == 'KCP') {
+                    $count_status_kcp += 1;
+                } else {
+                    $count_status_bosnet += 1;
+                }
+            } else {
+                $count_status_kcp += 1;
+            }
+        }
+
+        if ($count_status_kcp == $count_status_bosnet) {
+            $this->ready_to_sent = true;
+        }
+
+        $this->header = DB::connection('kcpinformation')
             ->table('trns_lkh_header')
             ->where('no_lkh', $this->no_lkh)
             ->first();
 
-        return view('livewire.delivery-order-detail', compact(
-            'items',
-            'header'
-        ));
+        return view('livewire.delivery-order-detail');
     }
 }
