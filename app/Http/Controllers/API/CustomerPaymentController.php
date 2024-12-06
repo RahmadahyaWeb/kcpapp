@@ -11,77 +11,61 @@ class CustomerPaymentController extends Controller
 {
     public function store(Request $request)
     {
-        // Validasi data request
         $validated = $request->validate([
-            'szFCustPaymentId' => 'required|string|max:50',
-            'dtmFCustPayment' => 'required|date',
-            'Items' => 'required|array',
-            'Items.*.dtmOrder' => 'required|date',
-            'Items.*.dtmDelivery' => 'required|date',
-            'Items.*.szFSoId' => 'required|string|max:50',
-            'Items.*.decSOAmount' => 'required|numeric',
-            'Items.*.decPayAmount' => 'required|numeric',
-            'Items.*.decInvAmount' => 'required|numeric',
-            'Items.*.remainingPayment' => 'required|numeric',
-            'Items.*.dtmDue' => 'required|date',
-            'Items.*.dtmPeriode' => 'required|date',
-            'Items.*.szFinvoiceId' => 'required|string|max:50',
-            'Items.*.jenisPembayaran' => 'required|string|max:50',
-            'Items.*.szRefId' => 'required|string|max:50',
-            'Items.*.dmDue' => 'required|date',
-            'Items.*.szCustId' => 'required|string|max:50',
-            'Items.*.szSalesId' => 'required|string|max:50',
+            'header' => 'required|array',
+            'header.no_piutang' => 'required|string|unique:customer_payment_header,no_piutang',
+            'header.area_piutang' => 'required|string',
+            'header.kd_outlet' => 'required|string',
+            'header.nm_outlet' => 'required|string',
+            'header.nominal_potong' => 'required|numeric',
+            'header.pembayaran_via' => 'required|string',
+            'header.no_bg' => 'nullable|string',
+            'header.tgl_jth_tempo_bg' => 'nullable|date',
+            'header.status' => 'required|string',
+            'header.crea_date' => 'required|date',
+            'header.crea_by' => 'required|string',
+
+            'details' => 'required|array',
+            'details.*.noinv' => 'required|string',
+            'details.*.no_piutang' => 'required|string',
+            'details.*.kd_outlet' => 'required|string',
+            'details.*.nm_outlet' => 'required|string',
+            'details.*.nominal' => 'required|numeric',
+            'details.*.keterangan' => 'nullable|string',
+            'details.*.pembayaran_via' => 'required|string',
+            'details.*.no_bg' => 'nullable|string',
+            'details.*.tgl_jth_tempo_bg' => 'nullable|date',
+            'details.*.bank' => 'nullable|string',
+            'details.*.status' => 'required|string',
+            'details.*.crea_date' => 'required|date',
+            'details.*.crea_by' => 'required|string',
         ]);
 
-        // Inisialisasi data header
-        $headerData = [
-            'szFCustPaymentId' => $validated['szFCustPaymentId'],
-            'dtmFCustPayment' => $validated['dtmFCustPayment'],
-        ];
-
-        // Data detail diambil dari Items
-        $detailsData = $validated['Items'];
-
-        // Mulai DB Transaction
-        DB::beginTransaction();
+        DB::beginTransaction(); // Memulai transaksi
 
         try {
-            // Insert ke tabel customerPaymentHeader
-            DB::table('customer_payment_header')->insert($headerData);
+            // Simpan Header
+            DB::table('customer_payment_header')->insert($validated['header']);
 
-            // Loop untuk insert ke tabel customerPaymentDetail
-            foreach ($detailsData as $detail) {
-                $detailData = [
-                    'szFCustPaymentId' => $validated['szFCustPaymentId'],
-                    'dtmOrder' => $detail['dtmOrder'],
-                    'dtmDelivery' => $detail['dtmDelivery'],
-                    'szFSoId' => $detail['szFSoId'],
-                    'decSOAmount' => $detail['decSOAmount'],
-                    'decPayAmount' => $detail['decPayAmount'],
-                    'decInvAmount' => $detail['decInvAmount'],
-                    'remainingPayment' => $detail['remainingPayment'],
-                    'dtmDue' => $detail['dtmDue'],
-                    'dtmPeriode' => $detail['dtmPeriode'],
-                    'szFinvoiceId' => $detail['szFinvoiceId'],
-                    'jenisPembayaran' => $detail['jenisPembayaran'],
-                    'szRefId' => $detail['szRefId'],
-                    'dmDue' => $detail['dmDue'],
-                    'szCustId' => $detail['szCustId'],
-                    'szSalesId' => $detail['szSalesId'],
-                ];
-
-                DB::table('customer_payment_detail')->insert($detailData);
+            // Simpan Details
+            foreach ($validated['details'] as $detail) {
+                DB::table('customer_payment_details')->insert($detail);
             }
 
-            // Commit transaction jika semua berhasil
-            DB::commit();
+            DB::commit(); // Komit transaksi jika semua berhasil
 
-            return response()->json(['message' => 'Data saved successfully'], 201);
+            return response()->json([
+                'message' => 'Data berhasil disimpan.',
+                'header' => $validated['header'],
+                'details' => $validated['details'],
+            ], 201);
         } catch (\Exception $e) {
-            // Rollback jika terjadi error
-            DB::rollBack();
+            DB::rollBack(); // Rollback transaksi jika terjadi kesalahan
 
-            return response()->json(['message' => 'Failed to save data', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menyimpan data.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }
