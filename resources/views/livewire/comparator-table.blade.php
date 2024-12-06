@@ -73,14 +73,6 @@
                                 <td>{{ $item->scan_by }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-sm btn-success"
-                                            wire:click="increment('{{ $item->part_number }}')">
-                                            +
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                            wire:click="decrement('{{ $item->part_number }}')">
-                                            -
-                                        </button>
                                         <button type="button" class="btn btn-sm btn-danger"
                                             wire:click="destroy('{{ $item->part_number }}')">
                                             Hapus
