@@ -52,7 +52,9 @@
                     @forelse ($invoices as $invoice)
                         <tr>
                             <td>
-                                <a href="{{ route('inv.detail-print', $invoice->noinv) }}">{{ $invoice->noinv }}</a>
+                                <span class="badge p-0">
+                                    <a href="{{ route('inv.detail-print', $invoice->noinv) }}">{{ $invoice->noinv }}</a>
+                                </span>
                             </td>
                             <td>
                                 {{ $invoice->noso }}

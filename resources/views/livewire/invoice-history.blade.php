@@ -7,7 +7,8 @@
             <div class="row mb-3 g-2">
                 <div class="col-md-4">
                     <label class="form-label">No Invoice</label>
-                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noinv">
+                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noinv"
+                        placeholder="Cari berdasarkan no invoice">
                 </div>
             </div>
 
@@ -36,9 +37,11 @@
                         @forelse ($items as $item)
                             <tr>
                                 <td>
-                                    <a href="{{ route('inv.history-detail', $item->noinv) }}">
-                                        KCP/{{ $item->area_inv }}/{{ $item->noinv }}
-                                    </a>
+                                    <span class="badge p-0">
+                                        <a href="{{ route('inv.history-detail', $item->noinv) }}">
+                                            KCP/{{ $item->area_inv }}/{{ $item->noinv }}
+                                        </a>
+                                    </span>
                                 </td>
                                 <td>{{ $item->kd_outlet }}</td>
                                 <td>{{ $item->nm_outlet }}</td>
