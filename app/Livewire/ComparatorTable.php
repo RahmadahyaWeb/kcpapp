@@ -32,7 +32,10 @@ class ComparatorTable extends Component
 
             // Periksa apakah part_number sudah ada
             $save_part_number = str_replace(' ', '', trim($this->barcode));
-            $existingRecord = DB::table('comparator')->where('part_number', $save_part_number)->first();
+            $existingRecord = DB::table('comparator')
+                ->where('part_number', $save_part_number)
+                ->lockForUpdate() // Tambahkan lock for update
+                ->first();
 
             if ($existingRecord) {
                 // Jika ada, increment qty
