@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Exports\ComparatorExport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -14,6 +15,10 @@ class ComparatorTable extends Component
     public $barcode;
     public $number_update;
     public $items = [];
+
+    public $part_number;
+    public $qty;
+    public $edited_qty;
 
     public function store()
     {
@@ -68,35 +73,32 @@ class ComparatorTable extends Component
         return Excel::download(new ComparatorExport(), $filename);
     }
 
-    public function updateQty($qty, $part_number)
+    public function updateQty()
     {
-        try {
-            DB::beginTransaction();
+        $this->validate([
+            'edited_qty' => 'required|numeric'
+        ]);
+        
+        DB::table('comparator')
+            ->where('part_number', $this->part_number)
+            ->update([
+                'qty' => $this->edited_qty
+            ]);
 
-            // Validate qty
-            if ($qty < 1) {
-                session()->flash('error', 'Qty tidak bisa kurang dari 1.');
-                return;
-            }
+        $this->dispatch('qty-saved');
 
-            $save_part_number = str_replace(' ', '', trim($part_number));
+        $this->reset('part_number', 'qty', 'edited_qty');
+    }
 
-            // Update qty in the database
-            DB::table('comparator')
-                ->where('part_number', $save_part_number)
-                ->update(['qty' => $qty]);
+    public function edit($part_number)
+    {
+        $this->part_number = $part_number;
 
-            DB::commit(); // Commit transaction
+        $item = DB::table('comparator')
+            ->where('part_number', $part_number)
+            ->first();
 
-            $this->dispatch('qty-saved');
-
-            $this->reset('number_update');
-
-            session()->flash('success', "Qty berhasil diperbarui.");
-        } catch (\Exception $e) {
-            DB::rollBack(); // Rollback transaction if error occurs
-            session()->flash('error', "Terjadi kesalahan saat memperbarui qty.");
-        }
+        $this->qty = $item->qty;
     }
 
     public function increment($part_number)
@@ -129,7 +131,7 @@ class ComparatorTable extends Component
         // Ambil data dari database 'mysql' (default) dan urutkan berdasarkan 'created_at'
         $comparatorItems = DB::connection('mysql')
             ->table('comparator')
-            ->orderBy('created_at')  // Menambahkan urutan berdasarkan 'created_at'
+            ->orderBy('created_at','desc')  // Menambahkan urutan berdasarkan 'created_at'
             ->get();
 
         // Ambil daftar part_number dari comparatorItems
