@@ -252,7 +252,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
                     $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
                 }
 
-                if ($data->durasi_perjalanan > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
+                if ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
                     $punishment_lupa_ist = 1;
                 }
             }
