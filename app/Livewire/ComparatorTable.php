@@ -16,11 +16,9 @@ class ComparatorTable extends Component
     public $number_update;
     public $items = [];
 
-    public $id;
     public $part_number;
     public $qty;
     public $edited_qty;
-    public $keterangan_text;
 
     public function store()
     {
@@ -34,14 +32,22 @@ class ComparatorTable extends Component
 
             // Periksa apakah part_number sudah ada
             $save_part_number = str_replace(' ', '', trim($this->barcode));
+            $existingRecord = DB::table('comparator')->where('part_number', $save_part_number)->first();
 
-            // Jika tidak ada, masukkan data baru
-            DB::table('comparator')->insert([
-                'part_number' => $save_part_number,
-                'qty'         => 1,
-                'scan_by'     => Auth::user()->username,
-                'created_at'  => now(),
-            ]);
+            if ($existingRecord) {
+                // Jika ada, increment qty
+                DB::table('comparator')
+                    ->where('part_number', $save_part_number)
+                    ->increment('qty', 1);
+            } else {
+                // Jika tidak ada, masukkan data baru
+                DB::table('comparator')->insert([
+                    'part_number' => $save_part_number,
+                    'qty'         => 1,
+                    'scan_by'     => Auth::user()->username,
+                    'created_at'  => now(),
+                ]);
+            }
 
             DB::commit(); // Commit transaksi
 
@@ -49,8 +55,9 @@ class ComparatorTable extends Component
             $this->barcode = '';
 
             session()->flash('success', "Berhasil scan barcode.");
+
+            $this->dispatch('qty-saved');
         } catch (\Exception $e) {
-            dd($e);
             DB::rollBack(); // Rollback transaksi jika terjadi kesalahan
         }
     }
@@ -75,7 +82,7 @@ class ComparatorTable extends Component
         ]);
 
         DB::table('comparator')
-            ->where('id', $this->id)
+            ->where('part_number', $this->part_number)
             ->update([
                 'qty' => $this->edited_qty
             ]);
@@ -85,60 +92,40 @@ class ComparatorTable extends Component
         $this->reset('part_number', 'qty', 'edited_qty');
     }
 
-    public function edit($id)
+    public function edit($part_number)
     {
-        $this->id = $id;
+        $this->part_number = $part_number;
 
         $item = DB::table('comparator')
-            ->where('id', $id)
+            ->where('part_number', $part_number)
             ->first();
 
         $this->qty = $item->qty;
-        $this->part_number = $item->part_number;
-
-        $this->dispatch('open-modal-qty');
     }
 
-    public function destroy($id)
+    public function increment($part_number)
     {
         DB::table('comparator')
-            ->where('id', $id)
+            ->where('part_number', $part_number)
+            ->increment('qty', 1);
+    }
+
+    public function decrement($part_number)
+    {
+        DB::table('comparator')
+            ->where('part_number', $part_number)
+            ->decrement('qty', 1);
+    }
+
+    public function destroy($part_number)
+    {
+        DB::table('comparator')
+            ->where('part_number', $part_number)
             ->delete();
 
         $this->dispatch('qty-saved');
 
         session()->flash('success', "Data berhasil dihapus.");
-    }
-
-    public function keterangan($id)
-    {
-        $this->id = $id;
-
-        $item = DB::table('comparator')
-            ->where('id', $id)
-            ->first();
-
-        $this->qty = $item->qty;
-        $this->part_number = $item->part_number;
-
-        $this->dispatch('open-modal-keterangan');
-    }
-
-    public function updateKeterangan()
-    {
-        $this->validate([
-            'keterangan_text' => 'required'
-        ]);
-
-        DB::table('comparator')
-            ->where('id', $this->id)
-            ->update([
-                'keterangan' => $this->keterangan_text
-            ]);
-
-        $this->dispatch('keterangan-saved');
-
-        $this->reset('keterangan_text');
     }
 
     public function render()
