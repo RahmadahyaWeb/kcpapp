@@ -89,9 +89,10 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
     {
         return DB::table('master_toko')
             ->leftJoin('master_provinsi', 'master_provinsi.id', '=', 'master_toko.kd_provinsi')
-            ->where('user_sales', $this->sales->username)
+            ->whereIn('user_sales', $this->sales)
             ->whereNotIn('kd_toko', ['TQ2'])
             ->where('status', 'active')
+            ->orderBy('user_sales', 'asc')
             ->get();
     }
 
@@ -101,12 +102,12 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
         $nama_toko = $row->nama_toko;
         $alamat_toko = $row->alamat;
         $nama_provinsi = $row->nama_provinsi;
-        $nama_sales = $this->sales->name;
+        $nama_sales = $row->user_sales;
         $minimal_kunjungan = $row->frekuensi;
 
         // REALISASI KUNJUNGAN
         $realisasi_kunjungan_data = DB::table('trns_dks')
-            ->where('user_sales', $this->sales->username)
+            ->where('user_sales', $row->user_sales)
             ->whereBetween('tgl_kunjungan', [$this->fromDate, $this->toDate])
             ->where('type', 'in')
             ->where('kd_toko', $kd_toko)
@@ -116,7 +117,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
         // CEK TOKO
         $realisasi_kunjungan_tq = DB::table('trns_dks')
-            ->where('user_sales', $this->sales->username)
+            ->where('user_sales', $row->user_sales)
             ->whereBetween('tgl_kunjungan', [$this->fromDate, $this->toDate])
             ->where('type', 'in')
             ->whereIn('kd_toko', ['TQ', 'TQ2'])
@@ -150,7 +151,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
     public function title(): string
     {
-        return $this->sales->name;
+        return 'Minimal Kunjungan';
     }
 
     public function columnFormats(): array

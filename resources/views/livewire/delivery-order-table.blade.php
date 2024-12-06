@@ -1,8 +1,8 @@
 <div>
     <!-- Status Alert -->
-    @if (session('status'))
+    @if (session('success'))
         <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('status') }}
+            {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -35,20 +35,10 @@
                     <input type="text" class="form-control" wire:model.live.debounce.1000ms="noLkh"
                         placeholder="Cari berdasarkan no lkh" wire:loading.attr="disabled">
                 </div>
-
-                <!-- Status Filter -->
-                <div class="col-md-4">
-                    <label class="form-label">Status</label>
-                    <select wire:model.change="status" class="form-select" wire:loading.attr="disabled">
-                        <option value="">Pilih Status</option>
-                        <option value="KCP">KCP</option>
-                        <option value="BOSNET">BOSNET</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Loading Spinner (Visible when waiting for results) -->
-            <div wire:loading.flex wire:target="noLkh, synchronization, gotoPage, noSo, status"
+            <div wire:loading.flex wire:target="noLkh, synchronization"
                 class="text-center justify-content-center align-items-center" style="height: 200px;">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -57,12 +47,11 @@
 
             <!-- Table with Delivery Orders -->
             <div class="table-responsive" wire:loading.class="d-none"
-                wire:target="noLkh, synchronization, gotoPage, noSo, status">
+                wire:target="noLkh, synchronization">
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
                             <th>No LKH</th>
-                            <th>Status DO</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -70,7 +59,7 @@
                         <!-- Check if there are no items -->
                         @if ($items->isEmpty())
                             <tr>
-                                <td colspan="3" class="text-center">No Data</td>
+                                <td colspan="2" class="text-center">No Data</td>
                             </tr>
                         @else
                             <!-- Loop through each item and display it -->
@@ -78,13 +67,6 @@
                                 <tr>
                                     <td>
                                         KCP/{{ $item->area_lkh }}/{{ $item->no_lkh }}
-                                    </td>
-                                    <td>
-                                        @if (DeliveryOrderTable::cek_status($item->no_lkh) == 'BOSNET')
-                                            <span class="badge text-bg-warning">BOSNET</span>
-                                        @else
-                                            <span class="badge text-bg-success">KCP</span>
-                                        @endif
                                     </td>
                                     <td>
                                         <a href="{{ route('do.detail', $item->no_lkh) }}">Detail</a>
@@ -99,7 +81,7 @@
 
         <!-- Card Footer with Pagination -->
         <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noLkh, synchronization, gotoPage, noSo, status">
+            <div wire:loading.class="d-none" wire:target="noLkh, synchronization">
                 <!-- Pagination links -->
                 {{ $items->links() }}
             </div>

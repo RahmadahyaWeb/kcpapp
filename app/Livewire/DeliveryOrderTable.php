@@ -48,19 +48,12 @@ class DeliveryOrderTable extends Component
      */
     public function render()
     {
-        // Mencari posisi substring "LKH"
-        $noLkh = strpos($this->noLkh, "LKH");
-
-        if ($noLkh !== false) {
-            $noLkh = substr($this->noLkh, $noLkh);
-        }
-
         $items = DB::connection('kcpinformation')
             ->table('trns_lkh_header')
             ->where('status', 'C')
             ->where('terima_ar', 'N')
             ->where('flag_batal', 'N')
-            ->where('no_lkh', 'like', '%' . $noLkh . '%')
+            ->where('no_lkh', 'like', '%' . $this->noLkh . '%')
             ->orderBy('crea_date', 'desc')
             ->paginate(20);
 

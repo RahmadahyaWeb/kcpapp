@@ -15,6 +15,14 @@
     @php
         use App\Livewire\DeliveryOrderDetail;
     @endphp
+    <div class="row g-2 mb-3">
+        @if ($terima_lkh_status && $status == true && $header->terima_ar == 'N')
+            <div class="col-md-3 d-grid">
+                <button wire:click="terima_lkh('{{ $header->no_lkh }}')" class="btn btn-success" wire:confirm="Yakin ingin terima LKH?">Terima LKH</button>
+            </div>
+        @endif
+    </div>
+
     <div class="row gap-3">
         <div class="col-12">
             <div class="card">

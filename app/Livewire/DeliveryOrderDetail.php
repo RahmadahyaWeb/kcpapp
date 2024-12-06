@@ -16,6 +16,7 @@ class DeliveryOrderDetail extends Component
     public $items;
     public $ready_to_sent = false;
     public $status = false;
+    public $terima_lkh_status = false;
 
 
     /**
@@ -67,6 +68,27 @@ class DeliveryOrderDetail extends Component
         session()->flash('success', 'Berhasil terima SJ');
     }
 
+    public function terima_lkh($no_lkh)
+    {
+        DB::connection('kcpinformation')
+            ->table('trns_lkh_details')
+            ->where('no_lkh', $no_lkh)
+            ->update([
+                'terima_ar' => 'Y'
+            ]);
+
+        DB::connection('kcpinformation')
+            ->table('trns_lkh_header')
+            ->where('no_lkh', $no_lkh)
+            ->update([
+                'terima_ar' => 'Y'
+            ]);
+
+        session()->flash('success', 'Berhasil terima LKH');
+
+        $this->redirect('/delivery-order');
+    }
+
     /**
      * Render the Livewire component.
      * 
@@ -116,6 +138,10 @@ class DeliveryOrderDetail extends Component
             } else {
                 $count_status_kcp += 1;
             }
+        }
+
+        if ($count_terima_ar == count($this->items)) {
+            $this->terima_lkh_status = true;
         }
 
         if ($count_status_bosnet == count($this->items) && $count_terima_ar == count($this->items)) {
