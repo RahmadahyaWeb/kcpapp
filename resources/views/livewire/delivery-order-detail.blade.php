@@ -190,11 +190,19 @@
                                                         </span>
                                                     @endif
                                                 @else
-                                                        SO / INV belum terintegrasi dengan Bosnet.
+                                                    SO / INV belum terintegrasi dengan Bosnet.
                                                 @endisset
                                             </td>
                                             <td class="text-center">
-                                                <a href="">Terima SJ</a>
+                                                @if ($item->terima_ar == 'N')
+                                                    <span style="cursor: pointer;" class="text-primary"
+                                                        wire:click="terimaSJ('{{ $item->id }}')"
+                                                        wire:confirm="Yakin ingin terima SJ?">
+                                                        Terima SJ
+                                                    </span>
+                                                @else
+                                                    <span class="badge text-bg-success">Berhasil terima SJ</span>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

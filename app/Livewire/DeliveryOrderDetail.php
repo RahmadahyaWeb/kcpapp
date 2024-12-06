@@ -55,6 +55,18 @@ class DeliveryOrderDetail extends Component
             ->first('status_bosnet');
     }
 
+    public function terimaSJ($id)
+    {
+        DB::connection('kcpinformation')
+            ->table('trns_lkh_details')
+            ->where('id', $id)
+            ->update([
+                'terima_ar' => 'Y'
+            ]);
+
+        session()->flash('success', 'Berhasil terima SJ');
+    }
+
     /**
      * Render the Livewire component.
      * 
@@ -76,6 +88,8 @@ class DeliveryOrderDetail extends Component
                 'trns_lkh_details.koli',
                 'trns_lkh_details.no_urut',
                 'trns_lkh_details.expedisi',
+                'trns_lkh_details.id',
+                'trns_lkh_details.terima_ar'
             ])
             ->join('trns_lkh_details', 'trns_lkh_details.no_lkh', '=', 'trns_lkh_header.no_lkh')
             ->join('trns_so_header', 'trns_so_header.no_packingsheet', '=', 'trns_lkh_details.no_packingsheet')
@@ -85,8 +99,13 @@ class DeliveryOrderDetail extends Component
 
         $count_status_kcp = 0;
         $count_status_bosnet = 0;
+        $count_terima_ar = 0;
         foreach ($this->items as $value) {
             $status = DeliveryOrderDetail::cek_status($value->noinv) ? DeliveryOrderDetail::cek_status($value->noinv)->status_bosnet : null;
+
+            if ($value->terima_ar == 'Y') {
+                $count_terima_ar += 1;
+            }
 
             if (isset($status)) {
                 if ($status == 'KCP') {
@@ -99,7 +118,7 @@ class DeliveryOrderDetail extends Component
             }
         }
 
-        if ($count_status_bosnet == count($this->items)) {
+        if ($count_status_bosnet == count($this->items) && $count_terima_ar == count($this->items)) {
             $this->ready_to_sent = true;
         }
 
@@ -108,7 +127,10 @@ class DeliveryOrderDetail extends Component
             ->where('no_lkh', $this->no_lkh)
             ->first();
 
-        $total_status_sukses =   DB::table('do_bosnet')->where('no_lkh', $this->no_lkh)->where('status_bosnet', 'BOSNET')->count();
+        $total_status_sukses =   DB::table('do_bosnet')
+            ->where('no_lkh', $this->no_lkh)
+            ->where('status_bosnet', 'BOSNET')
+            ->count();
 
         if ($total_status_sukses == count($this->items)) {
             $this->status = true;
