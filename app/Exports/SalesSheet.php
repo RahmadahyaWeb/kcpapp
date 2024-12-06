@@ -146,14 +146,14 @@ class SalesSheet implements FromCollection, WithHeadings, WithCustomStartCell, W
     {
         // Ambil $items dari properti yang sudah ada
         $items = collect($this->items);
-    
+
         // Langsung kembalikan koleksi tanpa flatMap, cukup map untuk memodifikasi setiap row
         return $items->map(function ($row) {
             // Mungkin Anda bisa menambahkan proses lain di sini jika perlu
             return $row; // Pastikan Anda mengembalikan struktur data asli
         });
     }
-    
+
 
     public function map($row): array
     {

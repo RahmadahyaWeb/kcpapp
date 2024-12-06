@@ -157,10 +157,10 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
 
         $punishmentCekInCekOut = count($this->punishmentCekInCekOut($filtered, $user_sales));
 
-        $punishmentIstirahat = $this->punishmentIstirahat($filtered, $user_sales);
+        $dataIst = $this->punishmentIstirahat($filtered, $user_sales);
 
-        $punishmentJumat = count($punishmentIstirahat['punishment_friday']);
-        $punishmentSelainJumat = count($punishmentIstirahat['punishment_other_days']);
+        $punishment_istirahat = count($dataIst['punishment_istirahat']);
+        $punishment_lupa_ist = count($dataIst['punishment_lupa_ist']);
 
         $rowNumber = 3;
 
@@ -191,25 +191,25 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         // BAYAR PUNISHMENT DURASI KUNJUNGAN TOKO
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 4), str_replace('{row}', ($rowNumber + 2), "=SUM({$user_sales}!I3:I6898) * 25000"));
 
-        // BANYAK PUNISHMENT ISTIRAHAT SELAIN JUMAT
-        $sheet->setCellValue($columnLetter . ($rowNumber + 5), str_replace('{row}', ($rowNumber + 2), $punishmentSelainJumat));
-        // BAYAR PUNISHMENT ISTIRAHAT SELAIN JUMAT
-        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 5), str_replace('{row}', ($rowNumber) + 2, 10000 * $punishmentSelainJumat));
+        // BANYAK PUNISHMENT ISTIRAHAT
+        $sheet->setCellValue($columnLetter . ($rowNumber + 5), str_replace('{row}', ($rowNumber + 2), $punishment_istirahat));
+        // BAYAR PUNISHMENT ISTIRAHAT
+        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 5), str_replace('{row}', ($rowNumber) + 2, 10000 * $punishment_istirahat));
 
         $sheet->mergeCells($columnLetter . ($rowNumber + 5) . ':' . $columnLetter . $rowNumber + 6);
         $sheet->mergeCells($nextColumnLetter2 . ($rowNumber + 5) . ':' . $nextColumnLetter2 . $rowNumber + 6);
         $sheet->mergeCells($nextColumnLetter3 . ($rowNumber + 5) . ':' . $nextColumnLetter3 . $rowNumber + 6);
 
-        // BANYAK PUNISHMENT ISTIRAHAT JUMAT
-        $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishmentJumat));
-        // BAYAR PUNISHMENT ISTIRAHAT JUMAT
-        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 5000 * $punishmentJumat));
+        // BANYAK PUNISHMENT LUPA IST
+        $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishment_lupa_ist));
+        // BAYAR PUNISHMENT LUPA IST
+        $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 5000 * $punishment_lupa_ist));
     }
 
     public function punishmentIstirahat($filtered, $user_sales)
     {
-        $punishmentDataFriday = [];
-        $punishmentDataOtherDays = [];
+        $punishment_istirahat = [];
+        $punishment_lupa_ist_array = [];
 
         // Mengonversi Collection menjadi array
         $itemsArray = $filtered[$user_sales]->toArray();
@@ -219,6 +219,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
             $durasi_perjalanan = $data->durasi_perjalanan;
 
             $punishment_durasi_lama_perjalanan = 0;
+            $punishment_lupa_ist = 0;
 
             if ($durasi_perjalanan != '00:00:00' && !empty($durasi_perjalanan)) {
                 // Pisahkan durasi perjalanan menjadi jam, menit, dan detik
@@ -250,32 +251,38 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
                     // Jika durasi perjalanan lebih dari maksimal + waktu istirahat, beri punishment
                     $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
                 }
+
+                if ($data->durasi_perjalanan > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
+                    $punishment_lupa_ist = 1;
+                }
             }
 
             // Jika ada punishment, pisahkan berdasarkan hari Jumat atau selain Jumat
             if ($punishment_durasi_lama_perjalanan == 1) {
-                $punishmentData = [
+                $punishment_istirahat[] = [
                     'user_sales' => $data->user_sales,
                     'nama_toko' => $data->nama_toko,
                     'tgl_kunjungan' => $data->tgl_kunjungan,
                     'durasi_perjalanan' => $data->durasi_perjalanan,
                     'punishment' => 'Durasi perjalanan melebihi batas waktu yang ditentukan',
                 ];
+            }
 
-                if ($isFriday) {
-                    // Jika hari Jumat, masukkan ke array punishmentDataFriday
-                    $punishmentDataFriday[] = $punishmentData;
-                } else {
-                    // Jika bukan hari Jumat, masukkan ke array punishmentDataOtherDays
-                    $punishmentDataOtherDays[] = $punishmentData;
-                }
+            if ($punishment_lupa_ist == 1) {
+                $punishment_lupa_ist_array[] = [
+                    'user_sales' => $data->user_sales,
+                    'nama_toko' => $data->nama_toko,
+                    'tgl_kunjungan' => $data->tgl_kunjungan,
+                    'durasi_perjalanan' => $data->durasi_perjalanan,
+                    'punishment' => 'Lupa tulis ist',
+                ];
             }
         }
 
         // Kembalikan data punishment untuk hari Jumat dan selain Jumat
         return [
-            'punishment_friday' => $punishmentDataFriday,
-            'punishment_other_days' => $punishmentDataOtherDays,
+            'punishment_istirahat' => $punishment_istirahat,
+            'punishment_lupa_ist'  => $punishment_lupa_ist_array,
         ];
     }
 
