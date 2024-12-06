@@ -126,9 +126,10 @@ class ComparatorTable extends Component
 
     public function render()
     {
-        // Ambil data dari database 'mysql' (default)
+        // Ambil data dari database 'mysql' (default) dan urutkan berdasarkan 'created_at'
         $comparatorItems = DB::connection('mysql')
             ->table('comparator')
+            ->orderBy('created_at')  // Menambahkan urutan berdasarkan 'created_at'
             ->get();
 
         // Ambil daftar part_number dari comparatorItems
