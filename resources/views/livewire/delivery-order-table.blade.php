@@ -15,6 +15,10 @@
         </div>
     @endif
 
+    @php
+        use App\Livewire\DeliveryOrderTable;
+    @endphp
+
     <div class="card">
         <!-- Card Header with Synchronization Button -->
         <div class="card-header">
@@ -30,13 +34,6 @@
                     <label class="form-label">No LKH</label>
                     <input type="text" class="form-control" wire:model.live.debounce.1000ms="noLkh"
                         placeholder="Cari berdasarkan no lkh" wire:loading.attr="disabled">
-                </div>
-
-                <!-- No SO Filter -->
-                <div class="col-md-4">
-                    <label class="form-label">No SO</label>
-                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noSo"
-                        placeholder="Cari berdasarkan no so" wire:loading.attr="disabled">
                 </div>
 
                 <!-- Status Filter -->
@@ -65,6 +62,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>No LKH</th>
+                            <th>Status DO</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -72,7 +70,7 @@
                         <!-- Check if there are no items -->
                         @if ($items->isEmpty())
                             <tr>
-                                <td colspan="4" class="text-center">No Data</td>
+                                <td colspan="3" class="text-center">No Data</td>
                             </tr>
                         @else
                             <!-- Loop through each item and display it -->
@@ -80,6 +78,13 @@
                                 <tr>
                                     <td>
                                         KCP/{{ $item->area_lkh }}/{{ $item->no_lkh }}
+                                    </td>
+                                    <td>
+                                        @if (DeliveryOrderTable::cek_status($item->no_lkh) == 'BOSNET')
+                                            <span class="badge text-bg-warning">BOSNET</span>
+                                        @else
+                                            <span class="badge text-bg-success">KCP</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <a href="{{ route('do.detail', $item->no_lkh) }}">Detail</a>

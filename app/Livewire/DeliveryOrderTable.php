@@ -24,6 +24,25 @@ class DeliveryOrderTable extends Component
      */
     public $noLkh;
 
+    public static function cek_status($no_lkh)
+    {
+        $headerCount = DB::table('do_bosnet')
+            ->where('no_lkh', $no_lkh)
+            ->where('status_bosnet', 'BOSNET')
+            ->count();
+
+        $detailCount = DB::connection('kcpinformation')
+            ->table('trns_lkh_details')
+            ->where('no_lkh', $no_lkh)
+            ->count();
+
+        if ($headerCount == $detailCount) {
+            return 'BOSNET';
+        } else {
+            return 'KCP';
+        }
+    }
+
     /**
      * Render halaman dengan data yang telah difilter
      */
@@ -42,6 +61,7 @@ class DeliveryOrderTable extends Component
             ->where('terima_ar', 'N')
             ->where('flag_batal', 'N')
             ->where('no_lkh', 'like', '%' . $noLkh . '%')
+            ->orderBy('crea_date', 'desc')
             ->paginate(20);
 
         return view('livewire.delivery-order-table', compact('items'));
