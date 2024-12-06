@@ -99,6 +99,8 @@ class ComparatorTable extends Component
             ->first();
 
         $this->qty = $item->qty;
+
+        $this->dispatch('open-modal');
     }
 
     public function increment($part_number)

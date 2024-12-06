@@ -40,6 +40,15 @@
                     wire:keydown.enter="store" placeholder="Scan barcode here" wire:loading.attr="disabled" autofocus>
             </div>
 
+            <!-- Loading Spinner (Visible when waiting for results) -->
+            <div wire:loading.flex wire:target.except="updateQty" class="text-center justify-content-center align-items-center"
+                style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -59,8 +68,8 @@
                                 <td>{{ $item->nm_part }}</td>
                                 <td>{{ $item->qty }}</td>
                                 <td>
-                                    <button wire:click="edit('{{ $item->part_number }}')" class="btn btn-sm btn-warning"
-                                        data-bs-toggle="modal" data-bs-target="#modal-edit-qty">Edit</button>
+                                    <button wire:click="edit('{{ $item->part_number }}')"
+                                        class="btn btn-sm btn-warning">Edit</button>
                                 </td>
                                 <td>{{ $item->scan_by }}</td>
                                 <td>
@@ -98,6 +107,10 @@
         Livewire.on('qty-saved', () => {
             document.getElementById('scan-barcode').focus();
             $('#modal-edit-qty').modal('hide');
+        });
+
+        Livewire.on('open-modal', () => {
+            $('#modal-edit-qty').modal('show');
         });
     </script>
 @endpush
