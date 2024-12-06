@@ -42,6 +42,12 @@ class ComparatorTable extends Component
                 DB::table('comparator')
                     ->where('part_number', $save_part_number)
                     ->increment('qty', 1);
+
+                DB::table('comparator')
+                    ->where('part_number', $save_part_number)
+                    ->update([
+                        'created_at' => now()
+                    ]);
             } else {
                 // Jika tidak ada, masukkan data baru
                 DB::table('comparator')->insert([
