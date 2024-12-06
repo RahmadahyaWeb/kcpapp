@@ -82,7 +82,7 @@
                                             Keterangan
                                         </button>
                                         <button type="button" class="btn btn-sm btn-danger"
-                                            wire:click="destroy('{{ $item->part_number }}')">
+                                            wire:click="destroy('{{ $item->id }}')">
                                             Hapus
                                         </button>
                                     </div>
