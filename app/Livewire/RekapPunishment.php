@@ -130,7 +130,7 @@ class RekapPunishment extends Component
                             ->where('user_sales', $item->user_sales)
                             ->whereDate('tgl_kunjungan', $item->tgl_kunjungan)
                             ->where('type', 'in')
-                            ->where('id', '>', $item->id)
+                            ->where('waktu_kunjungan', '>', $item->waktu_cek_in)  // Tambahkan kondisi waktu_kunjungan
                             ->first();
 
                         if ($cekInSelanjutnya) {
