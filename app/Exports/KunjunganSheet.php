@@ -247,7 +247,7 @@ class KunjunganSheet implements WithTitle, WithEvents, WithColumnFormatting
      */
     public function title(): string
     {
-        return 'Kunjungan';
+        return 'Kunjungan Harian';
     }
 
     /**
