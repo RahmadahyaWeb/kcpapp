@@ -137,7 +137,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             $nama_sales,
             $minimal_kunjungan,
             $realisasi_kunjungan,
-            $minimal_kunjungan - $realisasi_kunjungan
+            $realisasi_kunjungan - $minimal_kunjungan
         ];
     }
 
