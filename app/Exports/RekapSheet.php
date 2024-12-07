@@ -67,8 +67,9 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue('A5', 'Check in untuk toko yang pertama di kunjungi setiap hari maksimal jam 09.30');
         $sheet->setCellValue('A6', 'Durasi perjalanan dari toko ke toko berikutnya maksimal 40 menit');
         $sheet->setCellValue('A7', 'Durasi lama berkunjung di toko minimal 30 menit');
-        $sheet->setCellValue('A8', 'Lama istirahat 1 jam 15 menit (selain hari jumat) harus memberikan "IST" di system');
-        $sheet->setCellValue('A10', 'Lama istirahat 1 jam 45 menit (khusus hari jumat) harus memberikan "IST" di system');
+        $sheet->setCellValue('A8', 'Lama istirahat 1 jam 30 menit (selain hari jumat) harus memberikan "IST" di system');
+        $sheet->setCellValue('A10', 'Lama istirahat 2 jam (khusus hari jumat) harus memberikan "IST" di system');
+        $sheet->setCellValue('A11', 'Frekuensi Toko');
 
         // PELANGGARAN
         $sheet->mergeCells('B3:B4');
@@ -80,6 +81,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue('B8', 'Istirahat melebihi 1 jam 15 menit (selain hari jumat)');
         $sheet->setCellValue('B9', 'Istirahat melebihi 1 jam 45 menit (khusus hari jumat)');
         $sheet->setCellValue('B10', 'Tidak memberikan keterangan saat mau istirahat');
+        $sheet->setCellValue('B11', 'Tidak mencapai minimal kunjungan toko');
 
         // PUNISHMENT
         $sheet->mergeCells('C3:C4');
@@ -204,6 +206,9 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue($columnLetter . ($rowNumber + 7), str_replace('{row}', ($rowNumber + 2), $punishment_lupa_ist));
         // BAYAR PUNISHMENT LUPA IST
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 5000 * $punishment_lupa_ist));
+
+        // BANYAK PUNISHMENT FREKUENSI TOKO
+        $sheet->setCellValue($columnLetter . ($rowNumber + 8), str_replace('{row}', ($rowNumber + 2), $punishment_lupa_ist));
     }
 
     public function punishmentIstirahat($filtered, $user_sales)

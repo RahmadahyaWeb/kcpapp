@@ -53,6 +53,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             "",
             "",
             "",
+            "",
         ];
     }
 
@@ -65,6 +66,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
         $sheet->setCellValue('E1', 'SALES');
         $sheet->setCellValue('F1', 'MINIMAL KUNJUNGAN');
         $sheet->setCellValue('G1', 'REALISASI KUNJUNGAN');
+        $sheet->setCellValue('H1', 'PUNISHMENT');
 
         $styleArray = [
             'alignment' => [
@@ -74,7 +76,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             'font' => ['bold' => true],
         ];
 
-        $sheet->getDelegate()->getStyle('A1:G1')->applyFromArray($styleArray);
+        $sheet->getDelegate()->getStyle('A1:H1')->applyFromArray($styleArray);
 
         // Mengatur alignment untuk kolom A
         $sheet->getDelegate()->getStyle('A:A')->applyFromArray([
@@ -134,7 +136,8 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             $nama_provinsi,
             $nama_sales,
             $minimal_kunjungan,
-            $realisasi_kunjungan
+            $realisasi_kunjungan,
+            $minimal_kunjungan - $realisasi_kunjungan
         ];
     }
 
