@@ -17,7 +17,7 @@ class CustomerPaymentTable extends Component
 
     public function mount()
     {
-        $this->target = 'no_piutang';
+        $this->target = 'no_piutang, status_customer_payment';
     }
 
     public function render()
