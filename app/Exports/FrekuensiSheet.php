@@ -131,6 +131,8 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
         if ($minimal_kunjungan > $realisasi_kunjungan) {
            $punishment = 1;
+        } else {
+            $punishment = 0;
         }
 
         return [
