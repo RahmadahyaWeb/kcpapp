@@ -129,6 +129,10 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             $realisasi_kunjungan = (string) $realisasi_kunjungan_tq;
         }
 
+        if ($minimal_kunjungan > $realisasi_kunjungan) {
+           $punishment = 1;
+        }
+
         return [
             $kd_toko,
             $nama_toko,
@@ -137,7 +141,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             $nama_sales,
             $minimal_kunjungan,
             $realisasi_kunjungan,
-            $realisasi_kunjungan - $minimal_kunjungan
+            $punishment,
         ];
     }
 
