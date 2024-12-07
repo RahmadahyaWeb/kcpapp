@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AopController;
 use App\Http\Controllers\AopReceiptController;
+use App\Http\Controllers\API\CustomerPaymentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComparatorController;
 use App\Http\Controllers\DeliveryOrderController;
@@ -125,6 +126,12 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('/comparator', [ComparatorController::class, 'index'])->name('comparator.index');
     Route::get('/comparator/delete/{part_number}', [ComparatorController::class, 'destroy'])->name('comparator.destroy');
     Route::post('/comparator/edit-qty', [ComparatorController::class, 'edit_qty'])->name('comparator.edit-qty');
+
+    // CUSTOMER PAYMENT
+    Route::get('/customer-payment', [CustomerPaymentController::class, 'index'])->name('customer-payment.index');
+
+    // CUSTOMER PAYMENT DETAIL
+    Route::get('/customer-payment/detail/{no_piutang}', [CustomerPaymentController::class, 'detail'])->name('customer-payment.detail');
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');

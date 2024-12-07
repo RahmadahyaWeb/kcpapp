@@ -8,6 +8,21 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerPaymentController extends Controller
 {
+    public function index()
+    {
+        return view('customer-payment.index');
+    }
+
+    public function detail($no_piutang)
+    {
+        return view('customer-payment.detail', compact('no_piutang'));
+    }
+
+    public function history()
+    {
+        return view('customer-payment.history');
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

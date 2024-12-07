@@ -15,10 +15,6 @@
         </div>
     @endif
 
-    @php
-        use App\Livewire\DeliveryOrderTable;
-    @endphp
-
     <div class="card">
         <!-- Card Header with Synchronization Button -->
         <div class="card-header">
@@ -38,7 +34,7 @@
             </div>
 
             <!-- Loading Spinner (Visible when waiting for results) -->
-            <div wire:loading.flex wire:target="noLkh, synchronization"
+            <div wire:loading.flex wire:target="noLkh"
                 class="text-center justify-content-center align-items-center" style="height: 200px;">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -47,7 +43,7 @@
 
             <!-- Table with Delivery Orders -->
             <div class="table-responsive" wire:loading.class="d-none"
-                wire:target="noLkh, synchronization">
+                wire:target="noLkh">
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
@@ -81,7 +77,7 @@
 
         <!-- Card Footer with Pagination -->
         <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noLkh, synchronization">
+            <div wire:loading.class="d-none" wire:target="noLkh">
                 <!-- Pagination links -->
                 {{ $items->links() }}
             </div>
