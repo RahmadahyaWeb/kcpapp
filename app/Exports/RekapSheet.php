@@ -208,7 +208,7 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
         $sheet->setCellValue($nextColumnLetter3 . ($rowNumber + 7), str_replace('{row}', ($rowNumber) + 2, 5000 * $punishment_lupa_ist));
 
         // BANYAK PUNISHMENT FREKUENSI TOKO
-        $sheet->setCellValue($columnLetter . ($rowNumber + 8), str_replace('{row}', ($rowNumber + 2), 0));
+        $sheet->setCellValue($columnLetter . ($rowNumber + 8), str_replace('{row}', ($rowNumber + 2), 0 ));
     }
 
     public function punishmentIstirahat($filtered, $user_sales)
