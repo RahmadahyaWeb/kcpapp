@@ -250,10 +250,8 @@ class RekapSheet implements WithTitle, WithEvents, WithColumnFormatting
                 if (strpos($data->keterangan, 'ist') !== false) {
                     // Jika durasi perjalanan lebih dari maksimal + waktu istirahat, beri punishment
                     $punishment_durasi_lama_perjalanan = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
-                }
-
-                if ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) {
-                    $punishment_lupa_ist = 1;
+                } else {
+                    $punishment_lupa_ist = ($lama_perjalanan_dalam_menit > $max_durasi_lama_perjalanan_plus_waktu_istirahat) ? 1 : 0;
                 }
             }
 
