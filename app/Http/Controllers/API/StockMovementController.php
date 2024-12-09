@@ -40,7 +40,7 @@ class StockMovementController extends Controller
 
         try {
             // Insert bulk data into the database
-            DB::table('trns_log_stock')->insert($data);
+            DB::connection('mysql')->table('trns_log_stock')->insert($data);
 
             return response()->json([
                 'status'    => 'success',
