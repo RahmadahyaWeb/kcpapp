@@ -25,6 +25,7 @@ class StockMovementController extends Controller
             'data.*.stock_on_hand'      => 'required|integer',
             'data.*.stock_booking'      => 'required|integer',
             'data.*.stock_in_transit'   => 'required|integer',
+            'data.*.stock_type'         => 'nullable',
             'data.*.crea_date'          => 'nullable|date',
             'data.*.crea_by'            => 'nullable|string|max:80',
         ]);
