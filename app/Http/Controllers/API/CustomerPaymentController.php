@@ -73,15 +73,16 @@ class CustomerPaymentController extends Controller
             DB::commit(); // Komit transaksi jika semua berhasil
 
             return response()->json([
-                'message' => 'Data berhasil disimpan.',
+                'status'  => 'success',
+                'message' => 'Data stored successfully.',
                 'headers' => $validated['headers'],
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback transaksi jika terjadi kesalahan
 
             return response()->json([
-                'message' => 'Terjadi kesalahan saat menyimpan data.',
-                'error' => $e->getMessage(),
+                'status'  => 'error',
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }

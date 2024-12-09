@@ -5,53 +5,52 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class StockMovementController extends Controller
 {
     public function store(Request $request)
     {
-        // Validasi input data
-        $validated = $request->validate([
-            'szProductId' => 'required|string|max:10',
-            'decQtyOnHand' => 'required|numeric',
-            'decBookingQty' => 'required|numeric',
-            'szLocationType' => 'required|string|max:10',
-            'szLocationId' => 'required|string|max:20',
-            'szStockType' => 'required|string|max:20',
+        $validator = Validator::make($request->all(), [
+            'data'                      => 'required|array',
+            'data.*.status'             => 'required|string',
+            'data.*.keterangan'         => 'required|string',
+            'data.*.kd_gudang'          => 'nullable|string|max:3',
+            'data.*.part_no'            => 'nullable|string|max:120',
+            'data.*.qty'                => 'required|integer',
+            'data.*.debet_qty'          => 'required|integer',
+            'data.*.kredit_qty'         => 'required|integer',
+            'data.*.stock_sebelum'      => 'required|integer',
+            'data.*.stock_sesudah'      => 'required|integer',
+            'data.*.stock_on_hand'      => 'required|integer',
+            'data.*.stock_booking'      => 'required|integer',
+            'data.*.stock_in_transit'   => 'required|integer',
+            'data.*.crea_date'          => 'nullable|date',
+            'data.*.crea_by'            => 'nullable|string|max:80',
         ]);
 
-        // Mulai transaksi
-        DB::beginTransaction();
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $data = $request->data;
 
         try {
-            // Menyimpan data ke tabel stock_movements (ganti dengan nama tabel yang sesuai)
-            DB::table('stock_movements')->insert([
-                'szProductId' => $validated['szProductId'],
-                'decQtyOnHand' => $validated['decQtyOnHand'],
-                'decBookingQty' => $validated['decBookingQty'],
-                'szLocationType' => $validated['szLocationType'],
-                'szLocationId' => $validated['szLocationId'],
-                'szStockType' => $validated['szStockType'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // Lakukan operasi lainnya jika diperlukan
-
-            // Commit transaksi jika semua berhasil
-            DB::commit();
+            // Insert bulk data into the database
+            DB::table('trns_log_stock')->insert($data);
 
             return response()->json([
-                'message' => 'Stock movement data successfully stored.'
+                'status'    => 'success',
+                'message'   => 'Data stored successfully.',
+                'data'      => $data
             ], 201);
         } catch (\Exception $e) {
-            // Rollback transaksi jika ada error
-            DB::rollBack();
-
-            // Menangani kesalahan
             return response()->json([
-                'message' => 'Error storing stock movement data.',
-                'error' => $e->getMessage(),
+                'status'    => 'error',
+                'message'   => $e->getMessage(),
             ], 500);
         }
     }
