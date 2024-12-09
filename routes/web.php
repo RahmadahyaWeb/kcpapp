@@ -133,6 +133,11 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // CUSTOMER PAYMENT DETAIL
     Route::get('/customer-payment/detail/{no_piutang}', [CustomerPaymentController::class, 'detail'])->name('customer-payment.detail');
 
+    // STOCK MOVEMENT
+    Route::get('/stock-movement', function () {
+        return view('stock-movement.index');
+    })->name('stock-movement.index');
+
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 });
