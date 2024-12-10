@@ -1,23 +1,12 @@
 <div>
-    @if (session('success'))
-        <div id="success-alert" class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div id="error-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
 
     <div class="row g-2 mb-3">
         <div class="col-md-3 d-grid">
-            <a href="{{ route('inv.history') }}" class="btn btn-success">History Invoice</a>
+            <a href="{{ route('inv.history') }}" class="btn btn-primary">History Invoice</a>
         </div>
         <div class="col-md-3 d-grid">
-            <a href="{{ route('inv.bosnet') }}" class="btn btn-success">Invoice Bosnet</a>
+            <a href="{{ route('inv.bosnet') }}" class="btn btn-primary">Invoice Bosnet</a>
         </div>
     </div>
 

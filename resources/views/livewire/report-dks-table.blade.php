@@ -15,7 +15,7 @@
 <div>
     <div class="row g-2 mb-3">
         <div class="col-md-3 d-grid">
-            <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-success">Rekap Punishment</a>
+            <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-primary">Rekap Punishment</a>
         </div>
     </div>
 
