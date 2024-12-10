@@ -1,76 +1,50 @@
 <div>
-    @if (session('status'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('status') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
+
     <div class="card">
         <div class="card-header">
-            Detail Good Receipt: <b>{{ $spb }}</b>
-            <hr>
+            Detail : <b>{{ $invoiceAop }}</b>
         </div>
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Status</label>
-                    <select wire:model.change="statusItem" class="form-select">
-                        <option value="">Pilih Status</option>
-                        <option value="KCP">KCP</option>
-                        <option value="BOSNET">BOSNET</option>
-                    </select>
-                </div>
-            </div>
-
-            <div wire:loading.flex wire:target="statusItem"
-                class="text-center justify-content-center align-items-center" style="height: 200px;">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
-            <div class="table-responsive" wire:loading.class = "d-none" wire:target="statusItem">
+            <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>
-                                {{-- <input type="checkbox" wire:model="selectAll" wire:click="toggleSelectAll"> --}}
+                                <input type="checkbox" wire:model.change="selectAll" />
                             </th>
                             <th>Part No</th>
-                            <th>Total Qty</th>
-                            <th>Total Qty Terima</th>
-                            <th>Data From</th>
+                            <th>Qty</th>
+                            <th>Qty Terima</th>
+                            <th>Keterangan</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($finalResult as $item)
+                        @foreach ($items_with_qty as $item)
                             <tr>
                                 <td>
-                                    <input type="checkbox" wire:model.change="selectedItems"
-                                        value="{{ $item['materialNumber'] }}"
-                                        @if ($item['total_qty'] != $item['qty_terima'] || ($item['statusHeader'] == 'KCP' || $item['statusItem'] != 'KCP')) disabled @endif>
+                                    <input type="checkbox" wire:model="selectedItems" value="{{ $item->materialNumber }}"
+                                        @if (
+                                            !($item->qty >= $item->qty_terima - ($item->asal_qty ? $item->asal_qty->sum('qty') : 0)) ||
+                                                $item->status == 'BOSNET') disabled @endif />
                                 </td>
-                                <td>{{ $item['materialNumber'] }}</td>
-                                <td>{{ $item['total_qty'] }}</td>
-                                <td>{{ isset($item['qty_terima']) ? $item['qty_terima'] : 0 }}</td>
+                                <td>{{ $item->materialNumber }}</td>
+                                <td>{{ $item->qty }}</td>
+                                <td>{{ $item->qty_terima }}</td>
                                 <td>
-                                    @foreach ($item['invoices'] as $invoice => $qty)
-                                        <div>
-                                            <span>
-                                                <a href="{{ route('aop.detail', $invoice) }}">{{ $invoice }}</a> :
-                                                {{ $qty }}
-                                            </span>
-                                        </div>
-                                    @endforeach
-                                </td>
-                                <td>
-                                    @if ($item['statusItem'] == 'BOSNET')
-                                        <span class="badge text-bg-warning">BOSNET</span>
+                                    @if (!empty($item->asal_qty))
+                                        {!! implode(
+                                            '<br>',
+                                            $item->asal_qty->map(function ($asal) {
+                                                    return "Qty: {$asal['qty']} (Invoice: {$asal['invoice']})";
+                                                })->toArray(),
+                                        ) !!}
                                     @else
-                                        <span class="badge text-bg-success">KCP</span>
+                                        {{ $item->invoiceAop }}
                                     @endif
                                 </td>
+                                <td>{{ $item->status }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -81,10 +55,10 @@
 
     <!-- Floating Button -->
     <div style="position: fixed; bottom: 40px; right: 40px; z-index: 1000;">
-        <button class="btn btn-warning" wire:loading.attr="disabled" wire:target="sendToBosnet, selectedItems"
-            wire:click="sendToBosnet" @disabled(count($selectedItems) < 1) wire:confirm="Yakin ingin kirim data ke Bosnet?">
-            <span wire:loading.remove wire:target="sendToBosnet, selectedItems">Kirim ke Bosnet</span>
-            <span wire:loading wire:target="sendToBosnet, selectedItems">Loading...</span>
+        <button class="btn btn-warning" wire:loading.attr="disabled" wire:target="send_to_bosnet, selectedItems"
+            wire:click="send_to_bosnet" @disabled(count($selectedItems) < 1) wire:confirm="Yakin ingin kirim data ke Bosnet?">
+            <span wire:loading.remove wire:target="send_to_bosnet, selectedItems">Kirim ke Bosnet</span>
+            <span wire:loading wire:target="send_to_bosnet, selectedItems">Loading...</span>
         </button>
     </div>
 </div>

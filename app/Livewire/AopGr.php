@@ -59,44 +59,10 @@ class AopGr extends Component
 
     public function render()
     {
-        $invoiceAopHeader = DB::table('invoice_aop_header')
-            ->select('SPB')
+        $items = DB::table('invoice_aop_header')
+            ->select(['*'])
             ->where('status', 'BOSNET')
-            ->groupBy('SPB')
             ->get();
-
-        $items = [];
-        foreach ($invoiceAopHeader as $spb) {
-
-            $totalQtyTerima = $this->getIntransitBySpb($spb->SPB);
-
-            $totalQty = $this->getTotalQty($spb->SPB);
-            $invoices = $this->getInvoices($spb->SPB);
-
-            $items[$spb->SPB] = [
-                'spb'            => $spb->SPB,
-                'totalQtyTerima' => $totalQtyTerima,
-                'totalQty'       => $totalQty,
-                'invoices'       => $invoices,
-            ];
-        }
-
-        if ($this->invoiceAop) {
-            $items = array_filter($items, function ($item) {
-                foreach ($item['invoices'] as $invoice) {
-                    if (strpos($invoice, $this->invoiceAop) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-        }
-
-        if ($this->spb) {
-            $items = array_filter($items, function ($item) {
-                return strpos($item['spb'], $this->spb) !== false;
-            });
-        }
 
         return view('livewire.aop-gr', compact('items'));
     }

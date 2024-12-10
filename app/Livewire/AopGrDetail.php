@@ -10,28 +10,46 @@ use Livewire\Component;
 
 class AopGrDetail extends Component
 {
-    public $spb;
-    public $statusItem;
+    public $invoiceAop;
     public $selectedItems = [];
-    public $details = [];
     public $selectAll = false;
+    public $items_with_qty;
 
-    public function mount($spb)
+    public function mount($invoiceAop)
     {
-        $this->spb = $spb;
+        $this->invoiceAop = $invoiceAop;
     }
 
-    public function getIntransitBySpb($spb)
+    public function send_to_bosnet()
     {
-        $intransitStock = DB::connection('kcpinformation')
-            ->table('intransit_header as a')
-            ->join('intransit_details as b', 'a.no_sp_aop', '=', 'b.no_sp_aop')
-            ->where('a.no_sp_aop', '=', $spb)
-            ->select('a.no_sp_aop', 'a.kd_gudang_aop', 'a.tgl_packingsheet', 'b.no_packingsheet', 'b.no_doos', 'b.part_no', 'b.qty', 'b.qty_terima')
-            ->get();
+        try {
+            $controller = new GoodReceiptController();
+            $controller->sendToBosnet(new Request([
+                'invoiceAop'    => $this->invoiceAop,
+                'items'         => $this->selectedItems,
+            ]));
 
-        if ($intransitStock) {
-            return $intransitStock;
+            session()->flash('success', "Data GR berhasil dikirim!");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Pilih semua item yang memenuhi syarat dan status bukan 'BOSNET'
+            $this->selectedItems = collect($this->items_with_qty)
+                ->filter(function ($item) {
+                    // Periksa apakah qty >= qty_terima - asal_qty dan status bukan BOSNET
+                    return $item->qty >= ($item->qty_terima - ($item->asal_qty ? $item->asal_qty->sum('qty') : 0))
+                        && $item->status != 'BOSNET';
+                })
+                ->pluck('materialNumber')
+                ->toArray();
+        } else {
+            // Kosongkan daftar yang dipilih
+            $this->selectedItems = [];
         }
     }
 
@@ -41,170 +59,79 @@ class AopGrDetail extends Component
         $this->selectAll = false;
     }
 
-    public function toggleSelectAll()
+    public function find_qty_in_other_invoice($part_no, $spb)
     {
-        if ($this->selectAll) {
-            $this->selectedItems = collect($this->details)->pluck('materialNumber')->toArray();
-        } else {
-            $this->selectedItems = [];
-        }
-    }
+        $items = DB::table('invoice_aop_detail')
+            ->select(['qty', 'invoiceAop']) // Tambahkan invoiceAop
+            ->where('SPB', $spb)
+            ->where('materialNumber', $part_no)
+            ->where('invoiceAop', '<>', $this->invoiceAop)
+            ->get();
 
-    public function sendToBosnet()
-    {
-        try {
-            $controller = new GoodReceiptController();
-            $controller->sendToBosnet(new Request([
-                'spb'    => $this->spb,
-                'items'  => $this->selectedItems,
-            ]));
-            session()->flash('success', "Data GR berhasil dikirim!");
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error: ' . $e->getMessage());
-        }
+        return $items;
     }
 
     public function render()
     {
-        // Ambil semua detail invoice berdasarkan SPB yang diberikan
-        $details = DB::table('invoice_aop_detail')
-            ->where('SPB', $this->spb)
+        $kcp_information = DB::connection('kcpinformation');
+
+        // Ambil SPB dari invoice_aop_header
+        $spb = DB::table('invoice_aop_header')
+            ->where('invoiceAop', $this->invoiceAop)
+            ->value('SPB');
+
+        // Ambil data items dari invoice_aop_detail
+        $items = DB::table('invoice_aop_detail')
+            ->where('invoiceAop', $this->invoiceAop)
             ->get();
 
-        $this->details = $details;
-
-        // Mengelompokkan data berdasarkan materialNumber
-        $grouped = $this->groupDetails($details);
-
-        // Ambil data intransit yang terkait dengan SPB
-        $dataIntransit = $this->getIntransitBySpb($this->spb)->toArray();
-
-        // Hitung total qty_terima untuk setiap part_no
-        $qtyTerimaByPartNo = $this->calculateQtyTerima($dataIntransit);
-
-        // Update qty_terima pada masing-masing item yang sudah dikelompokkan
-        $finalResult = $this->updateQtyTerima($grouped, $qtyTerimaByPartNo);
-
-        // Render view dengan data yang sudah diproses
-        return view('livewire.aop-gr-detail', compact('finalResult'));
-    }
-
-    /**
-     * Mengelompokkan detail invoice berdasarkan materialNumber.
-     *
-     * @param \Illuminate\Support\Collection $details
-     * @return array
-     */
-    private function groupDetails($details)
-    {
-        $grouped = [];
-
-        foreach ($details as $detail) {
-            // Jika statusItem ditentukan, filter berdasarkan status
-            if (!empty($this->statusItem) && $detail->status !== $this->statusItem) {
-                continue;
-            }
-
-            // Mengambil key sebagai materialNumber
-            $key = $detail->materialNumber;
-
-            // Ambil header yang terkait dengan materialNumber dan SPB yang sama
-            $status = $this->getStatusForMaterialNumber($detail, $key);
-
-            // Jika materialNumber belum ada dalam grouped, inisialisasi arraynya
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'materialNumber'    => $detail->materialNumber,
-                    'total_qty'         => 0,
-                    'statusHeader'      => $status,
-                    'statusItem'        => $detail->status,
-                    'invoices'          => []
-                ];
-            }
-
-            // Tambahkan qty ke total_qty
-            $grouped[$key]['total_qty'] += $detail->qty;
-
-            // Kelompokkan qty berdasarkan invoiceAop
-            $grouped[$key]['invoices'][$detail->invoiceAop] =
-                isset($grouped[$key]['invoices'][$detail->invoiceAop])
-                ? $grouped[$key]['invoices'][$detail->invoiceAop] + $detail->qty
-                : $detail->qty;
-        }
-
-        return array_values($grouped);
-    }
-
-    /**
-     * Mendapatkan status berdasarkan materialNumber dari header terkait.
-     *
-     * @param object $detail
-     * @param string $materialNumber
-     * @return string
-     */
-    private function getStatusForMaterialNumber($detail, $materialNumber)
-    {
-        // Ambil header yang terkait
-        $header = DB::table('invoice_aop_header as h')
-            ->join('invoice_aop_detail as d', 'h.invoiceAop', '=', 'd.invoiceAop')
-            ->where('h.SPB', $detail->SPB)
-            ->where('d.materialNumber', $materialNumber)
-            ->select('h.*')
+        // Ambil data intransit dari intransit_details
+        $intransit = $kcp_information->table('intransit_details')
+            ->where('no_sp_aop', $spb)
             ->get();
 
-        // Tentukan status berdasarkan header
-        $status = 'BOSNET';
-        foreach ($header as $value) {
-            if ($value->status == 'KCP') {
-                $status = 'KCP';
+        // Kelompokkan qty_terima berdasarkan part_no
+        $grouped_data = [];
+
+        foreach ($intransit as $value) {
+            $part_no = $value->part_no;
+
+            if (isset($grouped_data[$part_no])) {
+                $grouped_data[$part_no] += $value->qty_terima;
+            } else {
+                $grouped_data[$part_no] = $value->qty_terima;
             }
         }
 
-        return $status;
-    }
+        // Proses items dan tambahkan informasi jika qty_terima lebih besar
+        $items_with_qty = $items->map(function ($item) use ($grouped_data, $spb) {
+            $material_number = $item->materialNumber;
 
-    /**
-     * Menghitung total qty_terima berdasarkan part_no.
-     *
-     * @param array $dataIntransit
-     * @return array
-     */
-    private function calculateQtyTerima($dataIntransit)
-    {
-        return array_reduce($dataIntransit, function ($carry, $item) {
-            $partNo = $item->part_no;
-            $qtyTerima = (int)$item->qty_terima;
+            // Default nilai qty_terima
+            $item->qty_terima = isset($grouped_data[$material_number]) ? $grouped_data[$material_number] : 0;
 
-            // Tambahkan qty_terima ke part_no yang sesuai
-            if (!isset($carry[$partNo])) {
-                $carry[$partNo] = 0;
+            // Tambahkan field 'asal_qty' jika qty_terima > qty
+            if ($item->qty_terima > $item->qty) {
+                $other_invoice_qty = $this->find_qty_in_other_invoice($material_number, $spb);
+
+                // Format data asal qty
+                $item->asal_qty = $other_invoice_qty->map(function ($other) {
+                    return [
+                        'qty' => $other->qty,
+                        'invoice' => $other->invoiceAop, // Tambahkan invoiceAop
+                    ];
+                });
+            } else {
+                $item->asal_qty = [];
             }
 
-            $carry[$partNo] += $qtyTerima;
+            return $item;
+        });
 
-            return $carry;
-        }, []);
-    }
+        $this->items_with_qty = $items_with_qty;
 
-    /**
-     * Memperbarui qty_terima untuk setiap item berdasarkan qty yang sudah dihitung.
-     *
-     * @param array $grouped
-     * @param array $qtyTerimaByPartNo
-     * @return array
-     */
-    private function updateQtyTerima($grouped, $qtyTerimaByPartNo)
-    {
-        foreach ($grouped as &$item) {
-            $materialNumber = $item['materialNumber'];
-            $item['qty_terima'] = 0;
+        // dd($items_with_qty);
 
-            // Jika qty_terima ditemukan untuk materialNumber, perbarui nilai qty_terima
-            if (isset($qtyTerimaByPartNo[$materialNumber])) {
-                $item['qty_terima'] = $qtyTerimaByPartNo[$materialNumber];
-            }
-        }
-
-        return $grouped;
+        return view('livewire.aop-gr-detail', compact('items_with_qty'));
     }
 }

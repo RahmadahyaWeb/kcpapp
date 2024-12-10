@@ -84,7 +84,7 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('/gr/aop', [AopReceiptController::class, 'index'])->name('aop-gr.index');
 
     // AOP GR DETAIL
-    Route::get('/gr/aop/{spb}', [AopReceiptController::class, 'detail'])->name('aop-gr.detail');
+    Route::get('/gr/aop/{invoiceAop}', [AopReceiptController::class, 'detail'])->name('aop-gr.detail');
 
     // SALES ORDER
     Route::get('sales-order', [SalesOrderController::class, 'index'])->name('so.index');

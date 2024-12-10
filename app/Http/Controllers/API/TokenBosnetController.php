@@ -12,8 +12,8 @@ class TokenBosnetController extends Controller
     {
         // Data request yang akan dikirim
         $payload = [
-            'appId' => 'BDI.KCP',
-            'secretKey' => config('api.secret_key'),
+            'szAppId' => 'BDI.KCP',
+            'szSecretKey' => config('api.secret_key'),
             'bSecretAsKey' => true,
         ];
 
@@ -26,22 +26,22 @@ class TokenBosnetController extends Controller
 
             // Periksa response
             if ($response->successful()) {
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $response->json(),
-                ]);
+                $data = $response->json(); // Ambil data JSON
+
+                // Kembalikan data secara langsung
+                return $data;  // Kembalikan array data yang berisi 'szToken'
             } else {
-                return response()->json([
+                return [
                     'status' => 'error',
                     'message' => $response->body(),
-                ], $response->status());
+                ];
             }
         } catch (\Exception $e) {
             // Tangani error
-            return response()->json([
+            return [
                 'status' => 'error',
                 'message' => $e->getMessage(),
-            ], 500);
+            ];
         }
     }
 }

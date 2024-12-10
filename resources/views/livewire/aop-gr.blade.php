@@ -20,14 +20,7 @@
                         </div>
                     </div>
 
-                    <div wire:loading.flex wire:target="invoiceAop, spb"
-                        class="text-center justify-content-center align-items-center" style="height: 200px;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive" wire:loading.class="d-none" wire:target="invoiceAop, spb">
+                    <div class="table-responsive">
                         @if (empty($items))
                             <table class="table table-hover">
                                 <thead>
@@ -45,34 +38,23 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>SPB</th>
                                         <th>Invoice</th>
-                                        <th>Qty Invoice</th>
-                                        <th>Qty Terima</th>
-                                        <th>Status Qty</th>
-                                        <th></th>
+                                        <th>SPB</th>
+                                        <th>Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($items as $item)
                                         <tr>
-                                            <td>{{ $item['spb'] }}</td>
                                             <td>
-                                                {!! implode('<br>', $item['invoices']) !!}
+                                                <span style="font-size: 0.9375rem" class="badge p-0">
+                                                    <a href="{{ route('aop-gr.detail', $item->invoiceAop) }}">
+                                                        {{ $item->invoiceAop }}
+                                                    </a>
+                                                </span>
                                             </td>
-                                            <td>{{ $item['totalQty'] }}</td>
-                                            <td>{{ $item['totalQtyTerima'] }}</td>
-                                            <td>
-                                                @if ($item['totalQty'] == $item['totalQtyTerima'])
-                                                    <span class="badge text-bg-success">Lengkap</span>
-                                                @else
-                                                    <span class="badge text-bg-danger">Belum Lengkap</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('aop-gr.detail', $item['spb']) }}"
-                                                    class="btn btn-sm btn-primary">Detail</a>
-                                            </td>
+                                            <td>{{ $item->SPB }}</td>
+                                            <td>{{ $item->qty }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

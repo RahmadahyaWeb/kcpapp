@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class PurchaseOrderController extends Controller
 {
@@ -98,14 +99,40 @@ class PurchaseOrderController extends Controller
      */
     private function sendDataToBosnet($data)
     {
-        // Implement the data sending logic using Guzzle or cURL.
-        // Example:
-        // return Http::post('url_bosnet', $data);
+        return true;
+
         $credential = TokenBosnetController::signInForSecretKey();
 
-        dd($credential);
+        if ($credential['status']) {
+            throw new \Exception('Connection refused by BOSNET');
+        }
 
-        // return true;
+        if ($credential && $credential['szStatus'] == 'READY') {
+            $token = $credential['szToken'];
+
+            $payload = $data;
+
+            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/PUR/FPo/SaveFPo';
+
+            $response = Http::withHeaders([
+                'Token' => $token
+            ])->post($url, $payload);
+
+            $data = $response->json();
+
+            if ($response->successful()) {
+
+                if ($data['statusCode'] == 500) {
+                    throw new \Exception($data['statusMessage']);
+                } else {
+                    return true;
+                }
+            } else {
+                throw new \Exception($data['message']);
+            }
+        } else {
+            throw new \Exception('BOSNET not responding');
+        }
     }
 
     /**
@@ -130,8 +157,8 @@ class PurchaseOrderController extends Controller
                 'decDPP'               => $detail->price / config('tax.ppn_factor'),
                 'decPPN'               => ($detail->price / config('tax.ppn_factor')) * config('tax.ppn_percentage'),
                 'decAmount'            => $detail->price,
-                'purchaseITemTypeId'   => "BELI",
-                'deliveryList'         => ['qty' => $detail->qty],
+                'purchaseItemTypeId'   => "BELI",
+                'deliveryList'         => [['qty' => $detail->qty]],
             ];
         }
 
@@ -165,18 +192,23 @@ class PurchaseOrderController extends Controller
     private function preparePayload($invoiceHeader, $items, $paymentTermId)
     {
         return [
-            'appId'                  => "BDI.KCP",
-            'szFPo_sId'              => $invoiceHeader->invoiceAop,
-            'dtmPO'                  => Carbon::parse($invoiceHeader->billingDocumentDate)->toDateTimeString(),
-            'szSupplierId'           => "AOP",
-            'bReturn'                => false,
-            'szDescription'          => "",
-            'szCcyId'                => "IDR",
-            'paymentTermId'          => $paymentTermId,
-            'purchaseTypeId'         => "BELI",
-            'szPOReceiptIdForReturn' => "",
-            'docStatus'              => ['bApplied' => true],
-            'itemList'               => $items,
+            'szAppId' => "BDI.KCP",
+            'fPoData' => [
+                'szFPo_sId'              => $invoiceHeader->invoiceAop,
+                'dtmPO'                  => Carbon::parse($invoiceHeader->billingDocumentDate)->toDateTimeString(),
+                'szSupplierId'           => "AOP",
+                'bReturn'                => false,
+                'szDescription'          => "po api",
+                'szCcyId'                => "IDR",
+                'paymentTermId'          => $paymentTermId,
+                'purchaseTypeId'         => "BELI",
+                'szPOReceiptIdForReturn' => "",
+                'DocStatus'              => [
+                    'bApplied'      => true,
+                    'szWorkplaceId' => config('api.workplace_id')
+                ],
+                'ItemList' => $items,
+            ],
         ];
     }
 }

@@ -19,50 +19,46 @@ class GoodReceiptController extends Controller
     public function sendToBosnet(Request $request)
     {
         try {
-            $spb = $request->spb;
+            $invoiceAop = $request->invoiceAop;
             $items = $request->items;
 
-            // Retrieve invoice details and group by invoiceAop
-            $invoiceDetails = DB::table('invoice_aop_detail')
-                ->select('*')
-                ->where('SPB', $spb)
-                ->whereIn('materialNumber', $items)
-                ->get()
-                ->groupBy('invoiceAop');
-
             // Prepare data to send and items to update
-            $dataToSent = [];
             $itemsToUpdate = [];
             $materialNumberToSave = implode(',', $items); // Concatenate material numbers
 
+            // Retrieve invoice header details
+            $invoiceHeader = DB::table('invoice_aop_header')
+                ->select('*')
+                ->where('invoiceAop', $invoiceAop)
+                ->first();
+
+            // Retrieve invoice details
+            $invoiceDetails = DB::table('invoice_aop_detail')
+                ->select('*')
+                ->where('invoiceAop', $invoiceAop)
+                ->whereIn('materialNumber', $items)
+                ->get();
+
             // Generate GR number
-            $no_gr = $this->generateGRNumber($spb, $materialNumberToSave);
+            $no_gr = $this->generateGRNumber($invoiceHeader->SPB, $invoiceAop, $materialNumberToSave);
 
-            // Loop through invoice details and prepare data to send to Bosnet API
-            foreach ($invoiceDetails as $invoiceAop => $details) {
-                // Retrieve invoice header details
-                $invoiceHeader = DB::table('invoice_aop_header')
-                    ->select('*')
-                    ->where('invoiceAop', $invoiceAop)
-                    ->first();
+            // Calculate payment term
+            $paymentTermId = $this->calculatePaymentTerm($invoiceHeader);
 
-                // Calculate payment term
-                $paymentTermId = $this->calculatePaymentTerm($invoiceHeader);
+            // Prepare item list for Bosnet API request
+            $items = $this->prepareItemList($invoiceDetails);
 
-                // Prepare item list for Bosnet API request
-                $items = $this->prepareItemList($details);
+            // Prepare data to send to Bosnet
+            $dataToSent = $this->prepareDataToSend($invoiceHeader, $no_gr, $paymentTermId, $items);
 
-                // Prepare data to send to Bosnet
-                $dataToSent[] = $this->prepareDataToSend($invoiceHeader, $no_gr, $paymentTermId, $items);
-
-                // Collect items to update
-                $itemsToUpdate[] = $items;
-            }
-
+            // Collect items to update
+            $itemsToUpdate[] = $items;
+            
+            $this->updateItemsStatus($invoiceAop, $itemsToUpdate);
+            
             // Send data to Bosnet API
             if ($this->sendDataToBosnet($dataToSent)) {
                 // Update items status in the database
-                $this->updateItemsStatus($spb, $itemsToUpdate);
             }
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
@@ -141,18 +137,18 @@ class GoodReceiptController extends Controller
     /**
      * Update items status in the database.
      *
-     * @param string $spb
+     * @param string $invoiceAop
      * @param array $itemsToUpdate
      * @return void
      */
-    private function updateItemsStatus($spb, $itemsToUpdate)
+    private function updateItemsStatus($invoiceAop, $itemsToUpdate)
     {
         foreach ($itemsToUpdate as $items) {
             foreach ($items as $item) {
                 $materialNumber = $item['szProductId'];
 
                 DB::table('invoice_aop_detail')
-                    ->where('SPB', $spb)
+                    ->where('invoiceAop', $invoiceAop)
                     ->where('materialNumber', $materialNumber)
                     ->update([
                         'status'        => 'BOSNET',
@@ -169,7 +165,7 @@ class GoodReceiptController extends Controller
      * @param string $items
      * @return string
      */
-    public function generateGRNumber($spb, $items)
+    public function generateGRNumber($spb, $invoiceAop, $items)
     {
         try {
             $tahun = Carbon::now()->year;
@@ -187,6 +183,7 @@ class GoodReceiptController extends Controller
             // Insert the new GR record into the database
             DB::table('gr_aop')->insert([
                 'no_gr'         => $no_gr,
+                'invoiceAop'    => $invoiceAop,
                 'spb'           => $spb,
                 'items'         => $items,
                 'created_at'    => now()

@@ -28,7 +28,7 @@ class AopFinalDetail extends Component
 
             session()->flash('success', "Data PO berhasil dikirim!");
 
-            $this->redirect('/aop/final');
+            $this->redirect('/pembelian/aop/final');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
