@@ -63,7 +63,7 @@ class ReportDksTable extends Component
             ->when($this->kd_toko, function ($query) {
                 return $query->where('master_toko.kd_toko', $this->kd_toko);
             })
-            ->whereDate('in_data.tgl_kunjungan', '>', $startOfMonth)
+            ->whereDate('in_data.tgl_kunjungan', '>=', $startOfMonth)
             ->orderBy('in_data.created_at', 'desc')
             ->paginate(20);
 
