@@ -10,6 +10,7 @@ use Livewire\Component;
 
 class AopFinalDetail extends Component
 {
+    public $target = 'sendToBosnet';
     public $invoiceAop;
     public $totalAmount;
     public $totalQty;
@@ -19,7 +20,7 @@ class AopFinalDetail extends Component
         $this->invoiceAop = $invoiceAop;
     }
 
-    public function sendToBosnet($invoiceAop)
+    public function sendToBosnet()
     {
         try {
             $controller = new PurchaseOrderController();

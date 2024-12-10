@@ -1,11 +1,13 @@
 <div>
+    <x-alert />
+    <x-loading :target="$target" />
+
     <div class="row">
         {{-- CARD DETAIL --}}
         <div class="col-12 mb-3">
             <div class="card">
                 <div class="card-header">
                     Detail Invoice Astra Otoparts (AOP): <b>{{ $header->invoiceAop }}</b>
-                    <hr>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -236,49 +238,35 @@
                             </button>
                         </div>
                     </div>
-                    <hr>
                 </div>
                 <div class="card-body">
-                    @if ($programAop->isEmpty())
-                        <table class="table table-bordered table-hover">
-                            <thead>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Discount (Rp)</th>
+                                <th>Keterangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($programAop as $item)
                                 <tr>
-                                    <th>Discount (Rp)</th>
-                                    <th>Keterangan</th>
-                                    <th></th>
+                                    <td>{{ number_format($item->potonganProgram, 0, ',', '.') }}</td>
+                                    <td>{{ $item->keteranganProgram }}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm"
+                                            wire:click="destroyProgram({{ $item->id }})">
+                                            Hapus
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
+                            @empty
                                 <tr>
-                                    <td class="text-center" colspan="3">No Data</td>
+                                    <td colspan="3" class="text-center">No Data</td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    @else
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Discount (Rp)</th>
-                                    <th>Keterangan</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($programAop as $item)
-                                    <tr>
-                                        <td>{{ number_format($item->potonganProgram, 0, ',', '.') }}</td>
-                                        <td>{{ $item->keteranganProgram }}</td>
-                                        <td>
-                                            <button class="btn btn-danger btn-sm"
-                                                wire:click="destroyProgram({{ $item->id }})">
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -288,27 +276,29 @@
             <div class="card">
                 <div class="card-header">
                     Detail Material Astra Otoparts (AOP): <b>{{ $header->invoiceAop }}</b>
-                    <hr>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered mb-3">
-                        <tr>
-                            <th>Total Qty</th>
-                            <td><b>{{ $totalQty }}</b></td>
-                        </tr>
-                        <tr>
-                            <th>
-                                Total Amount
-                            </th>
-                            <td>
-                                <b>Rp {{ number_format($totalAmount, 0, ',', '.') }}</b>
-                            </td>
-                        </tr>
+                    <table class="table table-hover mb-3">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Total Qty</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>{{ $totalQty }}</b></td>
+
+                                <td>
+                                    <b>Rp {{ number_format($totalAmount, 0, ',', '.') }}</b>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
+                        <table class="table table-hover">
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Material Number</th>
                                     <th>Qty</th>

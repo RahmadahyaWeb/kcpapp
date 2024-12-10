@@ -60,25 +60,25 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('master-toko/destroy/{kd_toko}', [MasterTokoController::class, 'destroy'])->name('master-toko.destroy');
 
     // AOP UPLOAD FILE
-    Route::get('/aop/upload', [AopController::class, 'indexUpload'])->name('aop.index');
+    Route::get('/pembelian/aop/upload', [AopController::class, 'indexUpload'])->name('aop.index');
 
     // AOP DETAIL
-    Route::get('/aop/upload/{invoiceAop}', [AopController::class, 'detail'])->name('aop.detail');
+    Route::get('/pembelian/aop/upload/{invoiceAop}', [AopController::class, 'detail'])->name('aop.detail');
 
     // AOP Final
-    Route::get('/aop/final', [AopController::class, 'final'])->name('aop.final');
+    Route::get('/pembelian/aop/final', [AopController::class, 'final'])->name('aop.final');
 
     // AOP FINAL DETAIL
-    Route::get('/aop/final/{invoiceAop}', [AopController::class, 'finalDetail'])->name('aop.final.detail');
+    Route::get('/pembelian/aop/final/{invoiceAop}', [AopController::class, 'finalDetail'])->name('aop.final.detail');
 
     // NON AOP
-    Route::get('/non-aop', [NonAopController::class, 'index'])->name('non-aop.index');
+    Route::get('/pembelian/non-aop', [NonAopController::class, 'index'])->name('non-aop.index');
 
     // CREATE NON AOP
-    Route::get('/non-aop/create', [NonAopController::class, 'create'])->name('non-aop.create');
+    Route::get('/pembelian/non-aop/create', [NonAopController::class, 'create'])->name('non-aop.create');
 
     // DETAIL NON AOP
-    Route::get('/non-aop/detail/{invoiceNon}', [NonAopController::class, 'detail'])->name('non-aop.detail');
+    Route::get('/pembelian/non-aop/detail/{invoiceNon}', [NonAopController::class, 'detail'])->name('non-aop.detail');
 
     // AOP GR
     Route::get('/gr/aop', [AopReceiptController::class, 'index'])->name('aop-gr.index');

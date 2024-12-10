@@ -143,7 +143,7 @@ class NonAopDetail extends Component
 
             session()->flash('status', "Data invoice: $this->invoiceNon berhasil dikirim!");
 
-            $this->redirect('/non-aop');
+            $this->redirect('/pembelian/non-aop');
         }
     }
 

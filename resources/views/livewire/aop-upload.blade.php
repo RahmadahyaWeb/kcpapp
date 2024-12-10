@@ -1,33 +1,14 @@
 <div>
-    @if (session('status'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('status') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
+    <x-loading :target="$target" />
+
     <div class="row gap-3">
-        {{-- FILE UPLOAD --}}
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <b>Upload File AOP</b>
-                    <hr>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-success" x-data="{ show: false }" x-show="show" x-init="@this.on('file-uploaded', () => {
-                        show = true;
-                        setTimeout(() => { show = false; }, 2000)
-                    })"
-                        style="display: none">
-                        <span>{{ $notification }}</span>
-                    </div>
-
                     <form wire:submit="save">
                         <div class="row g-2">
                             <div class="col-md-6">
@@ -65,7 +46,7 @@
                                 </div>
                             </div>
                             <div class="col-md-12 d-flex justify-content-end">
-                                <button type="submit" class="btn btn-success" wire:loading.attr="disabled"
+                                <button type="submit" class="btn btn-success"
                                     wire:target="rekap_tagihan, surat_tagihan">
                                     <span wire:loading.remove wire:target="save">Upload</span>
                                     <span wire:loading wire:target="save">Uploading...</span>
@@ -77,113 +58,77 @@
             </div>
         </div>
 
-        {{-- TABLE --}}
         <div class="col-12">
-            <div class="row">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <b>Data AOP</b>
-                                </div>
-                            </div>
-                            <hr>
+            <div class="card">
+                <div class="card-header">
+                    <b>Data AOP</b>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Invoice AOP</label>
+                            <input type="text" class="form-control" wire:model.live.debounce.1000ms="invoiceAop"
+                                placeholder="Invoice AOP">
                         </div>
-                        <div class="card-body">
-                            <div class="row mb-3" wire:loading.class="d-none" wire:target="save, gotoPage">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Invoice AOP</label>
-                                    <input type="text" class="form-control"
-                                        wire:model.live.debounce.1000ms="invoiceAop" placeholder="Invoice AOP"
-                                        wire:loading.attr="disabled">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Tanggal Jatuh Tempo</label>
-                                    <input type="date" class="form-control" wire:model.change="tanggalJatuhTempo"
-                                        wire:loading.attr="disabled">
-                                </div>
-                            </div>
-
-                            <div wire:loading.flex wire:target="save, gotoPage, invoiceAop, tanggalJatuhTempo"
-                                class="text-center justify-content-center align-items-center" style="height: 200px;">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-
-                            @if ($invoiceAopHeader->isEmpty())
-                                <div wire:loading.class="d-none"
-                                    wire:target="save, gotoPage, invoiceAop, tanggalJatuhTempo"
-                                    class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Invoice AOP</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="text-center">No Data</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <div wire:loading.class="d-none"
-                                    wire:target="save, gotoPage, invoiceAop, tanggalJatuhTempo"
-                                    class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Invoice AOP</th>
-                                                <th>Customer To</th>
-                                                <th>Billing Document Date</th>
-                                                <th>Tgl. Jatuh Tempo</th>
-                                                <th>Harga (Rp)</th>
-                                                <th>Add Discount (Rp)</th>
-                                                <th>Amount (Rp)</th>
-                                                <th>Cash Discount (Rp)</th>
-                                                <th>Extra Plafon Discount (Rp)</th>
-                                                <th>Net Sales (Rp)</th>
-                                                <th>Tax (Rp)</th>
-                                                <th>Grand Total (Rp)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($invoiceAopHeader as $invoice)
-                                                <tr>
-                                                    <td>
-                                                        <a
-                                                            href="{{ route('aop.detail', $invoice->invoiceAop) }}">
-                                                            {{ $invoice->invoiceAop }}
-                                                        </a>
-                                                    </td>
-                                                    <td>{{ $invoice->customerTo }}</td>
-                                                    <td>{{ date('d-m-Y', strtotime($invoice->billingDocumentDate)) }}
-                                                    </td>
-                                                    <td>{{ date('d-m-Y', strtotime($invoice->tanggalJatuhTempo)) }}</td>
-                                                    <td>{{ number_format($invoice->price, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->addDiscount, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->amount, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->cashDiscount, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->extraPlafonDiscount, 0, ',', '.') }}
-                                                    </td>
-                                                    <td>{{ number_format($invoice->netSales, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->tax, 0, ',', '.') }}</td>
-                                                    <td>{{ number_format($invoice->grandTotal, 0, ',', '.') }}</td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
-                        </div>
-                        <div wire:loading.class="d-none" wire:target="save, invoiceAop, tanggalJatuhTempo"
-                            class="card-footer">
-                            {{ $invoiceAopHeader->links() }}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tanggal Jatuh Tempo</label>
+                            <input type="date" class="form-control" wire:model.change="tanggalJatuhTempo">
                         </div>
                     </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Invoice AOP</th>
+                                    <th>Customer To</th>
+                                    <th>Billing Document Date</th>
+                                    <th>Tgl. Jatuh Tempo</th>
+                                    <th>Harga (Rp)</th>
+                                    <th>Add Discount (Rp)</th>
+                                    <th>Amount (Rp)</th>
+                                    <th>Cash Discount (Rp)</th>
+                                    <th>Extra Plafon Discount (Rp)</th>
+                                    <th>Net Sales (Rp)</th>
+                                    <th>Tax (Rp)</th>
+                                    <th>Grand Total (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($invoiceAopHeader as $invoice)
+                                    <tr>
+                                        <td>
+                                            <span style="font-size: 0.9375rem" class="badge p-0">
+                                                <a href="{{ route('aop.detail', $invoice->invoiceAop) }}">
+                                                    {{ $invoice->invoiceAop }}
+                                                </a>
+                                            </span>
+                                        </td>
+                                        <td>{{ $invoice->customerTo }}</td>
+                                        <td>{{ date('d-m-Y', strtotime($invoice->billingDocumentDate)) }}
+                                        </td>
+                                        <td>{{ date('d-m-Y', strtotime($invoice->tanggalJatuhTempo)) }}</td>
+                                        <td>{{ number_format($invoice->price, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->addDiscount, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->amount, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->cashDiscount, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->extraPlafonDiscount, 0, ',', '.') }}
+                                        </td>
+                                        <td>{{ number_format($invoice->netSales, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->tax, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($invoice->grandTotal, 0, ',', '.') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="12" class="text-center">No Data</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div wire:loading.class="d-none" wire:target="save, invoiceAop, tanggalJatuhTempo" class="card-footer">
+                    {{ $invoiceAopHeader->links() }}
                 </div>
             </div>
         </div>

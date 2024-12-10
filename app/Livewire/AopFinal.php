@@ -13,23 +13,24 @@ class AopFinal extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    public $target = 'cancel, invoiceAop, status';
+
     public $invoiceAop;
     public $status;
 
-    public function search()
-    {
-        $this->resetPage();
-    }
-
     public function cancel($invoiceAop)
     {
-        DB::table('invoice_aop_header')
-            ->where('invoiceAop', $invoiceAop)
-            ->update([
-                'flag_selesai' => 'N',
-            ]);
-            
-        session()->flash('status', "Invoice: $invoiceAop berhasil dibatalkan. Silakan periksa data di list Data Upload AOP.");
+        try {
+            DB::table('invoice_aop_header')
+                ->where('invoiceAop', $invoiceAop)
+                ->update([
+                    'flag_selesai' => 'N',
+                ]);
+
+            session()->flash('success', "Invoice: $invoiceAop berhasil dibatalkan. Silakan periksa data di list Data Upload AOP.");
+        } catch (\Exception $e) {
+            session()->flash('error', "Invoice: $invoiceAop gagal dibatalkan: " . $e->getMessage());
+        }
     }
 
     public function render()

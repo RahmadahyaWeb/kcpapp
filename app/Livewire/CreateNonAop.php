@@ -95,7 +95,7 @@ class CreateNonAop extends Component
 
         session()->flash('status', "Data Non AOP dengan invoice: $invoiceNon berhasil ditambahkan.");
 
-        $this->redirect('/non-aop');
+        $this->redirect('/pembelian/non-aop');
     }
 
     public function render()

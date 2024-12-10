@@ -32,7 +32,7 @@ class NonAop extends Component
 
     public function detailInvoiceNon($invoiceNon)
     {
-        $this->redirect("/non-aop/detail/$invoiceNon");
+        $this->redirect("/pembelian/non-aop/detail/$invoiceNon");
     }
 
     public function render()

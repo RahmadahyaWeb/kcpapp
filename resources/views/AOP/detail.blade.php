@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', "Detail $invoiceAop")
+@section('title', "Detail Data AOP")
 
 @section('breadcrumb')
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('aop.index') }}">Data Upload AOP</a></li>
-        <li class="breadcrumb-item active"><a href="">Detail</a></li>
+        <li class="breadcrumb-item active"><a href="">Detail Data AOP</a></li>
     </ol>
 @endsection
 

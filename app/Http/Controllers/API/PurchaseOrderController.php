@@ -101,7 +101,11 @@ class PurchaseOrderController extends Controller
         // Implement the data sending logic using Guzzle or cURL.
         // Example:
         // return Http::post('url_bosnet', $data);
-        return true;
+        $credential = TokenBosnetController::signInForSecretKey();
+
+        dd($credential);
+
+        // return true;
     }
 
     /**

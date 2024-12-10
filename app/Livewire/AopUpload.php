@@ -16,10 +16,8 @@ class AopUpload extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public $notification;
-
-    public $surat_tagihan;
-    public $rekap_tagihan;
+    public $target = 'save, invoiceAop, tanggalJatuhTempo';
+    public $surat_tagihan, $rekap_tagihan, $invoiceAop, $tanggalJatuhTempo;
 
     public function save()
     {
@@ -183,14 +181,21 @@ class AopUpload extends Component
         }
 
         try {
-            $invoiceHeader = $this->createInvoiceHeader($groupedData);
-            $invoiceDetail = $this->createInvoiceDetail($groupedArray);
+            DB::beginTransaction();
 
-            $this->notification = 'Upload berhasil';
+            $this->createInvoiceHeader($groupedData);
+            $this->createInvoiceDetail($groupedArray);
+
+            DB::commit();
+
+            session()->flash('success', 'Data AOP berhasil diupload.');
+
             $this->dispatch('file-uploaded');
             $this->reset('surat_tagihan');
             $this->reset('rekap_tagihan');
         } catch (\Exception $e) {
+            DB::rollBack();
+
             session()->flash('error', $e->getMessage());
         }
     }
@@ -228,39 +233,30 @@ class AopUpload extends Component
 
             // PROSES PENYIMPANAN KE DALAM TABLE INVOICE_AOP_HEADER
             if (!$exists) {
-                try {
-                    DB::beginTransaction();
-
-                    DB::table('invoice_aop_header')->insert([
-                        'invoiceAop'            => $data[0]['BILLING_NUMBER'],
-                        'SPB'                   => $data[0]['SPB_NO'],
-                        'customerTo'            => $data[0]['CUSTOMER_NUMBER'],
-                        'customerName'          => $data[0]['CUSTOMER_NAME'],
-                        'kdGudang'              => $data[0]['CUSTOMER_NUMBER'] == 'KCP01001' ? 'GD1' : 'GD2',
-                        'billingDocumentDate'   => date('Y-m-d', strtotime($data[0]['BILLING_DOCUMENT_DATE'])),
-                        'tanggalCetakFaktur'    => $data[0]['TANGGAL_CETAK_FAKTUR'] == '00.00.0000' ? NULL : date('Y-m-d', strtotime($data[0]['TANGGAL_CETAK_FAKTUR'])),
-                        'tanggalJatuhTempo'     => date('Y-m-d', strtotime($data[0]['TANGGAL_JATUH_TEMPO'])),
-                        'qty'                   => $qty,
-                        'price'                 => $price,
-                        'addDiscount'           => $addDiscount,
-                        'amount'                => $amount,
-                        'cashDiscount'          => $cashDiscount,
-                        'netSales'              => $netSales,
-                        'tax'                   => $tax,
-                        'grandTotal'            => $grandTotal,
-                        'extraPlafonDiscount'   => $extraPlafonDiscount,
-                        'uploaded_by'           => Auth::user()->username,
-                        'created_at'            => now(),
-                        'updated_at'            => now(),
-                        'status'                => 'KCP',
-                        'flag_selesai'          => 'N'
-                    ]);
-
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    throw new \Exception('Error when uploading.');
-                }
+                DB::table('invoice_aop_header')->insert([
+                    'invoiceAop'            => $data[0]['BILLING_NUMBER'],
+                    'SPB'                   => $data[0]['SPB_NO'],
+                    'customerTo'            => $data[0]['CUSTOMER_NUMBER'],
+                    'customerName'          => $data[0]['CUSTOMER_NAME'],
+                    'kdGudang'              => $data[0]['CUSTOMER_NUMBER'] == 'KCP01001' ? 'GD1' : 'GD2',
+                    'billingDocumentDate'   => date('Y-m-d', strtotime($data[0]['BILLING_DOCUMENT_DATE'])),
+                    'tanggalCetakFaktur'    => $data[0]['TANGGAL_CETAK_FAKTUR'] == '00.00.0000' ? NULL : date('Y-m-d', strtotime($data[0]['TANGGAL_CETAK_FAKTUR'])),
+                    'tanggalJatuhTempo'     => date('Y-m-d', strtotime($data[0]['TANGGAL_JATUH_TEMPO'])),
+                    'qty'                   => $qty,
+                    'price'                 => $price,
+                    'addDiscount'           => $addDiscount,
+                    'amount'                => $amount,
+                    'cashDiscount'          => $cashDiscount,
+                    'netSales'              => $netSales,
+                    'tax'                   => $tax,
+                    'grandTotal'            => $grandTotal,
+                    'extraPlafonDiscount'   => $extraPlafonDiscount,
+                    'uploaded_by'           => Auth::user()->username,
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                    'status'                => 'KCP',
+                    'flag_selesai'          => 'N'
+                ]);
             }
         }
     }
@@ -275,40 +271,23 @@ class AopUpload extends Component
                 ->exists();
 
             if (!$exists) {
-                try {
-                    DB::beginTransaction();
-
-                    DB::table('invoice_aop_detail')
-                        ->insert([
-                            'invoiceAop'            => $data['BILLING_NUMBER'],
-                            'SPB'                   => $data['SPB_NO'],
-                            'customerTo'            => $data['CUSTOMER_NUMBER'],
-                            'materialNumber'        => $data['MATERIAL_NUMBER'],
-                            'qty'                   => $data['BILLING_QTY'],
-                            'price'                 => $data['BILLING_AMOUNT'],
-                            'extraPlafonDiscount'   => $data['EXTRA_DISCOUNT'],
-                            'amount'                => $data['BILLING_AMOUNT'] + $data['EXTRA_DISCOUNT'],
-                            'addDiscount'           => $data['ADD_DISCOUNT'],
-                            'uploaded_by'           => Auth::user()->username,
-                            'created_at'            => now(),
-                            'updated_at'            => now()
-                        ]);
-
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    throw new \Exception('Error when uploading.');
-                }
+                DB::table('invoice_aop_detail')
+                    ->insert([
+                        'invoiceAop'            => $data['BILLING_NUMBER'],
+                        'SPB'                   => $data['SPB_NO'],
+                        'customerTo'            => $data['CUSTOMER_NUMBER'],
+                        'materialNumber'        => $data['MATERIAL_NUMBER'],
+                        'qty'                   => $data['BILLING_QTY'],
+                        'price'                 => $data['BILLING_AMOUNT'],
+                        'extraPlafonDiscount'   => $data['EXTRA_DISCOUNT'],
+                        'amount'                => $data['BILLING_AMOUNT'] + $data['EXTRA_DISCOUNT'],
+                        'addDiscount'           => $data['ADD_DISCOUNT'],
+                        'uploaded_by'           => Auth::user()->username,
+                        'created_at'            => now(),
+                        'updated_at'            => now()
+                    ]);
             }
         }
-    }
-
-    public $invoiceAop;
-    public $tanggalJatuhTempo;
-
-    public function search()
-    {
-        $this->resetPage();
     }
 
     public function render()

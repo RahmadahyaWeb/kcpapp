@@ -9,6 +9,8 @@ use Livewire\Component;
 
 class AopDetail extends Component
 {
+    public $target = 'updateFlag, saveFakturPajak, saveProgram, destroyProgram';
+
     public $fakturPajak;
     public $editingFakturPajak;
 
@@ -17,6 +19,24 @@ class AopDetail extends Component
 
     public $classFakturPajak;
     public $styleFakturPajak;
+
+    public $invoiceAop;
+    public $totalAmount;
+    public $totalQty;
+
+    #[Validate('required')]
+    public $potonganProgram = '';
+
+    #[Validate('required')]
+    public $keteranganProgram = '';
+
+    public $customerTo;
+    public $tanggalInvoice;
+
+    public function mount($invoiceAop)
+    {
+        $this->invoiceAop = $invoiceAop;
+    }
 
     public function openModalFakturPajak()
     {
@@ -50,15 +70,6 @@ class AopDetail extends Component
         $this->classProgram = "";
         $this->styleProgram = "";
     }
-
-    #[Validate('required')]
-    public $potonganProgram = '';
-
-    #[Validate('required')]
-    public $keteranganProgram = '';
-
-    public $customerTo;
-    public $tanggalInvoice;
 
     public function saveProgram()
     {
@@ -99,32 +110,27 @@ class AopDetail extends Component
             ]);
 
         $this->dispatch('fakturPajakUpdate');
-        
+
         $this->classFakturPajak = "";
         $this->styleFakturPajak = "";
     }
 
     public function updateFlag($invoiceAop)
     {
-        DB::table('invoice_aop_header')
-            ->where('invoiceAop', $invoiceAop)
-            ->update([
-                'flag_selesai'  => 'Y',
-                'updated_at'    => now()
-            ]);
+        try {
+            DB::table('invoice_aop_header')
+                ->where('invoiceAop', $invoiceAop)
+                ->update([
+                    'flag_selesai'  => 'Y',
+                    'updated_at'    => now()
+                ]);
 
-        session()->flash('status', "Flag $invoiceAop berhasil disimpan. Silakan periksa data di list Data AOP Final.");
+            session()->flash('success', "Flag $invoiceAop berhasil disimpan. Silakan periksa data di list Data AOP Final.");
 
-        $this->redirect('/aop/upload');
-    }
-
-    public $invoiceAop;
-    public $totalAmount;
-    public $totalQty;
-
-    public function mount($invoiceAop)
-    {
-        $this->invoiceAop = $invoiceAop;
+            $this->redirect('/pembelian/aop/upload');
+        } catch (\Exception $e) {
+            session()->flash('error', "Gagal update flag: " . $e->getMessage());
+        }
     }
 
     public function render()

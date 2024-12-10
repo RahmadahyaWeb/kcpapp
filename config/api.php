@@ -1,6 +1,7 @@
 <?php
 
 return [
-    'username' => env('API_USERNAME'),
-    'password' => env('API_PASSWORD'),
+    'username'      => env('API_USERNAME'),
+    'password'      => env('API_PASSWORD'),
+    'secret_key'    => env('SECRET_KEY_BOSNET'),
 ];
