@@ -13,6 +13,8 @@
 @endphp
 
 <div>
+    <x-loading :target="$target" />
+
     <div class="row g-2 mb-3">
         <div class="col-md-3 d-grid">
             <a href="{{ route('report.dks-rekap-punishment') }}" class="btn btn-primary">Rekap Punishment</a>
@@ -33,7 +35,7 @@
                 <div class="col-md-6">
                     <label for="fromDate" class="form-label">Dari tanggal</label>
                     <input id="fromDate" type="date" class="form-control @error('fromDate') is-invalid @enderror"
-                        wire:model.live="fromDate" name="fromDate">
+                        wire:model.change="fromDate" name="fromDate">
                     @error('fromDate')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -43,7 +45,7 @@
                 <div class="col-md-6">
                     <label for="toDate" class="form-label">Sampai tanggal</label>
                     <input id="toDate" type="date" class="form-control @error('toDate') is-invalid @enderror"
-                        wire:model.live="toDate" name="toDate">
+                        wire:model.change="toDate" name="toDate">
                     @error('toDate')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -73,16 +75,8 @@
     </div>
 
     <div class="card">
-        <div wire:loading.flex wire:target="toDate, user_sales, kd_toko, gotoPage"
-            class="text-center justify-content-center align-items-center" style="height: 200px;">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-
         <div class="card-body">
-            <div class="table-responsive mb-6" wire:loading.class="d-none"
-                wire:target="toDate, user_sales, kd_toko, gotoPage">
+            <div class="table-responsive mb-6">
                 <table class="table table-hover table-sm">
                     <thead class="table-dark">
                         <tr>

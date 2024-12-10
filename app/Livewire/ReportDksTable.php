@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,6 +12,8 @@ class ReportDksTable extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public $target = 'toDate, user_sales, kd_toko';
+
     public $fromDate;
     public $toDate;
     public $user_sales;
@@ -18,6 +21,8 @@ class ReportDksTable extends Component
 
     public function render()
     {
+        $startOfMonth = Carbon::now()->startOfMonth();
+
         $items = DB::table('trns_dks AS in_data')
             ->select(
                 'in_data.user_sales',
@@ -58,7 +63,7 @@ class ReportDksTable extends Component
             ->when($this->kd_toko, function ($query) {
                 return $query->where('master_toko.kd_toko', $this->kd_toko);
             })
-            ->whereDate('in_data.tgl_kunjungan', '>', '2024-10-31')
+            ->whereDate('in_data.tgl_kunjungan', '>', $startOfMonth)
             ->orderBy('in_data.created_at', 'desc')
             ->paginate(20);
 
