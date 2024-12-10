@@ -40,30 +40,10 @@ class DksController extends Controller
         return view('dks.submit', compact('toko', 'katalog', 'check'));
     }
 
-    private function getTokoData(string $kd_toko)
-    {
-        return DB::table('master_toko')
-            ->select(['kd_toko', 'nama_toko', 'latitude', 'longitude'])
-            ->where('kd_toko', $kd_toko)
-            ->first();
-    }
-
-    private function determineCheckTypeForIndex(string $kd_toko, ?string $katalog)
-    {
-        if ($katalog && $katalog[6] === 'Y') {
-            return 'katalog';
-        }
-
-        return DB::table('trns_dks')
-            ->where('kd_toko', $kd_toko)
-            ->where('user_sales', Auth::user()->username)
-            ->where('type', 'in')
-            ->whereDate('tgl_kunjungan', now()->toDateString())
-            ->count();
-    }
-
     public function scan()
     {
+        $this->guard();
+
         return view('dks.scan');
     }
 
@@ -222,5 +202,27 @@ class DksController extends Controller
         if ($checkKatalog > 0) {
             throw new \Exception('Anda sudah melakukan scan katalog!');
         }
+    }
+
+    private function getTokoData(string $kd_toko)
+    {
+        return DB::table('master_toko')
+            ->select(['kd_toko', 'nama_toko', 'latitude', 'longitude'])
+            ->where('kd_toko', $kd_toko)
+            ->first();
+    }
+
+    private function determineCheckTypeForIndex(string $kd_toko, ?string $katalog)
+    {
+        if ($katalog && $katalog[6] === 'Y') {
+            return 'katalog';
+        }
+
+        return DB::table('trns_dks')
+            ->where('kd_toko', $kd_toko)
+            ->where('user_sales', Auth::user()->username)
+            ->where('type', 'in')
+            ->whereDate('tgl_kunjungan', now()->toDateString())
+            ->count();
     }
 }
