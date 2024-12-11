@@ -42,7 +42,6 @@ class AopGr extends Component
 
         $items = $items->paginate(20);
 
-
         return view('livewire.aop-gr', compact('items'));
     }
 }

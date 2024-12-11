@@ -155,7 +155,7 @@ class GoodReceiptController extends Controller
                     ->where('materialNumber', $materialNumber)
                     ->update([
                         'status'        => 'BOSNET',
-                        'updated_at'    => now()
+                        'gr_date'       => now()
                     ]);
             }
         }

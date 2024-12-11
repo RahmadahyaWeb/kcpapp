@@ -138,8 +138,6 @@ class AopGrDetail extends Component
 
         $this->items_with_qty = $items_with_qty;
 
-        // dd($items_with_qty);
-
         return view('livewire.aop-gr-detail', compact(
             'items_with_qty',
             'spb',
