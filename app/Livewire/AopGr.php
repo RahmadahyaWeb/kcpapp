@@ -20,7 +20,7 @@ class AopGr extends Component
     {
         $items = DB::table('invoice_aop_header')
             ->select(['*'])
-            ->where('status', 'BOSNET')
+            ->where('flag_po', 'Y')
             ->where('invoiceAop', 'like', '%' . $this->invoiceAop . '%')
             ->where('SPB', 'like', '%' . $this->spb . '%')
             ->paginate(20);

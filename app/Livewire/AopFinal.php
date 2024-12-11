@@ -24,7 +24,7 @@ class AopFinal extends Component
             DB::table('invoice_aop_header')
                 ->where('invoiceAop', $invoiceAop)
                 ->update([
-                    'flag_selesai' => 'N',
+                    'flag_final' => 'N',
                 ]);
 
             session()->flash('success', "Invoice: $invoiceAop berhasil dibatalkan. Silakan periksa data di list Data Upload AOP.");
@@ -38,13 +38,13 @@ class AopFinal extends Component
         $query = DB::table('invoice_aop_header')
             ->select(['*'])
             ->where('invoiceAop', 'like', '%' . $this->invoiceAop . '%')
-            ->where('flag_selesai', '!=', 'N');
+            ->where('flag_final', '!=', 'N');
 
         if (!empty($this->status)) {
             $query->where('status', $this->status);
         }
 
-        $invoiceAopHeader = $query->orderBy('updated_at', 'desc')->paginate(20);
+        $invoiceAopHeader = $query->orderBy('flag_final', 'desc')->paginate(20);
 
         return view('livewire.aop-final', compact('invoiceAopHeader'));
     }

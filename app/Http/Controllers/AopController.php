@@ -32,11 +32,15 @@ class AopController extends Controller
         $this->guard();
 
         $invoice = DB::table('invoice_aop_header')
-            ->select(['flag_selesai'])
-            ->where('invoiceAop', $invoiceAop)
-            ->first();
+            ->where('invoiceAop', $invoiceAop)->first();
 
-        if ($invoice->flag_selesai == 'Y') {
+        if (!$invoice) {
+            return back()->with('error', "Invoice tidak ditemukan.");
+        }
+
+        $flag_final = $invoice->flag_final;
+
+        if ($flag_final == 'Y') {
             return back()->with('error', "Invoice: $invoiceAop sudah berada di list Data AOP Final.");
         }
 
@@ -53,6 +57,15 @@ class AopController extends Controller
     public function finalDetail($invoiceAop)
     {
         $this->guard();
+
+        $invoice = DB::table('invoice_aop_header')
+            ->where('invoiceAop', $invoiceAop)
+            ->where('flag_final', 'Y')
+            ->first();
+
+        if (!$invoice) {
+            return back()->with('error', "Invoice tidak ditemukan.");
+        }
 
         return view('AOP.final-detail', compact('invoiceAop'));
     }

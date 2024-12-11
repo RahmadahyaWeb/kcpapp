@@ -105,13 +105,13 @@
                                 </div>
                                 <div class="col col-auto">
                                     <div>
-                                        @if ($header->fakturPajak != null && $header->flag_selesai == 'N')
+                                        @if ($header->fakturPajak != null && $header->flag_final == 'N')
                                             <div class="d-inline text-primary" style="cursor: pointer"
                                                 data-bs-toggle="modal" data-bs-target="#editFakturPajakModal"
                                                 wire:click="openModalFakturPajak">
                                                 {{ $header->fakturPajak }}
                                             </div>
-                                        @elseif ($header->flag_selesai == 'N')
+                                        @elseif ($header->flag_final == 'N')
                                             <div class="d-inline text-primary" style="cursor: pointer"
                                                 data-bs-toggle="modal" data-bs-target="#editFakturPajakModal"
                                                 wire:click="openModalFakturPajak">
@@ -206,7 +206,7 @@
                             </div>
                         </div>
                     </div>
-                    @if ($header->fakturPajak && $header->flag_selesai == 'Y' && $header->status == 'KCP')
+                    @if ($header->fakturPajak && $header->flag_final == 'Y')
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">

@@ -28,7 +28,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Invoice AOP</th>
-                            <th>Status</th>
+                            <th>Keterangan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -43,16 +43,16 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @if ($invoice->flag_selesai == 'Y' && $invoice->status == 'KCP')
-                                        <span class="badge text-bg-success">KCP</span>
-                                    @elseif ($invoice->flag_selesai == 'Y' && $invoice->status == 'BOSNET')
+                                    @if ($invoice->flag_po == 'N')
+                                        FINAL STAGE
+                                    @elseif ($invoice->flag_po == 'Y')
                                         <span class="badge text-bg-warning">BOSNET:
-                                            {{ date('d-m-Y H:i:s', strtotime($invoice->sendToBosnet)) }}
+                                            {{ date('d-m-Y H:i:s', strtotime($invoice->po_date)) }}
                                         </span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($invoice->flag_selesai == 'Y' && $invoice->status == 'KCP')
+                                    @if ($invoice->flag_po == 'N')
                                         <button wire:click="cancel({{ $invoice->invoiceAop }})"
                                             wire:confirm="Yakin ingin batal?" type="submit"
                                             class="btn btn-sm btn-danger">

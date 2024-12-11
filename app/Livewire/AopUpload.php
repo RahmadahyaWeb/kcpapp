@@ -254,8 +254,6 @@ class AopUpload extends Component
                     'uploaded_by'           => Auth::user()->username,
                     'created_at'            => now(),
                     'updated_at'            => now(),
-                    'status'                => 'KCP',
-                    'flag_selesai'          => 'N'
                 ]);
             }
         }
@@ -295,7 +293,7 @@ class AopUpload extends Component
         $invoiceAopHeader = DB::table('invoice_aop_header')
             ->select(['*'])
             ->where('invoiceAop', 'like', '%' . $this->invoiceAop . '%')
-            ->where('flag_selesai', '!=', 'Y')
+            ->where('flag_final', '=', 'N')
             ->when($this->tanggalJatuhTempo, function ($query) {
                 return $query->where('tanggalJatuhTempo', $this->tanggalJatuhTempo);
             })

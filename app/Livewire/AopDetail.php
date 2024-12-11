@@ -121,8 +121,8 @@ class AopDetail extends Component
             DB::table('invoice_aop_header')
                 ->where('invoiceAop', $invoiceAop)
                 ->update([
-                    'flag_selesai'  => 'Y',
-                    'updated_at'    => now()
+                    'flag_final'  => 'Y',
+                    'final_date'  => now()
                 ]);
 
             session()->flash('success', "Flag $invoiceAop berhasil disimpan. Silakan periksa data di list Data AOP Final.");

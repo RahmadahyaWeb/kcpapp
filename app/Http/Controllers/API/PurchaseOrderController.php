@@ -80,8 +80,8 @@ class PurchaseOrderController extends Controller
                 DB::table('invoice_aop_header')
                     ->where('invoiceAop', $invoiceAop)
                     ->update([
-                        'status'        => 'BOSNET',
-                        'sendToBosnet'  => now()
+                        'flag_po'   => 'Y',
+                        'po_date'   => now()
                     ]);
             } else {
                 throw new \Exception('Failed to send data to BOSNET');
@@ -99,11 +99,11 @@ class PurchaseOrderController extends Controller
      */
     private function sendDataToBosnet($data)
     {
-        return true;
-
+        return true; 
+        
         $credential = TokenBosnetController::signInForSecretKey();
 
-        if ($credential['status']) {
+        if (isset($credential['status'])) {
             throw new \Exception('Connection refused by BOSNET');
         }
 
