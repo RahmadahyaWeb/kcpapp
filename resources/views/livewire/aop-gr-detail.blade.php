@@ -3,9 +3,32 @@
 
     <div class="card">
         <div class="card-header">
-            Detail : <b>{{ $invoiceAop }}</b>
+            <b>{{ $spb }} / {{ $invoiceAop }}</b>
         </div>
         <div class="card-body">
+            <table class="mb-3">
+                <tr>
+                    <td>Total item terpilih</td>
+                    <td style="width: 10%">:</td>
+                    <td>
+                        <b>
+                            {{ count($selectedItems) }} /
+                            {{ count($items_with_qty) }}
+                        </b>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Total item terkirim</td>
+                    <td style="width: 10%">:</td>
+                    <td>
+                        <b>
+                            {{ $total_items_terkirim }} /
+                            {{ count($items_with_qty) }}
+                        </b>
+                    </td>
+                </tr>
+            </table>
+
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -24,7 +47,8 @@
                         @foreach ($items_with_qty as $item)
                             <tr>
                                 <td>
-                                    <input type="checkbox" wire:model="selectedItems" value="{{ $item->materialNumber }}"
+                                    <input type="checkbox" wire:model.change="selectedItems"
+                                        value="{{ $item->materialNumber }}"
                                         @if (
                                             !($item->qty >= $item->qty_terima - ($item->asal_qty ? $item->asal_qty->sum('qty') : 0)) ||
                                                 $item->status == 'BOSNET') disabled @endif />

@@ -30,6 +30,8 @@ class AopGrDetail extends Component
             ]));
 
             session()->flash('success', "Data GR berhasil dikirim!");
+
+            $this->selectedItems = [];
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());
         }
@@ -85,6 +87,12 @@ class AopGrDetail extends Component
             ->where('invoiceAop', $this->invoiceAop)
             ->get();
 
+        // Total items terkirim
+        $total_items_terkirim = DB::table('invoice_aop_detail')
+            ->where('invoiceAop', $this->invoiceAop)
+            ->where('status', 'BOSNET')
+            ->count();
+
         // Ambil data intransit dari intransit_details
         $intransit = $kcp_information->table('intransit_details')
             ->where('no_sp_aop', $spb)
@@ -132,6 +140,10 @@ class AopGrDetail extends Component
 
         // dd($items_with_qty);
 
-        return view('livewire.aop-gr-detail', compact('items_with_qty'));
+        return view('livewire.aop-gr-detail', compact(
+            'items_with_qty',
+            'spb',
+            'total_items_terkirim'
+        ));
     }
 }

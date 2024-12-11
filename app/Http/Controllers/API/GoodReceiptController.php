@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class GoodReceiptController extends Controller
 {
@@ -53,12 +54,11 @@ class GoodReceiptController extends Controller
 
             // Collect items to update
             $itemsToUpdate[] = $items;
-            
-            $this->updateItemsStatus($invoiceAop, $itemsToUpdate);
-            
+
             // Send data to Bosnet API
             if ($this->sendDataToBosnet($dataToSent)) {
                 // Update items status in the database
+                $this->updateItemsStatus($invoiceAop, $itemsToUpdate);
             }
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
@@ -111,26 +111,29 @@ class GoodReceiptController extends Controller
     private function prepareDataToSend($invoiceHeader, $no_gr, $paymentTermId, $items)
     {
         return [
-            'appId'                     => "BDI.KCP",
-            'szPoId'                    => $invoiceHeader->invoiceAop,
-            'szFPoReceipt_sId'          => $no_gr,
-            'dtmReceipt'                => "2024-10-15 00:00:00",
-            'szRefDn'                   => $invoiceHeader->SPB,
-            'dtmRefDn'                  => $invoiceHeader->billingDocumentDate,
-            'szWarehouseId'             => "KCP01001",
-            'szStockTypeId'             => "Good Stock",
-            'paymentTermId'             => $paymentTermId,
-            'szWorkplaceId'             => "KCP01001",
-            'szCarrierId'               => "",
-            'szVehicleId'               => "",
-            'szDriverId'                => "",
-            'szVehicleNumber'           => "",
-            'szDriverNm'                => "",
-            'szDescription'             => "api",
-            'DocStatus'                 => [
-                'bApplied'              => true,
-            ],
-            'itemList'                  => $items
+            'szAppId'                     => "BDI.KCP",
+            'fPoReceiptData'    => [
+                'szPoId'                    => $invoiceHeader->invoiceAop,
+                'szFPoReceipt_sId'          => $no_gr,
+                'dtmReceipt'                => "2024-10-15 00:00:00",
+                'szRefDn'                   => $invoiceHeader->SPB,
+                'dtmRefDn'                  => $invoiceHeader->billingDocumentDate,
+                'szWarehouseId'             => "KCP01001",
+                'szStockTypeId'             => "Good Stock",
+                'paymentTermId'             => $paymentTermId,
+                'szWorkplaceId'             => "KCP01001",
+                'szCarrierId'               => "",
+                'szVehicleId'               => "",
+                'szDriverId'                => "",
+                'szVehicleNumber'           => "",
+                'szDriverNm'                => "",
+                'szDescription'             => "api",
+                'DocStatus'                 => [
+                    'bApplied'      => true,
+                    'szWorkplaceId' => config('api.workplace_id')
+                ],
+                'ItemList'                  => $items
+            ]
         ];
     }
 
@@ -172,7 +175,7 @@ class GoodReceiptController extends Controller
             $bulan = Carbon::now()->month;
 
             // Get the last GR number from the database
-            $lastGR = DB::table('gr_aop')
+            $lastGR = DB::table('goods_receipt')
                 ->orderBy('created_at', 'desc')
                 ->first();
 
@@ -181,9 +184,9 @@ class GoodReceiptController extends Controller
             $no_gr = 'GR-AOP-' . $tahun . $bulan . '-' . str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
 
             // Insert the new GR record into the database
-            DB::table('gr_aop')->insert([
+            DB::table('goods_receipt')->insert([
                 'no_gr'         => $no_gr,
-                'invoiceAop'    => $invoiceAop,
+                'invoice'       => $invoiceAop,
                 'spb'           => $spb,
                 'items'         => $items,
                 'created_at'    => now()
@@ -201,8 +204,40 @@ class GoodReceiptController extends Controller
      * @param array $dataToSent
      * @return bool
      */
-    public function sendDataToBosnet($data)
-    {
-        dd($data);
+    public function sendDataToBosnet($data) {
+        return true;
+
+        $credential = TokenBosnetController::signInForSecretKey();
+
+        if (isset($credential['status'])) {
+            throw new \Exception('Connection refused by BOSNET');
+        }
+
+        if ($credential && $credential['szStatus'] == 'READY') {
+            $token = $credential['szToken'];
+
+            $payload = $data;
+
+            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/PUR/FPo/SaveFPoReceipt';
+
+            $response = Http::withHeaders([
+                'Token' => $token
+            ])->post($url, $payload);
+
+            $data = $response->json();
+
+            if ($response->successful()) {
+
+                if ($data['statusCode'] == 500) {
+                    throw new \Exception($data['statusMessage']);
+                } else {
+                    return true;
+                }
+            } else {
+                throw new \Exception($data['message']);
+            }
+        } else {
+            throw new \Exception('BOSNET not responding');
+        }
     }
 }
