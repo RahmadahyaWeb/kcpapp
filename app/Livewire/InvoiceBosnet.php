@@ -15,11 +15,10 @@ class InvoiceBosnet extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public $kcpInformation;
-    public $token;
+    public $target = 'noso, noinv, status';
 
-    public $noSo = '';
-    public $noInv = '';
+    public $noso = '';
+    public $noinv = '';
     public $status = '';
 
     public function render()
@@ -34,8 +33,8 @@ class InvoiceBosnet extends Component
     private function getFilteredInvoices()
     {
         return DB::table('invoice_bosnet')
-            ->where('noso', 'like', '%' . $this->noSo . '%')
-            ->where('noinv', 'like', '%' . $this->noInv . '%')
+            ->where('noso', 'like', '%' . $this->noso . '%')
+            ->where('noinv', 'like', '%' . $this->noinv . '%')
             ->where('status_bosnet', 'like', '%' . $this->status . '%')
             ->paginate(20);
     }
