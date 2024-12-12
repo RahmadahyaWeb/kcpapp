@@ -206,7 +206,7 @@
                             </div>
                         </div>
                     </div>
-                    @if ($header->fakturPajak && $header->flag_final == 'Y')
+                    @if ($header->fakturPajak && $header->flag_final == 'Y' && $header->flag_po == 'N')
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">

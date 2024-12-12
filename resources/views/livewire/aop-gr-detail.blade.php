@@ -68,7 +68,13 @@
                                         {{ $item->invoiceAop }}
                                     @endif
                                 </td>
-                                <td>{{ $item->status }}</td>
+                                <td>
+                                    @if ($item->status == 'KCP')
+                                        {{ $item->status }}
+                                    @else
+                                        {{ $item->status }} / {{ $item->gr_date }}
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
