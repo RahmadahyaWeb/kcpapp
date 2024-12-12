@@ -188,8 +188,10 @@ class InvoiceDetailPrint extends Component
         try {
             $controller = new SalesOrderController();
             $controller->sendToBosnet(new Request(['invoice' => $this->invoice]));
-            session()->flash('success', "Data SO berhasil dikirim!");
-            $this->redirect('/invoice/bosnet');
+
+            session()->flash('success', "Data SO berhasil diteruskan ke BOSNET");
+
+            $this->redirect('/invoice');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }

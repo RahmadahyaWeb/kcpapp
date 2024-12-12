@@ -118,7 +118,7 @@ class SalesOrderController extends Controller
     private function addSupportProgram(array &$items, $invoice, &$decDPPTotal, &$decTaxTotal)
     {
         // Check if there is any support program related to this invoice
-        $supportProgram = DB::table('invoice_program')
+        $supportProgram = DB::table('history_bonus_invoice')
             ->where('noinv', $invoice)
             ->sum('nominal_program');
 
@@ -198,24 +198,28 @@ class SalesOrderController extends Controller
     private function prepareDataToSend($header, $paymentTermId, $decDPPTotal, $decTaxTotal, $items)
     {
         return [
-            'appId' => "BDI.KCP",
-            'szFSoId' => $header->noso,
-            'szOrderTypeId' => 'JUAL',
-            'dtmOrder' => date('Y-m-d H:i:s', strtotime($header->crea_date)),
-            'szCustId' => $header->kd_outlet,
-            'dlvAddress_J' => $this->prepareDeliveryAddress($header),
-            'decAmount' => $decDPPTotal,
-            'decTax' => $decTaxTotal,
-            'szShipToId' => $header->kd_outlet,
-            'szStatus' => "OPE",
-            'szCcyId' => "IDR",
-            'szCcyRateId' => "BI",
-            'szSalesId' => $header->user_sales,
-            'docStatus' => ['bApplied' => true],
-            'szPaymentTermId' => $paymentTermId . " HARI",
-            'szRemark' => '',
-            'dtmExpiration' => date('Y-m-d H:i:s', strtotime('+7 days', strtotime($header->crea_date))),
-            'itemList' => $items
+            'szAppId' => "BDI.KCP",
+            'fSoData' => [
+                'szFSoId'           => $header->noso,
+                'szOrderTypeId'     => 'JUAL',
+                'dtmOrder'          => date('Y-m-d H:i:s', strtotime($header->crea_date)),
+                'szCustId'          => $header->kd_outlet,
+                'decAmount'         => $decDPPTotal,
+                'decTax'            => $decTaxTotal,
+                'szShipToId'        => $header->kd_outlet,
+                'szStatus'          => "OPE",
+                'szCcyId'           => "IDR",
+                'szCcyRateId'       => "BI",
+                'szSalesId'         => $header->user_sales,
+                'docStatus'         => [
+                    'bApplied'      => true,
+                    'szWorkplaceId' => config('api.workplace_id')
+                ],
+                'szPaymentTermId' => $paymentTermId . " HARI",
+                'szRemark' => 'api',
+                'dtmExpiration' => date('Y-m-d H:i:s', strtotime('+7 days', strtotime($header->crea_date))),
+                'itemList' => $items
+            ]
         ];
     }
 
