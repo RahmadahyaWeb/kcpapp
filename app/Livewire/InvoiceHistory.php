@@ -12,6 +12,8 @@ class InvoiceHistory extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    public $target = 'noinv';
+
     public $noinv;
 
     public function render()

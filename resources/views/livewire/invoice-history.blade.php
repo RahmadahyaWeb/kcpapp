@@ -1,4 +1,7 @@
 <div>
+
+    <x-loading :target="$target" />
+    
     <div class="card">
         <div class="card-header">
             <b>History Invoice</b>
@@ -12,15 +15,7 @@
                 </div>
             </div>
 
-            <!-- Loading Spinner (Visible when waiting for results) -->
-            <div wire:loading.flex wire:target="noinv, gotoPage"
-                class="text-center justify-content-center align-items-center" style="height: 200px;">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
-            <div class="table-responsive mb-6" wire:loading.class="d-none" wire:target="noinv, gotoPage">
+            <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
@@ -37,7 +32,7 @@
                         @forelse ($items as $item)
                             <tr>
                                 <td>
-                                    <span class="badge p-0">
+                                    <span style="font-size: 0.9375rem;" class="badge p-0">
                                         <a href="{{ route('inv.history-detail', $item->noinv) }}">
                                             KCP/{{ $item->area_inv }}/{{ $item->noinv }}
                                         </a>
@@ -58,10 +53,9 @@
                     </tbody>
                 </table>
             </div>
-
-            <div wire:loading.class="d-none" wire:target="noinv, gotoPage">
-                {{ $items->links() }}
-            </div>
+        </div>
+        <div class="card-footer">
+            {{ $items->links() }}
         </div>
     </div>
 </div>
