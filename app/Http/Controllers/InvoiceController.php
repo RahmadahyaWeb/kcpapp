@@ -584,7 +584,7 @@ class InvoiceController extends Controller
             ->where('noinv', $noinv)
             ->first();
 
-        $nominalSuppProgram = DB::table('invoice_program')
+        $nominalSuppProgram = DB::table('history_bonus_invoice')
             ->where('noinv', $noinv)
             ->sum('nominal_program');
 
