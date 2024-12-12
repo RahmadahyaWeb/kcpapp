@@ -23,7 +23,7 @@
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 18%;">No Sales Order / SO</th>
+                            <th>No Sales Order / SO</th>
                             <th>Kode Toko</th>
                             <th>Nama Toko</th>
                             <th>Nominal Invoice + PPn (Rp)</th>
@@ -34,7 +34,11 @@
                     <tbody>
                         @forelse ($so_belum_invoice as $item)
                             <tr>
-                                <td>{{ $item->noso }}</td>
+                                <td>
+                                    <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
+                                        {{ $item->noso }}
+                                    </span>
+                                </td>
                                 <td>{{ $item->kd_outlet }}</td>
                                 <td>{{ $item->nm_outlet }}</td>
                                 <td>{{ number_format($item->nominal_total, 0, ',', '.') }}</td>

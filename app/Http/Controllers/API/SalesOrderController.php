@@ -118,7 +118,7 @@ class SalesOrderController extends Controller
     private function addSupportProgram(array &$items, $invoice, &$decDPPTotal, &$decTaxTotal)
     {
         // Check if there is any support program related to this invoice
-        $supportProgram = DB::table('sales_order_program')
+        $supportProgram = DB::table('invoice_program')
             ->where('noinv', $invoice)
             ->sum('nominal_program');
 

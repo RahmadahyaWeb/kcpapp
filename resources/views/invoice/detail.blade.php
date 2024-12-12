@@ -103,7 +103,11 @@
                     <tbody>
                         @foreach ($items as $item)
                             <tr>
-                                <td>{{ $item->part_no }}</td>
+                                <td>
+                                    <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
+                                        {{ $item->part_no }}
+                                    </span>
+                                </td>
                                 <td>{{ $item->nm_part }}</td>
                                 <td class="table-warning">
                                     {{ $item->qty }}

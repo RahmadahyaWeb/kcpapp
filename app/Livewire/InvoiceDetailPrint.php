@@ -64,7 +64,7 @@ class InvoiceDetailPrint extends Component
                 throw new \Exception('Program tidak ditemukan.');
             }
 
-            // Insert into sales_order_program
+            // Insert into invoice_program
             $this->insertSalesOrderProgram($nama_program);
 
             // Update invoice header
@@ -86,13 +86,13 @@ class InvoiceDetailPrint extends Component
     }
 
     /**
-     * Insert program details into the sales_order_program table.
+     * Insert program details into the invoice_program table.
      * 
      * @param string $nama_program Name of the program
      */
     private function insertSalesOrderProgram($nama_program)
     {
-        $inserted = DB::table('sales_order_program')->insert([
+        $inserted = DB::table('invoice_program')->insert([
             'no_program'       => $this->nama_program,
             'noinv'            => $this->invoice,
             'nama_program'     => $nama_program,
@@ -100,7 +100,7 @@ class InvoiceDetailPrint extends Component
         ]);
 
         if (!$inserted) {
-            throw new \Exception('Gagal menyimpan program ke sales_order_program.');
+            throw new \Exception('Gagal menyimpan program ke invoice_program.');
         }
     }
 
@@ -145,7 +145,7 @@ class InvoiceDetailPrint extends Component
             DB::beginTransaction();
 
             // Fetch the program details
-            $program = DB::table('sales_order_program')
+            $program = DB::table('invoice_program')
                 ->where('id', $id)
                 ->select(['nominal_program', 'no_program'])
                 ->first();
@@ -157,7 +157,7 @@ class InvoiceDetailPrint extends Component
             // Revert updates to invoice and bonus details
             $this->revertInvoiceAndBonus($program);
 
-            // Delete the program from sales_order_program
+            // Delete the program from invoice_program
             $this->deleteSalesOrderProgram($id);
 
             DB::commit();
@@ -192,18 +192,18 @@ class InvoiceDetailPrint extends Component
     }
 
     /**
-     * Delete the program record from the sales_order_program table.
+     * Delete the program record from the invoice_program table.
      * 
      * @param int $id Program ID
      */
     private function deleteSalesOrderProgram($id)
     {
-        $deletedProgram = DB::table('sales_order_program')
+        $deletedProgram = DB::table('invoice_program')
             ->where('id', $id)
             ->delete();
 
         if (!$deletedProgram) {
-            throw new \Exception('Gagal menghapus program dari sales_order_program.');
+            throw new \Exception('Gagal menghapus program dari invoice_program.');
         }
     }
 
@@ -252,7 +252,7 @@ class InvoiceDetailPrint extends Component
 
         return view('livewire.invoice-detail-print', [
             'invoices' => $this->details,
-            'programs' => DB::table('sales_order_program')
+            'programs' => DB::table('invoice_program')
                 ->where('noinv', $this->invoice)
                 ->get(),
             'header' => $this->header,
@@ -260,7 +260,7 @@ class InvoiceDetailPrint extends Component
                 ->where('nm_program', 'like', '%' . $this->search_program . '%')
                 ->where('kd_outlet', $this->kd_outlet)
                 ->get(),
-            'nominalSuppProgram' => DB::table('sales_order_program')
+            'nominalSuppProgram' => DB::table('invoice_program')
                 ->where('noinv', $this->invoice)
                 ->sum('nominal_program'),
         ]);

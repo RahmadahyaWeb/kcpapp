@@ -225,7 +225,7 @@ class DeliveryOrderController extends Controller
      */
     private function addSupportProgram(array &$items, $invoiceNumber, &$decDPPTotal, &$decTaxTotal)
     {
-        $supportProgram = DB::table('sales_order_program')
+        $supportProgram = DB::table('invoice_program')
             ->where('noinv', $invoiceNumber)
             ->sum('nominal_program');
 

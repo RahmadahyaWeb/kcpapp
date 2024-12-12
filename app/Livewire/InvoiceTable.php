@@ -24,7 +24,7 @@ class InvoiceTable extends Component
 
     public function print($noinv)
     {
-        
+
         return redirect()->route('so.detail', $noinv);
     }
 

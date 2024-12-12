@@ -489,7 +489,7 @@ class InvoiceController extends Controller
                 'flag_print' => 'Y'
             ]);
 
-        $suppProgram = DB::table('sales_order_program')
+        $suppProgram = DB::table('invoice_program')
             ->where('noinv', $invoice)
             ->get();
 
@@ -549,7 +549,7 @@ class InvoiceController extends Controller
             ->where('noinv', $noinv)
             ->first();
 
-        $nominalSuppProgram = DB::table('sales_order_program')
+        $nominalSuppProgram = DB::table('invoice_program')
             ->where('noinv', $noinv)
             ->sum('nominal_program');
 
