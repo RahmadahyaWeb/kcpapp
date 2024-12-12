@@ -24,6 +24,7 @@ class InvoiceDetailPrint extends Component
     public $nominal_program;
     public $details;
     public $sumTotalDPP;
+    public $bonus_toko;
 
     /**
      * Initialize the component with an invoice.
@@ -256,10 +257,7 @@ class InvoiceDetailPrint extends Component
                 ->where('noinv', $this->invoice)
                 ->get(),
             'header' => $this->header,
-            'bonus' => DB::table('bonus_detail')
-                ->where('nm_program', 'like', '%' . $this->search_program . '%')
-                ->where('kd_outlet', $this->kd_outlet)
-                ->get(),
+            'bonus' => $this->bonus_toko,
             'nominalSuppProgram' => DB::table('invoice_program')
                 ->where('noinv', $this->invoice)
                 ->sum('nominal_program'),
@@ -284,6 +282,11 @@ class InvoiceDetailPrint extends Component
             ->get();
 
         $this->details = $details;
+
+        $this->bonus_toko = DB::connection('kcpinformation')
+            ->table('trns_ach_toko_bonus')
+            ->where('kd_outlet', $header->kd_outlet)
+            ->get();
 
         $sumTotalNominal = 0;
         $sumTotalDPP = 0;
