@@ -16,7 +16,7 @@ class InvoiceController extends Controller
 
     public function detail($noso)
     {
-        $dataSO = DB::connection('kcpinformation')
+        $data_so = DB::connection('kcpinformation')
             ->table('trns_so_header')
             ->select([
                 'trns_so_header.*',
@@ -25,6 +25,10 @@ class InvoiceController extends Controller
             ->join('mst_outlet', 'mst_outlet.kd_outlet', '=', 'trns_so_header.kd_outlet')
             ->where('noso', $noso)
             ->first();
+
+        if ($data_so->flag_invoice == 'Y' || $data_so->flag_reject == 'Y') {
+            return redirect()->route('inv.index')->with('error', 'SO sudah jadi invoice / dibatalkan');
+        }
 
         $items = DB::connection('kcpinformation')
             ->table('trns_so_details')
@@ -40,6 +44,7 @@ class InvoiceController extends Controller
 
         $nominal_gudang = 0;
         $total = 0;
+
         foreach ($items as $item) {
             $total += $item->qty_gudang * $item->hrg_pcs;
             $nominal_gudang += $item->nominal_gudang;
@@ -52,7 +57,7 @@ class InvoiceController extends Controller
 
         return view('invoice.detail', compact(
             'items',
-            'dataSO',
+            'data_so',
             'nominal_gudang',
             'total',
             'nominal_total',
@@ -144,6 +149,40 @@ class InvoiceController extends Controller
                 $this->logStock('GD1', $value->part_no, $value, $noinv_formatted);
             }
 
+            $invoice_details = DB::connection('kcpinformation')
+                ->table('trns_inv_details')
+                ->where('noinv', $noinv_formatted)
+                ->get();
+
+            $sumTotalNominal = 0;
+            $sumTotalDPP = 0;
+            $sumTotalDisc = 0;
+
+            foreach ($invoice_details as $value) {
+                $sumTotalNominal = $sumTotalNominal + $value->nominal;
+                $sumTotalDPP = $sumTotalDPP + $value->nominal_total;
+                $sumTotalDisc = $sumTotalDisc + $value->nominal_disc;
+                $nominalPPn = ($value->nominal_total / config('tax.ppn_factor')) * config('tax.ppn_percentage');
+            }
+
+            $dpp = round($sumTotalNominal) / config('tax.ppn_factor');
+            $nominalPPn = round($dpp) * config('tax.ppn_percentage');
+            $dppDisc = round($sumTotalDPP) / config('tax.ppn_factor');
+            $nominalPPnDisc = round($dppDisc * config('tax.ppn_percentage'));
+
+            DB::connection('kcpinformation')
+                ->table('trns_inv_header')
+                ->where('noinv', $noinv_formatted)
+                ->update([
+                    "amount_dpp"        => ROUND($dpp),
+                    "amount_ppn"        => ROUND($nominalPPn),
+                    "amount"            => ROUND($sumTotalNominal),
+                    "amount_disc"       => ROUND($sumTotalDisc),
+                    "amount_dpp_disc"   => ROUND($dppDisc),
+                    "amount_ppn_disc"   => ROUND($nominalPPnDisc),
+                    "amount_total"      => ROUND($sumTotalDPP),
+                ]);
+
             // Reduce the outlet's plafond (credit limit) based on the total nominal of the invoice
             $this->penguranganPlafond($header->kd_outlet, $nominal_total);
 
@@ -161,7 +200,7 @@ class InvoiceController extends Controller
             $connection->commit();
 
             // Return a success response with a message
-            return redirect()->route('inv.index')->with('success', 'Invoice berhasil dibuat silahkan cetak nota pada list.');
+            return redirect()->route('inv.index')->with('success', 'Invoice berhasil dibuat. Silakan cetak nota pada list.');
         } catch (\Exception $e) {
             // Rollback the transaction if any error occurs during the process
             $connection->rollBack();
@@ -232,7 +271,6 @@ class InvoiceController extends Controller
         // Call the 'prosesRak' function to process stock based on the determined rack condition
         $this->prosesRak($qty, $kdGudang, $partNo, $rakCondition, $kdOutlet);
     }
-
 
     private function cekStockPart($kdGudang, $partNo)
     {
@@ -436,6 +474,25 @@ class InvoiceController extends Controller
             ->where('noinv', $invoice)
             ->get();
 
+        $header = DB::connection('kcpinformation')
+            ->table('trns_inv_header')
+            ->where('noinv', $invoice)
+            ->first();
+
+        // CEK FLAG PRINT
+        if ($header->cetak >= 1) {
+            return back()->with('error', 'Invoice tidak dapat diprint lebih dari satu kali');
+        }
+
+        DB::connection('kcpinformation')
+            ->table('trns_inv_header')
+            ->where('noinv', $invoice)
+            ->update([
+                "status"            => "C",
+                "ket_status"        => "CLOSE",
+                "cetak"             => 1,
+            ]);
+
         $sumTotalNominal = 0;
         $sumTotalDPP = 0;
         $sumTotalDisc = 0;
@@ -452,44 +509,22 @@ class InvoiceController extends Controller
         $dppDisc = round($sumTotalDPP) / config('tax.ppn_factor');
         $nominalPPnDisc = round($dppDisc * config('tax.ppn_percentage'));
 
-        DB::connection('kcpinformation')
-            ->table('trns_inv_header')
-            ->where('noinv', $invoice)
-            ->update([
-                "amount_dpp"        => ROUND($dpp),
-                "amount_ppn"        => ROUND($nominalPPn),
-                "amount"            => ROUND($sumTotalNominal),
-                "amount_disc"       => ROUND($sumTotalDisc),
-                "amount_dpp_disc"   => ROUND($dppDisc),
-                "amount_ppn_disc"   => ROUND($nominalPPnDisc),
-                "amount_total"      => ROUND($sumTotalDPP),
-                "status"            => "C",
-                "ket_status"        => "CLOSE",
-                "cetak"             => 1,
-            ]);
-
-        $header = DB::connection('kcpinformation')
-            ->table('trns_inv_header')
-            ->where('noinv', $invoice)
-            ->first();
-
-        $invoice_bosnet = DB::table('invoice_bosnet')
-            ->where('noinv', $invoice)
-            ->first();
-
-        // CEK FLAG PRINT
-        if ($invoice_bosnet->flag_print == 'Y') {
-            return redirect("/sales-order/detail/$invoice")->with('error', 'Invoice tidak dapat diprint lebih dari satu kali');
-        }
-
-        // UPDATE FLAG PRINT
         DB::table('invoice_bosnet')
-            ->where('noinv', $invoice)
-            ->update([
-                'flag_print' => 'Y'
+            ->insert([
+                'noso'          => $header->noso,
+                'noinv'         => $header->noinv,
+                'kd_outlet'     => $header->kd_outlet,
+                'nm_outlet'     => $header->nm_outlet,
+                'amount_total'  => $sumTotalDPP,
+                'amount'        => $sumTotalNominal,
+                'amount_disc'   => $sumTotalDisc,
+                'crea_date'     => $header->crea_date,
+                'tgl_jth_tempo' => $header->tgl_jth_tempo,
+                'user_sales'    => $header->user_sales,
+                'flag_print'    => 'Y'
             ]);
 
-        $suppProgram = DB::table('invoice_program')
+        $suppProgram = DB::table('history_bonus_invoice')
             ->where('noinv', $invoice)
             ->get();
 

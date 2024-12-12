@@ -32,14 +32,14 @@
         </div>
         <div class="card-body">
 
-            @if ($dataSO->type_toko == 'V')
-                <h4><b>VIP - ({{ $dataSO->keterangan }})</b></h4>
-            @elseif ($dataSO->type_toko == 'G')
-                <h4><b>GROSIR - ({{ $dataSO->keterangan }})</b></h4>
-            @elseif ($dataSO->type_toko == 'S')
-                <h4><b>SEMI GROSIS - ({{ $dataSO->keterangan }})</b></h4>
+            @if ($data_so->type_toko == 'V')
+                <h4><b>VIP - ({{ $data_so->keterangan }})</b></h4>
+            @elseif ($data_so->type_toko == 'G')
+                <h4><b>GROSIR - ({{ $data_so->keterangan }})</b></h4>
+            @elseif ($data_so->type_toko == 'S')
+                <h4><b>SEMI GROSIS - ({{ $data_so->keterangan }})</b></h4>
             @else
-                <h4><b>RETAIL - ({{ $dataSO->keterangan }})</b></h4>
+                <h4><b>RETAIL - ({{ $data_so->keterangan }})</b></h4>
             @endif
 
             <div class="row mb-3">
@@ -52,7 +52,7 @@
                             :
                         </div>
                         <div class="col col-auto">
-                            <div>KCP/{{ $dataSO->area_so }}/{{ $dataSO->noso }}</div>
+                            <div>KCP/{{ $data_so->area_so }}/{{ $data_so->noso }}</div>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -63,7 +63,7 @@
                             :
                         </div>
                         <div class="col col-auto">
-                            <div>{{ $dataSO->kd_outlet }} / {{ $dataSO->nm_outlet }}</div>
+                            <div>{{ $data_so->kd_outlet }} / {{ $data_so->nm_outlet }}</div>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -75,8 +75,8 @@
                         </div>
                         <div class="col col-auto">
                             <div>
-                                {{ date('d-m-Y', strtotime('+' . $dataSO->jth_tempo . ' days')) }}
-                                {{ $dataSO->jth_tempo == 0 ? ' CASH' : '' }}
+                                {{ date('d-m-Y', strtotime('+' . $data_so->jth_tempo . ' days')) }}
+                                {{ $data_so->jth_tempo == 0 ? ' CASH' : '' }}
                             </div>
                         </div>
                     </div>

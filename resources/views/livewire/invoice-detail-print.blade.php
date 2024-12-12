@@ -1,17 +1,6 @@
 <div>
-    <!-- Flash messages for success or error -->
-    @if (session('success'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
+    <x-loading :target="$target" />
 
     <!-- Invoice Details Section -->
     <div class="row gap-3">
@@ -24,8 +13,9 @@
                         </div>
                         <div class="col d-flex justify-content-end">
                             <!-- Print Button -->
-                            @if ($header->flag_print == 'N')
-                                <a href="{{ route('inv.print', $header->noinv) }}" class="btn btn-success">
+                            @if ($header->cetak == 0)
+                                <a href="{{ route('inv.print', $invoice) }}" target="_blank" class="btn btn-success"
+                                    onclick="if (confirm('Apakah Anda yakin ingin mencetak invoice ini?')) { window.open(this.href, '_blank'); location.reload(); return false; } else { return false; }">
                                     <i class='bx bxs-printer me-1'></i> Print
                                 </a>
                             @endif
@@ -56,7 +46,7 @@
                     </div>
 
                     <!-- Send to Bosnet Button (Only for KCP Status) -->
-                    @if ($header->status_bosnet == 'KCP' && $header->flag_print == 'Y')
+                    @if ($header->cetak == 1)
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">
@@ -74,7 +64,7 @@
         </div>
 
         <!-- Add Support Program (Only for KCP Status) -->
-        @if ($header->status_bosnet == 'KCP')
+        @if ($header->cetak == 0)
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
@@ -90,7 +80,7 @@
                                         wire:model.live="search_program" placeholder="Cari nama program">
                                 </div>
                                 <div class="col-md-12 mb-3">
-                                    <select wire:model.live="nama_program"
+                                    <select wire:model.change="nama_program"
                                         class="form-select @error('nama_program') is-invalid @enderror"
                                         wire:loading.attr="disabled" wire:target="nama_program, search_program">
                                         <option value="">Pilih Program</option>
@@ -104,7 +94,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Max Nominal Program</label>
-                                    <input type="number" class="form-control" wire:model.live="nominal_program_display"
+                                    <input type="text" class="form-control" wire:model="nominal_program_display"
                                         disabled>
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -139,11 +129,11 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Nama Program</th>
                                     <th>Nominal Program (Rp)</th>
-                                    <th></th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -151,10 +141,10 @@
                                 @forelse ($programs as $program)
                                     @php $supportProgram += $program->nominal_program; @endphp
                                     <tr>
-                                        <td>{{ $program->nama_program }}</td>
+                                        <td>{{ $program->nm_program }}</td>
                                         <td>{{ number_format($program->nominal_program, 0, ',', '.') }}</td>
                                         <td>
-                                            @if ($header->status_bosnet == 'KCP')
+                                            @if ($header->cetak == 0)
                                                 <button wire:click="deleteProgram({{ $program->id }})"
                                                     class="btn btn-sm btn-danger">Hapus</button>
                                             @endif
@@ -181,7 +171,7 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
                                     <th>No Part</th>
                                     <th>Nama Part</th>
@@ -195,8 +185,15 @@
                             </thead>
                             <tbody>
                                 @forelse ($invoices as $invoice)
+                                    @php
+                                        $nominal_total += $invoice->nominal_total;
+                                    @endphp
                                     <tr>
-                                        <td>{{ $invoice->part_no }}</td>
+                                        <td>
+                                            <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
+                                                {{ $invoice->part_no }}
+                                            </span>
+                                        </td>
                                         <td>{{ $invoice->nm_part }}</td>
                                         <td>{{ $invoice->qty }}</td>
                                         <td>{{ number_format($invoice->hrg_pcs, 0, ',', '.') }}</td>
@@ -212,7 +209,7 @@
                                 @endforelse
                                 <tr>
                                     <td colspan="7" class="fw-bold">Total</td>
-                                    <td>{{ number_format($sumTotalDPP, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($nominal_total, 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>
                                     <td colspan="7" class="fw-bold">Support Program</td>
@@ -220,7 +217,7 @@
                                 </tr>
                                 <tr>
                                     <td colspan="7" class="fw-bold">Grand Total</td>
-                                    <td>{{ number_format($sumTotalDPP - $supportProgram, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($nominal_total - $supportProgram, 0, ',', '.') }}</td>
                                 </tr>
                             </tbody>
                         </table>

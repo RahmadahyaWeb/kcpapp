@@ -36,12 +36,12 @@
                             <tr>
                                 <td>
                                     <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
-                                        {{ $item->noso }}
+                                        KCP/{{ $item->area_so }}/{{ $item->noso }}
                                     </span>
                                 </td>
                                 <td>{{ $item->kd_outlet }}</td>
                                 <td>{{ $item->nm_outlet }}</td>
-                                <td>{{ number_format($item->nominal_total, 0, ',', '.') }}</td>
+                                <td class="table-warning">{{ number_format($item->nominal_total, 0, ',', '.') }}</td>
                                 <td>{{ $item->user_sales }}</td>
                                 <td>
                                     <div class="dropdown">
@@ -85,8 +85,8 @@
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 20%;">No Invoice</th>
-                            <th style="width: 20%;">No SO</th>
+                            <th>No Invoice</th>
+                            <th>No SO</th>
                             <th>Kode Toko</th>
                             <th>Nama Toko</th>
                             <th>Nominal Invoice</th>
@@ -98,10 +98,14 @@
                         @forelse ($invoices as $invoice)
                             <tr>
                                 <td>
-                                    KCP/{{ $invoice->area_inv }}/{{ $invoice->noinv }}
+                                    <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
+                                        KCP/{{ $invoice->area_inv }}/{{ $invoice->noinv }}
+                                    </span>
                                 </td>
                                 <td>
-                                    KCP/{{ $invoice->area_inv }}/{{ $invoice->noso }}
+                                    <span style="font-size: 0.9375rem; color: #646e78" class="badge p-0">
+                                        KCP/{{ $invoice->area_inv }}/{{ $invoice->noso }}
+                                    </span>
                                 </td>
                                 <td>
                                     {{ $invoice->kd_outlet }}
@@ -109,10 +113,10 @@
                                 <td>
                                     {{ $invoice->nm_outlet }}
                                 </td>
-                                <td>
+                                <td class="table-warning">
                                     {{ number_format($invoice->nominal_total_noppn, 0, ',', '.') }}
                                 </td>
-                                <td>
+                                <td class="table-warning">
                                     {{ number_format($invoice->nominal_total_ppn, 0, ',', '.') }}
                                 </td>
                                 <td class="text-center">

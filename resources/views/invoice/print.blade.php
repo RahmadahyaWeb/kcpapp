@@ -242,7 +242,7 @@
                                 $totalProgram += $program->nominal_program;
                             @endphp
                             <tr>
-                                <td style="text-align: left; width: 15rem">{{ $program->nama_program }}</td>
+                                <td style="text-align: left; width: 15rem">{{ $program->nm_program }}</td>
                                 <td align="right" style="text-align: right;" valign="top">
                                     {{ number_format($program->nominal_program, 0, ',', '.') }}
                                 </td>
