@@ -59,8 +59,13 @@
                                 <td>{{ number_format($total_payment, 0, ',', '.') }}</td>
                                 <td>{{ number_format($total_piutang - $total_payment, 0, ',', '.') }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-success" wire:click="show_detail">Tampilkan detail
-                                        invoice</button>
+                                    <button class="btn btn-sm btn-success" wire:click="show_detail">
+                                        @if ($show)
+                                            Sembunyikan detail invoice
+                                        @else
+                                            Tampilkan detail invoice
+                                        @endif
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -101,7 +106,7 @@
                                     <td>{{ number_format($item->remaining_balance, 0, ',', '.') }}</td>
                                 </tr>
                             @endforeach
-                            <tr>
+                            <tr class="table-dark">
                                 <td colspan="4">Total Piutang</td>
                                 <td>{{ number_format($kalkulasi_total_piutang, 0, ',', '.') }}</td>
                             </tr>

@@ -14,7 +14,7 @@ class AccountsReceivableTable extends Component
 
     public $target = 'selected_kd_outlet, kd_outlet, show_detail';
     public $kd_outlet = '';
-    public $selected_kd_outlet = '3I';
+    public $selected_kd_outlet;
     public $show = false;
     public $items;
     public $kalkulasi_total_piutang;
