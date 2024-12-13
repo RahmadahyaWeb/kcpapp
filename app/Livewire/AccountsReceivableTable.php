@@ -24,6 +24,11 @@ class AccountsReceivableTable extends Component
         $this->reset('selected_kd_outlet', 'items');
     }
 
+    public function updatedSelectedKdOutlet()
+    {
+        $this->show = false;
+    }
+
     public function show_detail()
     {
         $this->show = !$this->show;
