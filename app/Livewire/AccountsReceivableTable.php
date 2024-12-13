@@ -12,14 +12,21 @@ class AccountsReceivableTable extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public $target = 'selected_kd_outlet, kd_outlet';
+    public $target = 'selected_kd_outlet, kd_outlet, show_detail';
     public $kd_outlet = '';
-    public $selected_kd_outlet;
+    public $selected_kd_outlet = '3I';
+    public $show = false;
     public $items;
+    public $kalkulasi_total_piutang;
 
     public function updatedKdOutlet()
     {
         $this->reset('selected_kd_outlet', 'items');
+    }
+
+    public function show_detail()
+    {
+        $this->show = !$this->show;
     }
 
     public function render()
@@ -32,12 +39,18 @@ class AccountsReceivableTable extends Component
             ->get();
 
         if ($this->selected_kd_outlet) {
-            $query = DB::connection('kcpinformation')->table(function ($query) {
-                $query->select('*')
-                    ->from('kcpinformation.trns_inv_header')
-                    ->where('flag_batal', 'N')
-                    ->where('flag_pembayaran_lunas', 'N');
-            }, 'invoice')
+            $query = DB::connection('kcpinformation')->table('kcpinformation.trns_inv_header AS invoice')
+                ->select(
+                    'invoice.noinv',
+                    'invoice.area_inv',
+                    'invoice.kd_outlet',
+                    'invoice.nm_outlet',
+                    'invoice.amount_total',
+                    'invoice.crea_date',
+                    'invoice.tgl_jth_tempo',
+                    DB::raw('IFNULL(payment.total_payment, 0) AS total_payment'),
+                    DB::raw('(invoice.amount_total - IFNULL(payment.total_payment, 0)) AS remaining_balance')
+                )
                 ->leftJoin(DB::raw('(SELECT 
                         payment_details.noinv,
                         SUM(payment_details.nominal) AS total_payment
@@ -50,19 +63,10 @@ class AccountsReceivableTable extends Component
                         payment_header.flag_batal = "N"
                     GROUP BY 
                         payment_details.noinv) AS payment'), 'invoice.noinv', '=', 'payment.noinv')
-                ->select(
-                    'invoice.noinv',
-                    'invoice.area_inv',
-                    'invoice.kd_outlet',
-                    'invoice.nm_outlet',
-                    'invoice.amount_total',
-                    'invoice.crea_date',
-                    'invoice.tgl_jth_tempo',
-                    DB::raw('IFNULL(payment.total_payment, 0) AS total_payment'),
-                    DB::raw('(invoice.amount_total - IFNULL(payment.total_payment, 0)) AS remaining_balance')
-                )
-                ->whereRaw('invoice.amount_total <> IFNULL(payment.total_payment, 0)')
-                ->where('invoice.kd_outlet', $this->selected_kd_outlet);
+                ->where('invoice.flag_batal', 'N')
+                ->where('invoice.flag_pembayaran_lunas', 'N')
+                ->where('invoice.kd_outlet', $this->selected_kd_outlet)
+                ->whereRaw('invoice.amount_total <> IFNULL(payment.total_payment, 0)');
 
             // Ambil data untuk tabel
             $this->items = $query->get();

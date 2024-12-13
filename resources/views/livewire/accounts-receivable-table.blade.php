@@ -2,7 +2,7 @@
     <x-alert />
     <x-loading :target="$target" />
 
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-header">
             Data Accounts Receivable
         </div>
@@ -48,6 +48,7 @@
                                 <th>Total Piutang</th>
                                 <th>Total Pembayaran</th>
                                 <th>Sisa Piutang</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,6 +58,10 @@
                                 <td>{{ number_format($total_piutang, 0, ',', '.') }}</td>
                                 <td>{{ number_format($total_payment, 0, ',', '.') }}</td>
                                 <td>{{ number_format($total_piutang - $total_payment, 0, ',', '.') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" wire:click="show_detail">Tampilkan detail
+                                        invoice</button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -64,4 +69,46 @@
             @endif
         </div>
     </div>
+
+    @if ($show)
+        <div class="card">
+            <div class="card-header">
+                Detail Accounts Receivable
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No. Invoice</th>
+                                <th>Nominal Invoice</th>
+                                <th>Tanggal Jatuh Tempo</th>
+                                <th>Total Pembayaran</th>
+                                <th>Sisa Piutang</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach ($items as $item)
+                                @php
+                                    $kalkulasi_total_piutang += $item->remaining_balance;
+                                @endphp
+                                <tr>
+                                    <td>{{ $item->noinv }}</td>
+                                    <td>{{ number_format($item->amount_total, 0, ',', '.') }}</td>
+                                    <td>{{ date('d-m-Y', strtotime($item->tgl_jth_tempo)) }}</td>
+                                    <td>{{ number_format($item->total_payment, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($item->remaining_balance, 0, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                            <tr>
+                                <td colspan="4">Total Piutang</td>
+                                <td>{{ number_format($kalkulasi_total_piutang, 0, ',', '.') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
