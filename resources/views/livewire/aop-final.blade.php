@@ -11,7 +11,7 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Invoice AOP</label>
                     <input type="text" class="form-control" wire:model.live.debounce.1000ms="invoiceAop"
-                        placeholder="Invoice AOP" wire:loading.attr="disabled">
+                        placeholder="Invoice AOP">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Status</label>

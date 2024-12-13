@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountsReceivableController;
 use App\Http\Controllers\AopController;
 use App\Http\Controllers\AopReceiptController;
 use App\Http\Controllers\API\CustomerPaymentController;
@@ -137,6 +138,9 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     Route::get('/stock-movement', function () {
         return view('stock-movement.index');
     })->name('stock-movement.index');
+
+    // ACCOUNTS RECEIVABLE
+    Route::get('/accounts-receivable', [AccountsReceivableController::class, 'index'])->name('ar.index');
 
     // LOGOUT
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
