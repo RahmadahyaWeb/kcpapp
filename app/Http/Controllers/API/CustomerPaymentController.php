@@ -67,6 +67,8 @@ class CustomerPaymentController extends Controller
                 if ($headerData['pembayaran_via'] === 'TRANSFER') {
                     $bank = implode(', ', array_column($headerData['bank'], 'nama_bank'));
                     $headerData['bank'] = $bank;
+                } else {
+                    $headerData['bank'] = '';
                 }
 
                 unset($headerData['details']); // Hapus details sebelum insert header
@@ -79,6 +81,8 @@ class CustomerPaymentController extends Controller
                     if ($detail['pembayaran_via'] === 'TRANSFER' || $detail['pembayaran_via'] === 'BG') {
                         $detailBank = implode(', ', array_column($detail['bank'], 'nama_bank'));
                         $detail['bank'] = $detailBank;
+                    } else {
+                        $detail['bank'] = '';
                     }
 
                     DB::table('customer_payment_details')->insert($detail);
