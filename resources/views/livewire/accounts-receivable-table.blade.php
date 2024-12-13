@@ -61,9 +61,9 @@
                                 <td>
                                     <button class="btn btn-sm btn-success" wire:click="show_detail">
                                         @if ($show)
-                                            Sembunyikan detail invoice
+                                            Sembunyikan detail
                                         @else
-                                            Tampilkan detail invoice
+                                            Tampilkan detail
                                         @endif
                                     </button>
                                 </td>

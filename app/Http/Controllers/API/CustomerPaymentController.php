@@ -76,7 +76,7 @@ class CustomerPaymentController extends Controller
                 // Simpan Details
                 foreach ($header['details'] as $detail) {
                     // Cek apakah pembayaran_via = 'TRANSFER' untuk detail
-                    if ($detail['pembayaran_via'] === 'TRANSFER') {
+                    if ($detail['pembayaran_via'] === 'TRANSFER' || $detail['pembayaran_via'] === 'BG') {
                         $detailBank = implode(', ', array_column($detail['bank'], 'nama_bank'));
                         $detail['bank'] = $detailBank;
                     }
