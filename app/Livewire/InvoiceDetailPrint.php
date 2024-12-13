@@ -226,6 +226,10 @@ class InvoiceDetailPrint extends Component
 
         $this->kd_outlet = $this->header->kd_outlet;
 
+        $invoice_status = DB::table('invoice_bosnet')
+            ->where('noinv', $this->invoice)
+            ->first();
+
         return view('livewire.invoice-detail-print', [
             'invoices' => $this->details,
             'programs' => DB::table('history_bonus_invoice')
@@ -236,6 +240,7 @@ class InvoiceDetailPrint extends Component
             'nominalSuppProgram' => DB::table('history_bonus_invoice')
                 ->where('noinv', $this->invoice)
                 ->sum('nominal_program'),
+            'invoice_status' => $invoice_status
         ]);
     }
 }
