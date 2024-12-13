@@ -15,7 +15,7 @@ class StockMovementController extends Controller
             'data'                      => 'required|array',
             'data.*.status'             => 'required|string',
             'data.*.keterangan'         => 'required|string',
-            'data.*.kd_gudang'          => 'nullable|string|max:3',
+            'data.*.kd_gudang'          => 'nullable|string|max:100',
             'data.*.part_no'            => 'nullable|string|max:120',
             'data.*.qty'                => 'required|integer',
             'data.*.debet_qty'          => 'required|integer',
