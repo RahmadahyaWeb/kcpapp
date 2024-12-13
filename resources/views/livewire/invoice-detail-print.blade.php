@@ -46,7 +46,7 @@
                     </div>
 
                     <!-- Send to Bosnet Button (Only for KCP Status) -->
-                    @if (isset($invoice_bosnet->status_bosnet) && $invoice_bosnet->status_bosnet == 'KCP')
+                    @if (isset($invoice_status->status_bosnet) && $invoice_status->status_bosnet == 'KCP')
                         <div class="row">
                             <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">

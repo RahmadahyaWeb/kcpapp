@@ -101,6 +101,43 @@ class CustomerPaymentDetail extends Component
                             'crea_date'         => $value->crea_date,
                             'crea_by'           => $value->crea_by,
                         ]);
+
+                    // FLAG PEMBAYARAN LUNAS
+                    $paymentSummary = DB::connection('kcpinformation')->table('trns_pembayaran_piutang AS pay')
+                        ->selectRaw('pay.noinv, SUM(pay.nominal) AS total_pembayaran')
+                        ->where('pay.noinv', $value->noinv)
+                        ->where('pay.status', '<>', 'B')
+                        ->groupBy('pay.noinv');
+
+                    $returnSummary = DB::connection('kcpinformation')->table('trns_retur_details AS ret_detail')
+                        ->selectRaw('ret_detail.noinv, SUM(ret_detail.nominal_total) AS total_retur')
+                        ->leftJoin('trns_retur_header AS ret_header', 'ret_detail.noretur', '=', 'ret_header.noretur')
+                        ->where('ret_detail.noinv', $value->noinv)
+                        ->groupBy('ret_detail.noinv');
+
+                    $result = DB::connection('kcpinformation')->table('trns_inv_header AS inv')
+                        ->select([
+                            'inv.noinv AS nomor_invoice',
+                            'inv.area_inv AS area_invoice',
+                            'inv.kd_outlet AS kode_outlet',
+                            'inv.nm_outlet AS nama_outlet',
+                            'inv.crea_date AS tanggal_dibuat',
+                            'inv.tgl_jth_tempo AS tanggal_jatuh_tempo',
+                            'inv.amount_total AS total_nominal_invoice',
+                            DB::raw('payment_summary.total_pembayaran'),
+                            DB::raw('return_summary.total_retur')
+                        ])
+                        ->leftJoinSub($paymentSummary, 'payment_summary', 'inv.noinv', '=', 'payment_summary.noinv')
+                        ->leftJoinSub($returnSummary, 'return_summary', 'inv.noinv', '=', 'return_summary.noinv')
+                        ->first();
+
+                    if ($result->total_nominal_invoice <= $result->total_pembayaran) {
+                        $kcpinformation->table('trns_inv_header')
+                            ->where('noinv', $value->noinv)
+                            ->update([
+                                'flag_pembayaran_lunas' => 'Y'
+                            ]);
+                    }
                 }
 
                 $kcpapplication->table('customer_payment_header')
@@ -132,6 +169,10 @@ class CustomerPaymentDetail extends Component
 
                 $kcpapplication->commit();
                 $kcpinformation->commit();
+
+                $this->redirect('/customer-payment');
+
+                session()->flash('success', 'Penerimaan piutang toko berhasil.');
             } catch (\Exception $e) {
                 $kcpapplication->rollBack();
                 $kcpinformation->rollBack();
@@ -139,8 +180,6 @@ class CustomerPaymentDetail extends Component
                 session()->flash('error', $e->getMessage());
                 return;
             }
-
-            session()->flash('success', 'Penerimaan piutang toko berhasil.');
         }
     }
 

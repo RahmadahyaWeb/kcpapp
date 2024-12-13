@@ -107,7 +107,7 @@
                                 </tr>
                             @endforeach
                             <tr class="table-dark">
-                                <td colspan="4">Total Piutang</td>
+                                <th colspan="4">Total Piutang</th>
                                 <td>{{ number_format($kalkulasi_total_piutang, 0, ',', '.') }}</td>
                             </tr>
                         </tbody>

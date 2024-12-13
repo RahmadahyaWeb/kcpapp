@@ -8,30 +8,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 /**
  * Controller to handle Sales Order operations, including sending data to BOSNET.
  */
 class SalesOrderController extends Controller
 {
-    protected $kcpInformation;
-    protected $token;
-
-    /**
-     * Constructor to initialize KCP Information and authenticate to get the token.
-     */
-    public function __construct()
-    {
-        $this->kcpInformation = new KcpInformation;
-
-        // Initialize token
-        $conn = $this->kcpInformation->login();
-
-        if ($conn) {
-            $this->token = $conn['token'];
-        }
-    }
-
     /**
      * Send the sales order data to BOSNET.
      *
@@ -51,8 +34,8 @@ class SalesOrderController extends Controller
             }
 
             // Calculate payment term
-            $paymentTermId = Carbon::parse($header->crea_date)
-                ->diffInDays(Carbon::parse($header->tgl_jth_tempo));
+            $paymentTermId = Carbon::parse($header->crea_date)->startOfDay()
+                ->diffInDays(Carbon::parse($header->tgl_jth_tempo)->startOfDay());
 
             // Initialize totals
             $decDPPTotal = 0;
@@ -177,11 +160,13 @@ class SalesOrderController extends Controller
             'decDPP' => $decDPP,
             'szPaymentType' => "NON",
             'deliveryList' => [
-                'dtmDelivery' => date('Y-m-d H:i:s', strtotime($value->crea_date)),
-                'szCustId' => $value->kd_outlet,
-                'decQty' => $value->qty,
-                'szFromWpId' => 'KCP01001',
-            ],
+                [
+                    'dtmDelivery' => date('Y-m-d H:i:s', strtotime($value->crea_date)),
+                    'szCustId' => $value->kd_outlet,
+                    'decQty' => $value->qty,
+                    'szFromWpId' => 'KCP01001',
+                ],
+            ]
         ];
     }
 
@@ -231,34 +216,41 @@ class SalesOrderController extends Controller
      */
     private function sendDataToBosnet($data)
     {
-        // Implement the data sending logic using Guzzle or cURL.
-        // Example:
-        // return Http::post('url_bosnet', $data);
+        // dd($data);
         return true;
-    }
 
-    /**
-     * Prepare the delivery address for the sales order.
-     *
-     * @param object $header
-     * @return array
-     */
-    private function prepareDeliveryAddress($header)
-    {
-        $addressDetail = $this->kcpInformation->getAddress($this->token, $header->kd_outlet);
-        $addressDetail = $addressDetail['data'];
+        $credential = TokenBosnetController::signInForSecretKey();
 
-        return [
-            'szContactPerson' => $addressDetail['nm_outlet'],
-            'szAddress_1' => $addressDetail['almt_outlet'],
-            'szAddress_2' => $addressDetail['almt_outlet'],
-            'szDistrict' => $addressDetail['nm_area'],
-            'szCity' => $addressDetail['nm_area'],
-            'szZipCode' => '',
-            'szState' => $addressDetail['provinsi'],
-            'szCountry' => 'Indonesia',
-            'szPhoneNo_1' => $addressDetail['tlpn'] ?? 0,
-        ];
+        if (isset($credential['status'])) {
+            throw new \Exception('Connection refused by BOSNET');
+        }
+
+        if ($credential && $credential['szStatus'] == 'READY') {
+            $token = $credential['szToken'];
+
+            $payload = $data;
+
+            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/SD/FSo/SaveFSo';
+
+            $response = Http::withHeaders([
+                'Token' => $token
+            ])->post($url, $payload);
+
+            $data = $response->json();
+
+            if ($response->successful()) {
+
+                if ($data['statusCode'] == 500) {
+                    throw new \Exception($data['statusMessage']);
+                } else {
+                    return true;
+                }
+            } else {
+                throw new \Exception($data['message']);
+            }
+        } else {
+            throw new \Exception('BOSNET not responding');
+        }
     }
 
     /**
