@@ -15,7 +15,8 @@ class DeliveryOrderTable extends Component
     protected $paginationTheme = 'bootstrap';
 
     public $no_lkh;
-    public $target = 'no_lkh';
+    public $target = 'no_lkh, status';
+    public $status = 'KCP';
 
     public static function cek_status($no_lkh)
     {
@@ -41,14 +42,19 @@ class DeliveryOrderTable extends Component
      */
     public function render()
     {
-        $items = DB::connection('kcpinformation')
-            ->table('trns_lkh_header')
-            ->where('status', 'C')
-            ->where('terima_ar', 'N')
-            ->where('flag_batal', 'N')
-            ->where('no_lkh', 'like', '%' . $this->no_lkh . '%')
-            ->orderBy('crea_date', 'desc')
-            ->paginate(20);
+        if ($this->status == 'KCP') {
+            $items = DB::connection('kcpinformation')
+                ->table('trns_lkh_header')
+                ->where('status', 'C')
+                ->where('terima_ar', 'N')
+                ->where('flag_batal', 'N')
+                ->where('no_lkh', 'like', '%' . $this->no_lkh . '%')
+                ->orderBy('crea_date', 'desc')
+                ->paginate(20);
+        } else {
+            $items = DB::table('do_bosnet')
+                ->paginate(20);
+        }
 
         return view('livewire.delivery-order-table', compact('items'));
     }
