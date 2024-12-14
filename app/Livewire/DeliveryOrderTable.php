@@ -12,17 +12,10 @@ class DeliveryOrderTable extends Component
 {
     use WithPagination;
 
-    /**
-     * @var string $paginationTheme Tema pagination Livewire
-     */
     protected $paginationTheme = 'bootstrap';
 
-    /**
-     * @var string|null $noLkh Filter berdasarkan nomor LKH
-     * @var string|null $noSo Filter berdasarkan nomor SO
-     * @var string|null $status Filter berdasarkan status
-     */
-    public $noLkh;
+    public $no_lkh;
+    public $target = 'no_lkh';
 
     public static function cek_status($no_lkh)
     {
@@ -53,7 +46,7 @@ class DeliveryOrderTable extends Component
             ->where('status', 'C')
             ->where('terima_ar', 'N')
             ->where('flag_batal', 'N')
-            ->where('no_lkh', 'like', '%' . $this->noLkh . '%')
+            ->where('no_lkh', 'like', '%' . $this->no_lkh . '%')
             ->orderBy('crea_date', 'desc')
             ->paginate(20);
 

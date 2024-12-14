@@ -11,13 +11,13 @@ use Livewire\Component;
 
 class DeliveryOrderDetail extends Component
 {
+    public $target = 'sendToBosnet, terima_lkh, terimaSJ';
     public $no_lkh;
     public $header;
     public $items;
     public $ready_to_sent = false;
     public $status = false;
     public $terima_lkh_status = false;
-
 
     /**
      * Initialize component and authenticate to fetch token.
@@ -43,6 +43,7 @@ class DeliveryOrderDetail extends Component
                 'items'  => $this->items,
                 'header' => $this->header,
             ]));
+
             session()->flash('success', "Data DO berhasil dikirim!");
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());

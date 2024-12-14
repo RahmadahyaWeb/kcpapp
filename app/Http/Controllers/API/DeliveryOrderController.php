@@ -11,24 +11,6 @@ use Illuminate\Support\Facades\Http;
 
 class DeliveryOrderController extends Controller
 {
-    protected $kcpInformation;
-    protected $token;
-
-    /**
-     * Constructor to initialize KcpInformation and token.
-     */
-    public function __construct()
-    {
-        $this->kcpInformation = new KcpInformation;
-
-        // Initialize token using the login method
-        $conn = $this->kcpInformation->login();
-
-        if ($conn) {
-            $this->token = $conn['token'];
-        }
-    }
-
     /**
      * Main function to send the delivery order to BOSNET.
      * 
@@ -92,11 +74,40 @@ class DeliveryOrderController extends Controller
      */
     private function sendDataToBosnet($data)
     {
-        // Placeholder: Implement the actual HTTP request logic using Guzzle or cURL
-        // Example:
-        // return Http::post('url_bosnet', $data);
-
         return true;  // Simulate success
+
+        $credential = TokenBosnetController::signInForSecretKey();
+
+        if (isset($credential['status'])) {
+            throw new \Exception('Connection refused by BOSNET');
+        }
+
+        if ($credential && $credential['szStatus'] == 'READY') {
+            $token = $credential['szToken'];
+
+            $payload = $data;
+
+            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/SD/FDo/SaveFDo';
+
+            $response = Http::withHeaders([
+                'Token' => $token
+            ])->post($url, $payload);
+
+            $data = $response->json();
+
+            if ($response->successful()) {
+
+                if ($data['statusCode'] == 500) {
+                    throw new \Exception($data['statusMessage']);
+                } else {
+                    return true;
+                }
+            } else {
+                throw new \Exception($data['message']);
+            }
+        } else {
+            throw new \Exception('BOSNET not responding');
+        }
     }
 
     /**
@@ -114,28 +125,32 @@ class DeliveryOrderController extends Controller
         $items = $this->generateSalesOrderItems($item, $decDPPTotal, $decTaxTotal, $header);
 
         return [
-            "appId"             => "BDI.KCP",
-            "szDoId"            => $item->noinv,
-            "szFSoId"           => $item->noso,
-            "szLogisticType"    => "INV",
-            "szOrderTypeId"     => "JUAL",
-            "dtmDelivery"       => Carbon::parse($item->crea_date)->toDateTimeString(),
-            "szCustId"          => $item->kd_outlet,
-            "decAmount"         => $decDPPTotal,
-            "decTax"            => $decTaxTotal,
-            "szCcyId"           => "IDR",
-            "szCcyRateId"       => "BI",
-            "szVehicleId"       => $header->plat_mobil,
-            "szDriverId"        => $header->driver,
-            "szSalesId"         => $item->user_sales,
-            "szCarrierId"       => "",
-            "szRemark"          => "api",
-            "szPaymentTermId"   => "{$paymentTermId} HARI",
-            "szWarehouseId"     => "KCP01001",
-            "szStockTypeId"     => "Good Stock",
-            "dlvAddress"        => $this->prepareDeliveryAddress($item),
-            "docStatus"         => ['bApplied' => true],
-            "itemList"          => $items,
+            "szAppId"               => "BDI.KCP",
+            "fdoData"   => [
+                "szDoId"            => $item->noinv,
+                "szFSoId"           => $item->noso,
+                "szLogisticType"    => "INV",
+                "szOrderTypeId"     => "JUAL",
+                "dtmDelivery"       => Carbon::parse($item->crea_date)->toDateTimeString(),
+                "szCustId"          => $item->kd_outlet,
+                "decAmount"         => $decDPPTotal,
+                "decTax"            => $decTaxTotal,
+                "szCcyId"           => "IDR",
+                "szCcyRateId"       => "BI",
+                "szVehicleId"       => $header->plat_mobil,
+                "szDriverId"        => $header->driver,
+                "szSalesId"         => $item->user_sales,
+                "szCarrierId"       => "",
+                "szRemark"          => "api",
+                "szPaymentTermId"   => "{$paymentTermId} HARI",
+                "szWarehouseId"     => "KCP01001",
+                "szStockTypeId"     => "Good Stock",
+                'docStatus'         => [
+                    'bApplied'      => true,
+                    'szWorkplaceId' => config('api.workplace_id')
+                ],
+                "itemList"          => $items,
+            ]
         ];
     }
 
@@ -174,7 +189,6 @@ class DeliveryOrderController extends Controller
             $items[] = [
                 'szOrderItemTypeId'  => "JUAL",
                 'szProductId'        => $orderItem->part_no,
-                'decDiscProcent'     => 0,
                 'decQty'             => $orderItem->qty,
                 'szUomId'            => "PCS",
                 'decPrice'           => $decPrice,
@@ -184,12 +198,6 @@ class DeliveryOrderController extends Controller
                 'decAmount'          => $decAmount,
                 'decDPP'             => $decDPP,
                 'szPaymentType'      => "NON",
-                'deliveryList'       => [
-                    'dtmDelivery'   => date('Y-m-d H:i:s', strtotime($header->crea_date)),
-                    'szCustId'      => $item->kd_outlet,
-                    'decQty'        => $orderItem->qty,
-                    'szFromWpId'    => 'KCP01001',
-                ],
             ];
         }
 
@@ -225,7 +233,7 @@ class DeliveryOrderController extends Controller
      */
     private function addSupportProgram(array &$items, $invoiceNumber, &$decDPPTotal, &$decTaxTotal)
     {
-        $supportProgram = DB::table('invoice_program')
+        $supportProgram = DB::table('history_bonus_invoice')
             ->where('noinv', $invoiceNumber)
             ->sum('nominal_program');
 
@@ -233,7 +241,6 @@ class DeliveryOrderController extends Controller
             $item = [
                 'szOrderItemTypeId'  => "DISKON",
                 'szProductId'        => "",
-                'decDiscProcent'     => 0,
                 'decQty'             => 0,
                 'szUomId'            => "",
                 'decPrice'           => 0,
@@ -243,8 +250,6 @@ class DeliveryOrderController extends Controller
                 'decAmount'          => 0,
                 'decDPP'             => - ($supportProgram / config('tax.ppn_factor')),
                 'szPaymentType'      => "TDB",
-                'deliveryList'       => [],
-                'bonusSourceList'    => [],
             ];
 
             // Update totals
@@ -253,29 +258,5 @@ class DeliveryOrderController extends Controller
 
             $items[] = $item;
         }
-    }
-
-    /**
-     * Prepares the delivery address from KcpInformation.
-     * 
-     * @param object $item
-     * @return array The prepared delivery address.
-     */
-    private function prepareDeliveryAddress($item)
-    {
-        $addressDetail = $this->kcpInformation->getAddress($this->token, $item->kd_outlet);
-        $addressDetail = $addressDetail['data'];
-
-        return [
-            'szContactPerson'   => $addressDetail['nm_outlet'],
-            'szAddress_1'       => $addressDetail['almt_outlet'],
-            'szAddress_2'       => $addressDetail['almt_outlet'],
-            'szDistrict'        => $addressDetail['nm_area'],
-            'szCity'            => $addressDetail['nm_area'],
-            'szZipCode'         => '',
-            'szState'           => $addressDetail['provinsi'],
-            'szCountry'         => 'Indonesia',
-            'szPhoneNo_1'       => $addressDetail['tlpn'] ? $addressDetail['tlpn'] : 0,
-        ];
     }
 }

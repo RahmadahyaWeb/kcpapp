@@ -1,19 +1,6 @@
 <div>
-    <!-- Status Alert -->
-    @if (session('success'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <!-- Error Alert -->
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
+    <x-loading :target="$target" />
 
     <div class="card">
         <!-- Card Header with Synchronization Button -->
@@ -28,22 +15,13 @@
                 <!-- No LKH Filter -->
                 <div class="col-md-4">
                     <label class="form-label">No LKH</label>
-                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="noLkh"
+                    <input type="text" class="form-control" wire:model.live.debounce.1000ms="no_lkh"
                         placeholder="Cari berdasarkan no lkh" wire:loading.attr="disabled">
                 </div>
             </div>
 
-            <!-- Loading Spinner (Visible when waiting for results) -->
-            <div wire:loading.flex wire:target="noLkh"
-                class="text-center justify-content-center align-items-center" style="height: 200px;">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
             <!-- Table with Delivery Orders -->
-            <div class="table-responsive" wire:loading.class="d-none"
-                wire:target="noLkh">
+            <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
@@ -65,7 +43,8 @@
                                         KCP/{{ $item->area_lkh }}/{{ $item->no_lkh }}
                                     </td>
                                     <td>
-                                        <a href="{{ route('do.detail', $item->no_lkh) }}">Detail</a>
+                                        <a href="{{ route('do.detail', $item->no_lkh) }}"
+                                            class="btn btn-sm btn-primary">Detail</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -77,10 +56,7 @@
 
         <!-- Card Footer with Pagination -->
         <div class="card-footer">
-            <div wire:loading.class="d-none" wire:target="noLkh">
-                <!-- Pagination links -->
-                {{ $items->links() }}
-            </div>
+            {{ $items->links() }}
         </div>
     </div>
 </div>

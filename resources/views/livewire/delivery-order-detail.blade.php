@@ -1,24 +1,16 @@
 <div>
-    @if (session('success'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     @php
         use App\Livewire\DeliveryOrderDetail;
     @endphp
+
+    <x-alert />
+    <x-loading :target="$target" />
+
     <div class="row g-2 mb-3">
         @if ($terima_lkh_status && $status == true && $header->terima_ar == 'N')
             <div class="col-md-3 d-grid">
-                <button wire:click="terima_lkh('{{ $header->no_lkh }}')" class="btn btn-success" wire:confirm="Yakin ingin terima LKH?">Terima LKH</button>
+                <button wire:click="terima_lkh('{{ $header->no_lkh }}')" class="btn btn-success"
+                    wire:confirm="Yakin ingin terima LKH?">Terima LKH</button>
             </div>
         @endif
     </div>
@@ -28,7 +20,6 @@
             <div class="card">
                 <div class="card-header">
                     Detail LKH: <b>{{ $no_lkh }}</b>
-                    <hr>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
@@ -145,12 +136,11 @@
             <div class="card">
                 <div class="card-header">
                     Detail LKH: <b>{{ $no_lkh }}</b>
-                    <hr>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Kode / Nama Toko</th>
                                     <th>No. Invoice</th>
@@ -203,7 +193,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($item->terima_ar == 'N')
-                                                    <span style="cursor: pointer;" class="text-primary"
+                                                    <span style="cursor: pointer;" class="badge text-bg-primary"
                                                         wire:click="terimaSJ('{{ $item->id }}')"
                                                         wire:confirm="Yakin ingin terima SJ?">
                                                         Terima SJ
