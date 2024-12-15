@@ -4,7 +4,7 @@
 
     <div class="card">
         <div class="card-header">
-            <b>{{ $spb }} / {{ $invoiceAop }}</b>
+            <b>{{ $invoiceNon }}</b>
         </div>
         <div class="card-body">
             <table class="mb-3">
@@ -49,10 +49,7 @@
                             <tr>
                                 <td>
                                     <input type="checkbox" wire:model.change="selectedItems"
-                                        value="{{ $item->materialNumber }}"
-                                        @if (
-                                            !($item->qty >= $item->qty_terima - ($item->asal_qty ? $item->asal_qty->sum('qty') : 0)) ||
-                                                $item->status == 'BOSNET') disabled @endif />
+                                        value="{{ $item->materialNumber }}" @disabled(!$item->qty >= $item->qty_terima - ($item->asal_qty ? $item->asal_qty->sum('qty') : 0) || $item->status == 'BOSNET') />
                                 </td>
                                 <td>{{ $item->materialNumber }}</td>
                                 <td>{{ $item->qty }}</td>
@@ -66,14 +63,14 @@
                                                 })->toArray(),
                                         ) !!}
                                     @else
-                                        {{ $item->invoiceAop }}
+                                        {{ $item->invoiceNon }}
                                     @endif
                                 </td>
                                 <td>
                                     @if ($item->status == 'KCP')
                                         {{ $item->status }}
                                     @else
-                                        {{ $item->status }} / {{ $item->gr_date }}
+                                        {{ $item->status }}
                                     @endif
                                 </td>
                             </tr>

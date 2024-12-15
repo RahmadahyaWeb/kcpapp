@@ -11,6 +11,7 @@ use App\Http\Controllers\DksController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MasterTokoController;
 use App\Http\Controllers\NonAopController;
+use App\Http\Controllers\NonReceiptController;
 use App\Http\Controllers\ReportDKSController;
 use App\Http\Controllers\SalesOrderController;
 use Illuminate\Support\Facades\DB;
@@ -65,6 +66,10 @@ Route::middleware(['auth', 'check.online', 'auth.session'])->group(function () {
     // GOODS RECEIPT AOP
     Route::get('/gr/aop', [AopReceiptController::class, 'index'])->name('aop-gr.index');
     Route::get('/gr/aop/{invoiceAop}', [AopReceiptController::class, 'detail'])->name('aop-gr.detail');
+
+    // GOODS RECEIPT NON
+    Route::get('/gr/non-aop', [NonReceiptController::class, 'index'])->name('non-gr.index');
+    Route::get('/gr/non-aop/{invoiceNon}', [NonReceiptController::class, 'detail'])->name('non-gr.detail');
 
     // DELIVERY ORDER
     Route::get('delivery-order', [DeliveryOrderController::class, 'index'])->name('do.index');

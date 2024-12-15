@@ -65,12 +65,12 @@
                                     <div class="d-flex gap-2">
                                         <span class="badge text-bg-primary" style="cursor: pointer"
                                             wire:click="detailInvoiceNon('{{ $item->invoiceNon }}')">Detail</span>
-                                        <span wire:click="hapusInvoiceNon('{{ $item->invoiceNon }}')"
+                                        {{-- <span wire:click="hapusInvoiceNon('{{ $item->invoiceNon }}')"
                                             class="badge text-bg-danger"
                                             wire:confirm="Yakin ingin hapus invoice: {{ $item->invoiceNon }}?"
                                             style="cursor: pointer">
                                             Hapus
-                                        </span>
+                                        </span> --}}
                                     </div>
                                 </td>
                             </tr>

@@ -95,6 +95,18 @@ class NonAopCreate extends Component
                 'fakturPajak'           => $this->fakturPajak
             ]);
 
+        DB::connection('kcpinformation')
+            ->table('intransit_header')
+            ->insert([
+                'no_sp_aop'         => $invoiceNon,
+                'kd_gudang_aop'     => $this->customerTo,
+                'tgl_packingsheet'  => $this->billingDocumentDate,
+                'status'            => 'I',
+                'ket_status'        => 'INTRANSIT',
+                'crea_date'         => now(),
+                'crea_by'           => Auth::user()->username,
+            ]);
+
         session()->flash('success', "Data Non AOP dengan invoice: $invoiceNon berhasil ditambahkan.");
 
         $this->redirect('/pembelian/non-aop');

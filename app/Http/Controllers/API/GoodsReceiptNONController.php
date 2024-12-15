@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Http;
 
-class GoodReceiptController extends Controller
+class GoodsReceiptNONController extends Controller
 {
     /**
      * Send data to Bosnet API after retrieving invoice details.
@@ -20,7 +20,7 @@ class GoodReceiptController extends Controller
     public function sendToBosnet(Request $request)
     {
         try {
-            $invoiceAop = $request->invoiceAop;
+            $invoiceNon = $request->invoiceNon;
             $items = $request->items;
 
             // Prepare data to send and items to update
@@ -28,20 +28,20 @@ class GoodReceiptController extends Controller
             $materialNumberToSave = implode(',', $items); // Concatenate material numbers
 
             // Retrieve invoice header details
-            $invoiceHeader = DB::table('invoice_aop_header')
+            $invoiceHeader = DB::table('invoice_non_header')
                 ->select('*')
-                ->where('invoiceAop', $invoiceAop)
+                ->where('invoiceNon', $invoiceNon)
                 ->first();
 
             // Retrieve invoice details
-            $invoiceDetails = DB::table('invoice_aop_detail')
+            $invoiceDetails = DB::table('invoice_non_detail')
                 ->select('*')
-                ->where('invoiceAop', $invoiceAop)
+                ->where('invoiceNon', $invoiceNon)
                 ->whereIn('materialNumber', $items)
                 ->get();
 
             // Generate GR number
-            $no_gr = $this->generateGRNumber($invoiceHeader->SPB, $invoiceAop, $materialNumberToSave);
+            $no_gr = $this->generateGRNumber($invoiceHeader->SPB, $invoiceNon, $materialNumberToSave);
 
             // Calculate payment term
             $paymentTermId = $this->calculatePaymentTerm($invoiceHeader);
@@ -58,7 +58,7 @@ class GoodReceiptController extends Controller
             // Send data to Bosnet API
             if ($this->sendDataToBosnet($dataToSent)) {
                 // Update items status in the database
-                $this->updateItemsStatus($invoiceAop, $itemsToUpdate);
+                $this->updateItemsStatus($invoiceNon, $itemsToUpdate);
             }
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
@@ -113,7 +113,7 @@ class GoodReceiptController extends Controller
         return [
             'szAppId'                     => "BDI.KCP",
             'fPoReceiptData'    => [
-                'szPoId'                    => $invoiceHeader->invoiceAop,
+                'szPoId'                    => $invoiceHeader->invoiceNon,
                 'szFPoReceipt_sId'          => $no_gr,
                 'dtmReceipt'                => "2024-10-15 00:00:00",
                 'szRefDn'                   => $invoiceHeader->SPB,
@@ -140,22 +140,21 @@ class GoodReceiptController extends Controller
     /**
      * Update items status in the database.
      *
-     * @param string $invoiceAop
+     * @param string $invoiceNon
      * @param array $itemsToUpdate
      * @return void
      */
-    private function updateItemsStatus($invoiceAop, $itemsToUpdate)
+    private function updateItemsStatus($invoiceNon, $itemsToUpdate)
     {
         foreach ($itemsToUpdate as $items) {
             foreach ($items as $item) {
                 $materialNumber = $item['szProductId'];
 
-                DB::table('invoice_aop_detail')
-                    ->where('invoiceAop', $invoiceAop)
+                DB::table('invoice_non_detail')
+                    ->where('invoiceNon', $invoiceNon)
                     ->where('materialNumber', $materialNumber)
                     ->update([
                         'status'        => 'BOSNET',
-                        'gr_date'       => now()
                     ]);
             }
         }
@@ -168,7 +167,7 @@ class GoodReceiptController extends Controller
      * @param string $items
      * @return string
      */
-    public function generateGRNumber($spb, $invoiceAop, $items)
+    public function generateGRNumber($spb, $invoiceNon, $items)
     {
         try {
             $tahun = Carbon::now()->year;
@@ -181,12 +180,12 @@ class GoodReceiptController extends Controller
 
             // Generate the new GR number
             $nomor_urut = $lastGR ? (int)substr($lastGR->no_gr, -4) + 1 : 1;
-            $no_gr = 'GR-AOP-' . $tahun . $bulan . '-' . str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
+            $no_gr = 'GR-NON-' . $tahun . $bulan . '-' . str_pad($nomor_urut, 4, '0', STR_PAD_LEFT);
 
             // Insert the new GR record into the database
             DB::table('goods_receipt')->insert([
                 'no_gr'         => $no_gr,
-                'invoice'       => $invoiceAop,
+                'invoice'       => $invoiceNon,
                 'spb'           => $spb,
                 'items'         => $items,
                 'created_at'    => now()
@@ -204,9 +203,10 @@ class GoodReceiptController extends Controller
      * @param array $dataToSent
      * @return bool
      */
-    public function sendDataToBosnet($data) {
+    public function sendDataToBosnet($data)
+    {
         return true;
-
+        
         $credential = TokenBosnetController::signInForSecretKey();
 
         if (isset($credential['status'])) {
@@ -218,7 +218,7 @@ class GoodReceiptController extends Controller
 
             $payload = $data;
 
-            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/PUR/FPo/SaveFPoReceipt';
+            $url = 'http://103.54.218.250:3000/API/OC/NGE/v1/PUR/FPoReceipt/SaveFPoReceipt';
 
             $response = Http::withHeaders([
                 'Token' => $token

@@ -2,30 +2,30 @@
 
 namespace App\Livewire;
 
-use App\Http\Controllers\API\GoodsReceiptAOPController;
+use App\Http\Controllers\API\GoodsReceiptNONController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-class AopGrDetail extends Component
+class NonGrDetail extends Component
 {
     public $target = 'send_to_bosnet';
-    public $invoiceAop;
+    public $invoiceNon;
     public $selectedItems = [];
     public $selectAll = false;
     public $items_with_qty;
 
-    public function mount($invoiceAop)
+    public function mount($invoiceNon)
     {
-        $this->invoiceAop = $invoiceAop;
+        $this->invoiceNon = $invoiceNon;
     }
 
     public function send_to_bosnet()
     {
         try {
-            $controller = new GoodsReceiptAOPController();
+            $controller = new GoodsReceiptNONController();
             $controller->sendToBosnet(new Request([
-                'invoiceAop'    => $this->invoiceAop,
+                'invoiceNon'    => $this->invoiceNon,
                 'items'         => $this->selectedItems,
             ]));
 
@@ -65,13 +65,13 @@ class AopGrDetail extends Component
         $this->selectAll = false;
     }
 
-    public function find_qty_in_other_invoice($part_no, $spb)
+    public function find_qty_in_other_invoice($part_no, $invoiceNon)
     {
-        $items = DB::table('invoice_aop_detail')
-            ->select(['qty', 'invoiceAop']) // Tambahkan invoiceAop
-            ->where('SPB', $spb)
+        $items = DB::table('invoice_non_detail')
+            ->select(['qty', 'invoiceAop'])
+            ->where('invoiceNon', $invoiceNon)
             ->where('materialNumber', $part_no)
-            ->where('invoiceAop', '<>', $this->invoiceAop)
+            ->where('invoiceNon', '<>', $this->invoiceNon)
             ->get();
 
         return $items;
@@ -81,25 +81,21 @@ class AopGrDetail extends Component
     {
         $kcp_information = DB::connection('kcpinformation');
 
-        // Ambil SPB dari invoice_aop_header
-        $spb = DB::table('invoice_aop_header')
-            ->where('invoiceAop', $this->invoiceAop)
-            ->value('SPB');
+        $invoiceNon = $this->invoiceNon;
 
-        // Ambil data items dari invoice_aop_detail
-        $items = DB::table('invoice_aop_detail')
-            ->where('invoiceAop', $this->invoiceAop)
+        $items = DB::table('invoice_non_detail')
+            ->where('invoiceNon', $this->invoiceNon)
             ->get();
 
         // Total items terkirim
-        $total_items_terkirim = DB::table('invoice_aop_detail')
-            ->where('invoiceAop', $this->invoiceAop)
+        $total_items_terkirim = DB::table('invoice_non_detail')
+            ->where('invoiceNon', $this->invoiceNon)
             ->where('status', 'BOSNET')
             ->count();
 
         // Ambil data intransit dari intransit_details
         $intransit = $kcp_information->table('intransit_details')
-            ->where('no_sp_aop', $spb)
+            ->where('no_sp_aop', $this->invoiceNon)
             ->get();
 
         // Kelompokkan qty_terima berdasarkan part_no
@@ -116,7 +112,7 @@ class AopGrDetail extends Component
         }
 
         // Proses items dan tambahkan informasi jika qty_terima lebih besar
-        $items_with_qty = $items->map(function ($item) use ($grouped_data, $spb) {
+        $items_with_qty = $items->map(function ($item) use ($grouped_data, $invoiceNon) {
             $material_number = $item->materialNumber;
 
             // Default nilai qty_terima
@@ -124,13 +120,13 @@ class AopGrDetail extends Component
 
             // Tambahkan field 'asal_qty' jika qty_terima > qty
             if ($item->qty_terima > $item->qty) {
-                $other_invoice_qty = $this->find_qty_in_other_invoice($material_number, $spb);
+                $other_invoice_qty = $this->find_qty_in_other_invoice($material_number, $invoiceNon);
 
                 // Format data asal qty
                 $item->asal_qty = $other_invoice_qty->map(function ($other) {
                     return [
                         'qty' => $other->qty,
-                        'invoice' => $other->invoiceAop, // Tambahkan invoiceAop
+                        'invoice' => $other->invoiceNon,
                     ];
                 });
             } else {
@@ -142,9 +138,8 @@ class AopGrDetail extends Component
 
         $this->items_with_qty = $items_with_qty;
 
-        return view('livewire.aop-gr-detail', compact(
+        return view('livewire.non-gr-detail', compact(
             'items_with_qty',
-            'spb',
             'total_items_terkirim'
         ));
     }

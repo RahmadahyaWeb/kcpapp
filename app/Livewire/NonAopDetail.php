@@ -125,14 +125,51 @@ class NonAopDetail extends Component
 
     public function updateFlag()
     {
-        DB::table('invoice_non_header')
-            ->where('invoiceNon', $this->invoiceNon)
-            ->update([
-                'flag_selesai'  => 'Y',
-                'updated_at'    => now()
-            ]);
+        $kcpinformation = DB::connection('kcpinformation');
 
-        session()->flash('status', "Flag $this->invoiceNon berhasil disimpan.");
+        $kcpinformation->beginTransaction();
+        DB::beginTransaction();
+
+        try {
+            DB::table('invoice_non_header')
+                ->where('invoiceNon', $this->invoiceNon)
+                ->update([
+                    'flag_selesai'  => 'Y',
+                    'updated_at'    => now()
+                ]);
+
+            $items = DB::table('invoice_non_detail')
+                ->where('invoiceNon', $this->invoiceNon)
+                ->get();
+
+            foreach ($items as $item) {
+                DB::connection('kcpinformation')
+                    ->table('intransit_details')
+                    ->insert([
+                        'no_sp_aop'     => $item->invoiceNon,
+                        'kd_gudang_aop' => $item->customerTo,
+                        'part_no'       => $item->materialNumber,
+                        'qty'           => $item->qty,
+                        'status'        => 'I',
+                        'crea_date'     => now(),
+                        'crea_by'       => Auth::user()->username
+                    ]);
+            }
+
+            // Commit transaksi jika tidak ada error
+            DB::commit();
+            $kcpinformation->commit();
+
+            // Memberikan feedback kepada user
+            session()->flash('status', "Flag $this->invoiceNon berhasil disimpan.");
+        } catch (\Exception $e) {
+            // Rollback transaksi jika terjadi error
+            DB::rollBack();
+            $kcpinformation->rollBack();
+
+            // Menangani error, memberikan feedback jika terjadi kesalahan
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function sendToBosnet()
