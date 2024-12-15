@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-class PurchaseOrderController extends Controller
+class PurchaseOrderAOPController extends Controller
 {
     /**
      * Send the purchase order data to BOSNET.

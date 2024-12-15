@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Http\Controllers\API\PurchaseOrderController;
+use App\Http\Controllers\API\PurchaseOrderAOPController;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ class AopFinalDetail extends Component
     public function sendToBosnet()
     {
         try {
-            $controller = new PurchaseOrderController();
+            $controller = new PurchaseOrderAOPController();
             $controller->sendToBosnet(new Request(['invoiceAop' => $this->invoiceAop]));
 
             session()->flash('success', "Data PO berhasil dikirim!");

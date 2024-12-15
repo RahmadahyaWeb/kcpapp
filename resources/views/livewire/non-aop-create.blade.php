@@ -1,8 +1,9 @@
 <div>
+    <x-loading :target="$target" />
+
     <div class="card">
         <div class="card-header">
             <b>Tambah Data Non AOP</b>
-            <hr>
         </div>
         <div class="card-body">
             <form wire:submit="save">

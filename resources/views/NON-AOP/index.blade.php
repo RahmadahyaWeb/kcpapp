@@ -9,5 +9,5 @@
 @endsection
 
 @section('content')
-    <livewire:non-aop />
+    <livewire:non-aop-table />
 @endsection

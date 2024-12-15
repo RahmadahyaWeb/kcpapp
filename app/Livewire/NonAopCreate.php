@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-class CreateNonAop extends Component
+class NonAopCreate extends Component
 {
+    public $target = 'generateInvoiceNumber, supplier, save';
+
     #[Validate('required')]
     public $supplier;
 
@@ -68,7 +70,7 @@ class CreateNonAop extends Component
 
         // TOP
         $billingDocumentDate = Carbon::parse($this->billingDocumentDate);
-        $top = $billingDocumentDate->addDays($this->top)->toDateString();
+        $top = $billingDocumentDate->addDays((int) $this->top)->toDateString();
 
         // INVOICE
         $invoiceNon = $this->invoiceGenerated;
@@ -93,7 +95,7 @@ class CreateNonAop extends Component
                 'fakturPajak'           => $this->fakturPajak
             ]);
 
-        session()->flash('status', "Data Non AOP dengan invoice: $invoiceNon berhasil ditambahkan.");
+        session()->flash('success', "Data Non AOP dengan invoice: $invoiceNon berhasil ditambahkan.");
 
         $this->redirect('/pembelian/non-aop');
     }
@@ -102,7 +104,7 @@ class CreateNonAop extends Component
     {
         $suppliers = DB::table('master_supplier')->get();
 
-        return view('livewire.create-non-aop', compact(
+        return view('livewire.non-aop-create', compact(
             'suppliers'
         ));
     }

@@ -78,14 +78,6 @@
                         <div class="dropdown-divider my-1"></div>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-user bx-md me-3"></i><span>My Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <div class="dropdown-divider my-1"></div>
-                    </li>
-                    <li>
                         <a class="dropdown-item" href="{{ route('logout') }}">
                             <i class="bx bx-power-off bx-md me-3"></i><span>Log Out</span>
                         </a>

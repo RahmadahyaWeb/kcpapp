@@ -27,7 +27,7 @@
                         <th>Kode Toko</th>
                         <th>Nama Toko</th>
                         <th>Alamat</th>
-                        <th>Action</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

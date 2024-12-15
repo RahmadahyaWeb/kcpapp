@@ -7,15 +7,15 @@ use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
 
-class NonAop extends Component
+class NonAopTable extends Component
 {
     use WithPagination, WithoutUrlPagination;
 
     protected $paginationTheme = 'bootstrap';
 
+    public $target = 'invoiceNon, status';
     public $invoiceNon;
-    public $tanggalJatuhTempo;
-    public $status;
+    public $status = 'KCP';
 
     public function hapusInvoiceNon($invoiceNon)
     {
@@ -46,8 +46,8 @@ class NonAop extends Component
             $query->where('status', $this->status);
         }
 
-        $invoiceNonAopHeader = $query->orderBy('created_at', 'desc')->paginate(20);
+        $items = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        return view('livewire.non-aop', compact('invoiceNonAopHeader'));
+        return view('livewire.non-aop-table', compact('items'));
     }
 }

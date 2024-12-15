@@ -10,5 +10,5 @@
 @endsection
 
 @section('content')
-    <livewire:create-non-aop />
+    <livewire:non-aop-create />
 @endsection

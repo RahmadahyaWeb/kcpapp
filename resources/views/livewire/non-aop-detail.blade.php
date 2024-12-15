@@ -1,16 +1,12 @@
 <div>
-    @if (session('status'))
-        <div class="alert alert-primary alert-dismissible fade show" role="alert">
-            {{ session('status') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-alert />
+    <x-loading :target="$target" />
+
     <div class="row">
         <div class="col-12 mb-3">
             <div class="card">
                 <div class="card-header">
                     Detail Invoice Non AOP: <b>{{ $invoiceNon }}</b>
-                    <hr>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -87,8 +83,7 @@
                         </div>
                     @elseif ($header->flag_selesai == 'Y' && $header->status == 'KCP')
                         <div class="row">
-                            <form wire:submit="sendToBosnet"
-                                wire:confirm="Yakin ingin kirim data ke Bosnet?">
+                            <form wire:submit="sendToBosnet" wire:confirm="Yakin ingin kirim data ke Bosnet?">
                                 <div class="col d-grid">
                                     <hr>
                                     <button type="submit" class="btn btn-warning">
@@ -108,20 +103,21 @@
                 <div class="card">
                     <div class="card-header">
                         <b>Form Tambah Item</b>
-                        <hr>
                     </div>
                     <div class="card-body">
                         <form wire:submit="addItem">
                             <div class="row">
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">No Part | Nama Part</label>
+                                    <label class="form-label">No Part</label>
                                     <input type="text" class="form-control mb-2" wire:model.live="search"
                                         placeholder="Cari Part">
                                     <select class="form-select @error('materialNumber') is-invalid @enderror"
                                         wire:model.live ="materialNumber">
                                         <option value="" selected>Pilih Part</option>
                                         @foreach ($nonAopParts as $part)
-                                            <option value="{{ $part['part_no'] }}">{{ $part['txt'] }}</option>
+                                            <option value="{{ $part->part_no }}">
+                                                {{ $part->part_no }} | {{ $part->nm_part }}
+                                            </option>
                                         @endforeach
                                     </select>
 
@@ -190,20 +186,12 @@
             <div class="card">
                 <div class="card-header">
                     <b>Detail Item</b>
-                    <hr>
                 </div>
                 <div class="card-body">
-                    <div wire:loading.flex wire:target="addItem, destroyItem"
-                        class="text-center justify-content-center align-items-center" style="height: 200px;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-
                     @if ($details->isEmpty())
                         <div class="table-responsive" wire:loading.class="d-none" wire:target="addItem, destroyItem">
                             <table class="table table-hover">
-                                <thead>
+                                <thead class="table-dark">
                                     <tr>
                                         <th>No Part | Nama Part</th>
                                     </tr>
@@ -218,7 +206,7 @@
                     @else
                         <div class="table-responsive" wire:loading.class="d-none" wire:target="addItem, destroyItem">
                             <table class="table table-hover">
-                                <thead>
+                                <thead class="table-dark">
                                     <tr>
                                         <th>No Part | Nama Part</th>
                                         <th>Qty</th>
@@ -256,8 +244,8 @@
                                             @endif
                                         </tr>
                                     @endforeach
-                                    <tr>
-                                        <th colspan="4" class="text-center">Grand Total</th>
+                                    <tr class="table-dark">
+                                        <th colspan="4">Grand Total</th>
                                         <td>{{ number_format($grandTotal, 0, ',', '.') }}</td>
                                     </tr>
                                 </tbody>
