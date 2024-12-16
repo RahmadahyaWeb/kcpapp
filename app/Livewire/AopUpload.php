@@ -121,11 +121,28 @@ class AopUpload extends Component
                     'BILLING_AMOUNT'        => intval($suratData[6]),
                     'SPB_NO'                => $suratData[7],
                     'TANGGAL_CETAK_FAKTUR'  => $suratData[8],
-                    'TANGGAL_JATUH_TEMPO'   => $rekapData[4],
+                    'TANGGAL_JATUH_TEMPO'   => $suratData[9],
                     'BILLING_AMOUNT_PPN'    => intval($rekapData[5]),
-                    'ADD_DISCOUNT'          => intval($rekapData[6]),
-                    'CASH_DISCOUNT'         => intval($rekapData[7]),
-                    'EXTRA_DISCOUNT'        => intval($rekapData[8]),
+                    'ADD_DISCOUNT'          => isset($rekapData[6]) ? intval($rekapData[6]) : 0,
+                    'CASH_DISCOUNT'         => isset($rekapData[7]) ? intval($rekapData[7]) : 0,
+                    'EXTRA_DISCOUNT'        => isset($rekapData[8]) ? intval($rekapData[8]) : 0,
+                ];
+            } else {
+                $combinedArray[] = [
+                    'CUSTOMER_NUMBER'       => $suratData[0],
+                    'CUSTOMER_NAME'         => $suratData[1],
+                    'BILLING_NUMBER'        => $suratData[2],
+                    'BILLING_DOCUMENT_DATE' => $suratData[3],
+                    'MATERIAL_NUMBER'       => $suratData[4],
+                    'BILLING_QTY'           => intval($suratData[5]),
+                    'BILLING_AMOUNT'        => intval($suratData[6]),
+                    'SPB_NO'                => $suratData[7],
+                    'TANGGAL_CETAK_FAKTUR'  => $suratData[8],
+                    'TANGGAL_JATUH_TEMPO'   => $suratData[9],
+                    'BILLING_AMOUNT_PPN'    => 0,
+                    'ADD_DISCOUNT'          => 0,
+                    'CASH_DISCOUNT'         => 0,
+                    'EXTRA_DISCOUNT'        => 0,
                 ];
             }
         }

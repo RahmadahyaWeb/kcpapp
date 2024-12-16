@@ -145,18 +145,39 @@ class PurchaseOrderAOPController extends Controller
     {
         $items = [];
 
+        // KIRIM NET SALES 
+        // foreach ($invoiceDetails as $detail) {
+        //     $items[] = [
+        //         'szProductId'          => $detail->materialNumber,
+        //         'decQty'               => $detail->qty,
+        //         'szUomId'              => "PCS",
+        //         'decPrice'             => $detail->price / $detail->qty,
+        //         'bTaxable'             => true,
+        //         'decDiscount'          => 0,
+        //         'decDiscPercentage'    => 0,
+        //         'decDPP'               => $detail->price / config('tax.ppn_factor'),
+        //         'decPPN'               => ($detail->price / config('tax.ppn_factor')) * config('tax.ppn_percentage'),
+        //         'decAmount'            => $detail->price,   
+        //         'purchaseItemTypeId'   => "BELI",
+        //         'deliveryList'         => [['qty' => $detail->qty]],
+        //     ];
+        // }
+
+        // KIRIM GRAND TOTAL 
         foreach ($invoiceDetails as $detail) {
+            $decAmount = ($detail->price * config('tax.ppn_percentage')) + $detail->price;
+
             $items[] = [
                 'szProductId'          => $detail->materialNumber,
                 'decQty'               => $detail->qty,
                 'szUomId'              => "PCS",
-                'decPrice'             => $detail->price / $detail->qty,
+                'decPrice'             => $decAmount / $detail->qty,
                 'bTaxable'             => true,
                 'decDiscount'          => 0,
                 'decDiscPercentage'    => 0,
-                'decDPP'               => $detail->price / config('tax.ppn_factor'),
-                'decPPN'               => ($detail->price / config('tax.ppn_factor')) * config('tax.ppn_percentage'),
-                'decAmount'            => $detail->price,
+                'decDPP'               => $detail->price,
+                'decPPN'               => $detail->price * config('tax.ppn_percentage'),
+                'decAmount'            => $decAmount,   
                 'purchaseItemTypeId'   => "BELI",
                 'deliveryList'         => [['qty' => $detail->qty]],
             ];
