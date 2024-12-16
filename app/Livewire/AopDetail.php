@@ -32,6 +32,7 @@ class AopDetail extends Component
 
     public $customerTo;
     public $tanggalInvoice;
+    public $isAvailable = true;
 
     public function mount($invoiceAop)
     {
@@ -140,10 +141,31 @@ class AopDetail extends Component
             ->where('invoiceAop', $this->invoiceAop)
             ->first();
 
+        // Mengambil data invoice_aop_detail dari database default
         $details = DB::table('invoice_aop_detail')
-            ->select(['*'])
+            ->select('*')
             ->where('invoiceAop', $this->invoiceAop)
             ->get();
+
+        // Mengambil data nm_part dari database 'kcpinformation'
+        $partNumbers = $details->pluck('materialNumber'); // Ambil semua materialNumber
+        $partData = DB::connection('kcpinformation')
+            ->table('mst_part')
+            ->whereIn('part_no', $partNumbers)
+            ->get(['part_no', 'nm_part']);
+
+        // Gabungkan data nm_part ke dalam $details
+        $details = $details->map(function ($item) use ($partData) {
+            $nmPart = $partData->firstWhere('part_no', $item->materialNumber);
+            $item->nm_part = $nmPart ? $nmPart->nm_part : null; // Menambahkan nm_part ke item
+
+            // Jika tidak ada nm_part, set $this->isAvailable = false
+            if (!$item->nm_part) {
+                $this->isAvailable = false;
+            }
+
+            return $item;
+        });
 
         $totalAmount = DB::table('invoice_aop_detail')
             ->where('invoiceAop', $this->invoiceAop)

@@ -2,6 +2,12 @@
     <x-alert />
     <x-loading :target="$target" />
 
+    @if (!$isAvailable)
+        <div class="alert alert-danger">
+            Ada Part Number yang tidak terdaftar.
+        </div>
+    @endif
+
     <div class="row">
         {{-- CARD DETAIL --}}
         <div class="col-12 mb-3">
@@ -206,7 +212,7 @@
                             </div>
                         </div>
                     </div>
-                    @if ($header->fakturPajak && $header->flag_final == 'N')
+                    @if ($header->fakturPajak && $header->flag_final == 'N' && $isAvailable)
                         <div class="row">
                             <form wire:submit="updateFlag({{ $header->invoiceAop }})"
                                 wire:confirm="Yakin ingin update flag?">
@@ -301,6 +307,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Material Number</th>
+                                    <th>Material Name</th>
                                     <th>Qty</th>
                                     <th>Amount (Rp)</th>
                                 </tr>
@@ -309,10 +316,12 @@
                                 @foreach ($details as $item)
                                     <tr>
                                         <td>{{ $item->materialNumber }}</td>
+                                        <td>{{ $item->nm_part }}</td>
                                         <td>{{ $item->qty }}</td>
                                         <td>{{ number_format($item->amount, 0, ',', '.') }}</td>
                                     </tr>
                                 @endforeach
+
                             </tbody>
                         </table>
                     </div>
