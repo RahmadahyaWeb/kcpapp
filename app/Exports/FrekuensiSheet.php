@@ -89,23 +89,34 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
 
     public function collection()
     {
-        return DB::table('master_toko')
-            ->leftJoin('master_provinsi', 'master_provinsi.id', '=', 'master_toko.kd_provinsi')
-            ->whereIn('user_sales', $this->sales)
-            ->whereNotIn('kd_toko', ['TQ2'])
-            ->where('status', 'active')
+        return DB::connection('kcpinformation')
+            ->table('mst_outlet')
+            ->leftJoin('mst_areatoko', 'mst_areatoko.area_group', '=', 'mst_outlet.area_group_2w')
+            ->leftJoin('mst_area', 'mst_area.kode_kab', '=', 'mst_outlet.kode_kab')
+            ->leftJoin('mst_provinsi', 'mst_provinsi.kode_prp', '=', 'mst_outlet.kode_prp')
+            ->where('mst_outlet.status', 'Y')
+            ->whereIn('mst_areatoko.user_sales', $this->sales)
+            ->whereNotIn('mst_outlet.kd_outlet', ['TQ2'])
             ->orderBy('user_sales', 'asc')
             ->get();
+
+        // return DB::table('master_toko')
+        //     ->leftJoin('master_provinsi', 'master_provinsi.id', '=', 'master_toko.kd_provinsi')
+        //     ->whereIn('user_sales', $this->sales)
+        //     ->whereNotIn('kd_toko', ['TQ2'])
+        //     ->where('status', 'active')
+        //     ->orderBy('user_sales', 'asc')
+        //     ->get();
     }
 
     public function map($row): array
     {
-        $kd_toko = $row->kd_toko;
-        $nama_toko = $row->nama_toko;
-        $alamat_toko = $row->alamat;
-        $nama_provinsi = $row->nama_provinsi;
+        $kd_toko = $row->kd_outlet;
+        $nama_toko = $row->nm_outlet;
+        $alamat_toko = $row->nm_area;
+        $nama_provinsi = $row->provinsi;
         $nama_sales = $row->user_sales;
-        $minimal_kunjungan = $row->frekuensi;
+        $minimal_kunjungan = DB::table('master_toko')->where('kd_toko', $kd_toko)->value('frekuensi') ?? 0;
 
         // REALISASI KUNJUNGAN
         $realisasi_kunjungan_data = DB::table('trns_dks')
@@ -125,7 +136,7 @@ class FrekuensiSheet implements WithTitle, WithEvents, WithColumnFormatting, Wit
             ->whereIn('kd_toko', ['TQ', 'TQ2'])
             ->count();
 
-        if ($row->kd_toko == 'TQ' || $row->kd_toko == 'TQ2') {
+        if ($row->kd_outlet == 'TQ' || $row->kd_outlet == 'TQ2') {
             $realisasi_kunjungan = (string) $realisasi_kunjungan_tq;
         }
 

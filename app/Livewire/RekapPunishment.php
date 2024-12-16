@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class RekapPunishment extends Component
 {
+    public $target = 'export';
     public $fromDate;
     public $toDate;
     public $user_sales = 'all';

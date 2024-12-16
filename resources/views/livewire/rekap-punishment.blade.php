@@ -1,10 +1,10 @@
 <div>
+    <x-loading :target="$target" />
     <div class="row">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <b>Rekap Punishment DKS</b>
-                    <hr>
                 </div>
                 <div class="card-body">
                     <form wire:submit.prevent="export">
@@ -50,7 +50,6 @@
                                     class="form-select @error('laporan') is-invalid @enderror">
                                     <option value="">Pilih Laporan</option>
                                     <option value="rekap_punishment">Rekap Punishment</option>
-                                    <option value="frekuensi_kunjungan">Frekuensi Kunjungan</option>
                                 </select>
                                 @error('laporan')
                                     <div class="invalid-feedback">
