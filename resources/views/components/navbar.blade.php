@@ -1,7 +1,7 @@
 @php
-    $onlineUsers = \App\Models\User::where('id', '!=', Auth::id())
-        ->orderBy('last_seen', 'desc')
-        ->get();
+    if (Request::is('/')) {
+        $onlineUsers = \App\Models\User::where('id', '!=', Auth::id())->orderBy('last_seen', 'desc')->get();
+    }
 @endphp
 
 <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
@@ -15,38 +15,40 @@
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
         <ul class="navbar-nav flex-row align-items-center ms-auto">
             {{-- USER ONLINE --}}
-            <li class="nav-item navbar-dropdown dropdown-user dropdown me-5">
-                <a class="nav-link dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown">
-                    <div class="avatar position-relative">
-                        <i class='bx bx-signal-5' style='font-size: 40px;'></i>
-                    </div>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" style="max-height: 300px; overflow-y: auto;">
-                    <li>
-                        <h6 class="dropdown-header">Users Online</h6>
-                    </li>
-                    @foreach ($onlineUsers as $user)
-                        @if ($user->isOnline != null && $user->last_seen != null)
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <div class="d-flex">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">{{ $user->username }}</h6>
-                                            <small class="text-muted">
-                                                @if ($user->userOnline())
-                                                    Online
-                                                @else
-                                                    {{ \Carbon\Carbon::parse($user->last_seen)->diffForHumans() }}
-                                                @endif
-                                            </small>
+            @if (Request::is('/'))
+                <li class="nav-item navbar-dropdown dropdown-user dropdown me-5">
+                    <a class="nav-link dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown">
+                        <div class="avatar position-relative">
+                            <i class='bx bx-signal-5' style='font-size: 40px;'></i>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" style="max-height: 300px; overflow-y: auto;">
+                        <li>
+                            <h6 class="dropdown-header">Users Online</h6>
+                        </li>
+                        @foreach ($onlineUsers as $user)
+                            @if ($user->isOnline != null && $user->last_seen != null)
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <div class="d-flex">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">{{ $user->username }}</h6>
+                                                <small class="text-muted">
+                                                    @if ($user->userOnline())
+                                                        Online
+                                                    @else
+                                                        {{ \Carbon\Carbon::parse($user->last_seen)->diffForHumans() }}
+                                                    @endif
+                                                </small>
+                                            </div>
                                         </div>
-                                    </div>
-                                </a>
-                            </li>
-                        @endif
-                    @endforeach
-                </ul>
-            </li>
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </li>
+            @endif
             {{-- USER ONLINE --}}
 
             <!-- User -->
