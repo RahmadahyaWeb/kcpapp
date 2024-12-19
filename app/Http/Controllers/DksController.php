@@ -27,15 +27,24 @@ class DksController extends Controller
             return view('dks.index');
         }
 
-        $kd_toko = base64_decode($kd_toko);
         $toko = $this->getTokoData($kd_toko);
 
         if (!$toko) {
             return redirect()->route('dks.scan')->with('error', "Kode toko tidak ditemukan.");
         }
 
+        $check = DB::table('trns_dks')
+            ->where('kd_toko', $kd_toko)
+            ->where('user_sales', Auth::user()->username)
+            ->where('type', 'in')
+            ->whereDate('tgl_kunjungan', now()->toDateString())
+            ->count();
+
         $katalog = $request->get('katalog');
-        $check = $this->determineCheckTypeForIndex($kd_toko, $katalog);
+
+        if ($katalog) {
+            $check = 'katalog';
+        }
 
         return view('dks.submit', compact('toko', 'katalog', 'check'));
     }
@@ -103,20 +112,27 @@ class DksController extends Controller
             ->count();
 
         if ($check == 0) {
-            if ($katalog[6] == 'Y') {
+            if ($katalog == 'Y') {
                 throw new \Exception('Tidak dapat scan katalog. Anda belum melakukan check in!');
             }
             return 'in';
         }
 
         if ($check == 2) {
-            if ($katalog[6] == 'Y') {
+            if ($katalog == 'Y') {
                 throw new \Exception('Tidak dapat scan katalog. Anda sudah melakukan check out!');
             }
             throw new \Exception('Anda sudah melakukan check out!');
         }
 
-        return 'out';
+        if ($check == 1) {
+            if ($katalog == 'Y') {
+                return 'katalog';
+            }
+
+            return 'out';
+        }
+
     }
 
     private function validateActiveStore($kd_toko)
@@ -140,7 +156,7 @@ class DksController extends Controller
             // $lastRecord = DB::table('trns_dks')
             //     ->where('kd_toko', $kd_toko)
             //     ->where('user_sales', $user)
-            //     ->latest('waktu_kunjungan') 
+            //     ->latest('waktu_kunjungan')
             //     ->first();
 
             // if ($lastRecord) {
@@ -170,7 +186,7 @@ class DksController extends Controller
             ];
 
             // Jika katalog, tambahkan validasi dan data tambahan
-            if ($katalog[6] == 'Y') {
+            if ($katalog == 'Y') {
                 $data['type'] = 'katalog';
                 $data['katalog'] = 'Y';
                 $data['katalog_at'] = $waktu_kunjungan;
@@ -182,7 +198,7 @@ class DksController extends Controller
             DB::table('trns_dks')->insert($data);
             DB::commit();
 
-            $action = $katalog[6] == 'Y' ? 'scan katalog' : "check $type";
+            $action = $katalog == 'Y' ? 'scan katalog' : "check $type";
             return redirect()->route('dks.scan')->with('success', "Berhasil melakukan $action");
         } catch (\Exception $e) {
             DB::rollBack();
@@ -210,19 +226,5 @@ class DksController extends Controller
             ->select(['kd_toko', 'nama_toko', 'latitude', 'longitude'])
             ->where('kd_toko', $kd_toko)
             ->first();
-    }
-
-    private function determineCheckTypeForIndex(string $kd_toko, ?string $katalog)
-    {
-        if ($katalog && $katalog[6] === 'Y') {
-            return 'katalog';
-        }
-
-        return DB::table('trns_dks')
-            ->where('kd_toko', $kd_toko)
-            ->where('user_sales', Auth::user()->username)
-            ->where('type', 'in')
-            ->whereDate('tgl_kunjungan', now()->toDateString())
-            ->count();
     }
 }
